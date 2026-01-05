@@ -54,3 +54,14 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# SSO Mock 데이터 (실제 SSO 응답 데이터 포함)
+src/domain/common/sso/mock-data/*.json
+
+# Database backups
+scripts/backup/dumps/*.sql
+!scripts/backup/dumps/.gitkeep
+
+# Automated backup directories (루트 디렉토리의 백업 파일만 무시)
+/backup/
+!/backup/.gitkeep
