@@ -1,2 +1,2 @@
-export { AnnouncementPopupService } from './announcement-popup.service';
-export { AnnouncementPopupBusinessModule } from './announcement-popup.module';
+export * from './announcement-popup.service';
+export * from './announcement-popup.module';

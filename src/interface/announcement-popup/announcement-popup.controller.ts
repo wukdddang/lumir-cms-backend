@@ -1,6 +1,12 @@
-import { Controller, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Body,
+  Param,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { AnnouncementPopupService } from '@domain/core/announcement-popup';
+import { AnnouncementPopupService } from '@business/announcement-popup/announcement-popup.service';
 import {
   CreateAnnouncementPopupDto,
   UpdateAnnouncementPopupDto,
@@ -31,9 +37,8 @@ export class AnnouncementPopupController {
    */
   @GetAllAnnouncementPopups()
   async getAllAnnouncementPopups(): Promise<AnnouncementPopupResponseDto[]> {
-    const popups =
-      await this.announcementPopupService.모든_공지사항_팝업을_조회한다();
-    return popups as unknown as AnnouncementPopupResponseDto[];
+    const result = await this.announcementPopupService.팝업_목록을_조회_한다();
+    return result.data as unknown as AnnouncementPopupResponseDto[];
   }
 
   /**
@@ -43,12 +48,20 @@ export class AnnouncementPopupController {
   async getAnnouncementPopup(
     @Param('id') id: string,
   ): Promise<AnnouncementPopupResponseDto> {
-    const popup =
-      await this.announcementPopupService.ID로_공지사항_팝업을_조회한다(id);
-    if (!popup) {
-      throw new Error('공지사항 팝업을 찾을 수 없습니다');
+    try {
+      const result = await this.announcementPopupService.팝업을_조회_한다(id);
+      return result.data as unknown as AnnouncementPopupResponseDto;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('찾을 수 없습니다')) {
+          throw new NotFoundException(error.message);
+        }
+        if (error.message.includes('invalid input syntax for type uuid')) {
+          throw new BadRequestException('잘못된 UUID 형식입니다.');
+        }
+      }
+      throw error;
     }
-    return popup as unknown as AnnouncementPopupResponseDto;
   }
 
   /**
@@ -58,8 +71,10 @@ export class AnnouncementPopupController {
   async createAnnouncementPopup(
     @Body() createDto: CreateAnnouncementPopupDto,
   ): Promise<AnnouncementPopupResponseDto> {
-    // DTO를 Entity로 변환하는 로직은 Business Layer에서 처리
-    throw new Error('Business Layer 구현 필요');
+    const result = await this.announcementPopupService.팝업을_생성_한다(
+      createDto as any,
+    );
+    return result.data as unknown as AnnouncementPopupResponseDto;
   }
 
   /**
@@ -70,7 +85,23 @@ export class AnnouncementPopupController {
     @Param('id') id: string,
     @Body() updateDto: UpdateAnnouncementPopupDto,
   ): Promise<AnnouncementPopupResponseDto> {
-    throw new Error('Business Layer 구현 필요');
+    try {
+      const result = await this.announcementPopupService.팝업을_수정_한다(
+        id,
+        updateDto as any,
+      );
+      return result.data as unknown as AnnouncementPopupResponseDto;
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('찾을 수 없습니다')) {
+          throw new NotFoundException(error.message);
+        }
+        if (error.message.includes('invalid input syntax for type uuid')) {
+          throw new BadRequestException('잘못된 UUID 형식입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -78,6 +109,18 @@ export class AnnouncementPopupController {
    */
   @DeleteAnnouncementPopup()
   async deleteAnnouncementPopup(@Param('id') id: string): Promise<void> {
-    await this.announcementPopupService.공지사항_팝업을_삭제한다(id);
+    try {
+      await this.announcementPopupService.팝업을_삭제_한다(id);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('찾을 수 없습니다')) {
+          throw new NotFoundException(error.message);
+        }
+        if (error.message.includes('invalid input syntax for type uuid')) {
+          throw new BadRequestException('잘못된 UUID 형식입니다.');
+        }
+      }
+      throw error;
+    }
   }
 }

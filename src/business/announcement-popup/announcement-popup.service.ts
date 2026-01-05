@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AnnouncementPopup } from '@domain/core/announcement-popup/announcement-popup.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
 import type { AnnouncementPopupDto } from '@domain/core/announcement-popup/announcement-popup.types';
 import {
   successResponse,
@@ -20,6 +21,8 @@ export class AnnouncementPopupService {
   constructor(
     @InjectRepository(AnnouncementPopup)
     private readonly popupRepository: Repository<AnnouncementPopup>,
+    @InjectRepository(Employee)
+    private readonly employeeRepository: Repository<Employee>,
   ) {}
 
   /**
@@ -68,15 +71,53 @@ export class AnnouncementPopupService {
    * 팝업을 생성한다
    */
   async 팝업을_생성_한다(
-    data: Partial<AnnouncementPopupDto>,
+    data: Partial<AnnouncementPopupDto> & { managerId?: string },
   ): Promise<ApiResponse<AnnouncementPopupDto>> {
-    const popup = this.popupRepository.create(data as any);
+    // managerId가 제공된 경우 Employee 객체로 변환
+    let manager: Employee | undefined;
+    if (data.managerId) {
+      manager = await this.employeeRepository.findOne({
+        where: { id: data.managerId },
+      });
+
+      if (!manager) {
+        throw new Error(`관리자를 찾을 수 없습니다. ID: ${data.managerId}`);
+      }
+    }
+
+    // DTO에서 managerId 제거하고 manager 객체 추가
+    const { managerId, ...restData } = data;
+    
+    // tags와 attachments를 명시적으로 처리
+    const entityData: any = {
+      title: restData.title,
+      status: restData.status,
+      isPublic: restData.isPublic,
+      category: restData.category,
+      language: restData.language,
+      tags: restData.tags || [],
+      attachments: restData.attachments || [],
+      releasedAt: restData.releasedAt,
+      ...(manager && { manager }),
+    };
+
+    const popup = this.popupRepository.create(entityData);
     const savedPopup = await this.popupRepository.save(popup);
     
     const result = Array.isArray(savedPopup) ? savedPopup[0] : savedPopup;
 
+    // 생성 후 다시 조회하여 manager 정보 포함
+    const createdPopup = await this.popupRepository.findOne({
+      where: { id: result.id },
+      relations: ['manager'],
+    });
+
+    if (!createdPopup) {
+      throw new Error('팝업 생성 후 조회에 실패했습니다.');
+    }
+
     return successResponse(
-      result.DTO로_변환한다(),
+      createdPopup.DTO로_변환한다(),
       '팝업이 성공적으로 생성되었습니다.',
     );
   }
@@ -86,7 +127,7 @@ export class AnnouncementPopupService {
    */
   async 팝업을_수정_한다(
     popupId: string,
-    data: Partial<AnnouncementPopupDto>,
+    data: Partial<AnnouncementPopupDto> & { managerId?: string },
   ): Promise<ApiResponse<AnnouncementPopupDto>> {
     const popup = await this.popupRepository.findOne({
       where: { id: popupId },
@@ -97,7 +138,26 @@ export class AnnouncementPopupService {
       throw new Error(`팝업을 찾을 수 없습니다. ID: ${popupId}`);
     }
 
-    Object.assign(popup, data);
+    // managerId가 제공된 경우 Employee 객체로 변환
+    let manager: Employee | undefined;
+    if (data.managerId) {
+      manager = await this.employeeRepository.findOne({
+        where: { id: data.managerId },
+      });
+
+      if (!manager) {
+        throw new Error(`관리자를 찾을 수 없습니다. ID: ${data.managerId}`);
+      }
+    }
+
+    // DTO에서 managerId 제거하고 manager 객체 추가
+    const { managerId, ...restData } = data;
+    const updateData = {
+      ...restData,
+      ...(manager && { manager }),
+    };
+
+    Object.assign(popup, updateData);
     const updatedPopup = await this.popupRepository.save(popup);
 
     return successResponse(

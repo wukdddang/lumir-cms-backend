@@ -22,13 +22,23 @@ export class CreateAnnouncementPopupDto {
   @IsString()
   title: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
+    description: '상태',
+    example: 'draft',
+    default: 'draft',
+  })
+  @IsOptional()
+  @IsString()
+  status?: AnnouncementStatus;
+
+  @ApiPropertyOptional({
     description: '공개 여부',
     example: false,
     default: false,
   })
+  @IsOptional()
   @IsBoolean()
-  isPublic: boolean;
+  isPublic?: boolean;
 
   @ApiProperty({
     description: '카테고리',
@@ -66,6 +76,13 @@ export class CreateAnnouncementPopupDto {
   @IsOptional()
   @IsArray()
   attachments?: string[];
+
+  @ApiPropertyOptional({
+    description: '공개 일시',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  @IsOptional()
+  releasedAt?: Date | string;
 }
 
 /**
