@@ -9,7 +9,7 @@ beforeAll(async () => {
   console.log('🐳 PostgreSQL 테스트 컨테이너를 시작합니다...');
 
   postgresContainer = await new PostgreSqlContainer('postgres:15-alpine')
-    .withDatabase('lumir_evaluation_test')
+    .withDatabase('lumir_cms_test')
     .withUsername('test_user')
     .withPassword('test_password')
     .withExposedPorts(5432)

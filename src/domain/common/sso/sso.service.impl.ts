@@ -170,7 +170,7 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
 
   /**
    * 시스템 역할을 검증한다
-   * systemRoles에 설정된 시스템(기본: EMS-PROD)의 역할이 없거나 비어있으면 예외를 발생시킨다
+   * systemRoles에 설정된 시스템(기본: CMS-PROD)의 역할이 없거나 비어있으면 예외를 발생시킨다
    *
    * @param loginResult 로그인 결과
    * @throws {ForbiddenException} 시스템 역할이 없거나 비어있는 경우
@@ -712,9 +712,11 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
   private mapToEmployeeInfo(data: any): EmployeeInfo {
     // 실제 SSO 데이터 구조에 맞게 매핑
     // status 값을 enum으로 변환
-    const mapStatusToEnum = (status: string | undefined): EmployeeStatus | undefined => {
+    const mapStatusToEnum = (
+      status: string | undefined,
+    ): EmployeeStatus | undefined => {
       if (!status) return undefined;
-      
+
       // 정확한 매칭
       if (status === '재직중' || status === 'ACTIVE' || status === 'active') {
         return EmployeeStatus.ACTIVE;
@@ -722,22 +724,27 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
       if (status === '휴직' || status === 'ON_LEAVE' || status === 'on_leave') {
         return EmployeeStatus.ON_LEAVE;
       }
-      if (status === '퇴사' || status === 'TERMINATED' || status === 'terminated') {
+      if (
+        status === '퇴사' ||
+        status === 'TERMINATED' ||
+        status === 'terminated'
+      ) {
         return EmployeeStatus.TERMINATED;
       }
-      
+
       // 기본값: 알 수 없는 상태는 undefined로 반환
       return undefined;
     };
 
     const employeeStatus = mapStatusToEnum(data.status);
-    
+
     // status가 "재직중"이면 isTerminated는 false, 그 외는 true
     const isTerminated =
       data.isTerminated !== undefined
         ? data.isTerminated
         : employeeStatus === EmployeeStatus.TERMINATED ||
-          (employeeStatus !== EmployeeStatus.ACTIVE && employeeStatus !== EmployeeStatus.ON_LEAVE);
+          (employeeStatus !== EmployeeStatus.ACTIVE &&
+            employeeStatus !== EmployeeStatus.ON_LEAVE);
 
     return {
       id: data.id,

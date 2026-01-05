@@ -50,7 +50,7 @@ export const SSOService = Symbol('SSOService');
     {
       provide: 'SSO_SYSTEM_NAME',
       useFactory: (configService: ConfigService): string => {
-        return configService.get<string>('SSO_SYSTEM_NAME') || 'EMS-PROD';
+        return configService.get<string>('SSO_SYSTEM_NAME') || 'CMS-PROD';
       },
       inject: [ConfigService],
     },
