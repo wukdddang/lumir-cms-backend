@@ -15,6 +15,7 @@ import * as Decorators from './decorators/lumir-story.decorators';
 @ApiTags('루미르 스토리')
 @Controller('lumir-story')
 export class LumirStoryController {
+  // ========== 스토리 문서 CRUD ==========
   @Get()
   @Decorators.GetAllLumirStories()
   async 스토리_목록을_조회_한다() {
@@ -43,6 +44,7 @@ export class LumirStoryController {
   @Decorators.DeleteLumirStory()
   async 스토리를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 카테고리 CRUD ==========
   @Get('categories')
   @Decorators.GetAllLumirStoryCategories()
   async 카테고리_목록을_조회_한다() {
@@ -65,6 +67,7 @@ export class LumirStoryController {
   @Decorators.DeleteLumirStoryCategory()
   async 카테고리를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 번역 CRUD ==========
   @Get(':documentId/translations')
   @Decorators.GetLumirStoryTranslations()
   async 번역_목록을_조회_한다(@Param('documentId') documentId: string) {
@@ -97,6 +100,7 @@ export class LumirStoryController {
   @Decorators.DeleteLumirStoryTranslation()
   async 번역을_삭제_한다(@Param('documentId') documentId: string, @Param('languageId') languageId: string) {}
 
+  // ========== 첨부파일 CRUD ==========
   @Get(':documentId/translations/:languageId/attachments')
   @Decorators.GetLumirStoryAttachments()
   async 첨부파일_목록을_조회_한다(@Param('documentId') documentId: string, @Param('languageId') languageId: string) {

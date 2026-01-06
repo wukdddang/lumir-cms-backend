@@ -7,6 +7,9 @@ import {
   IsOptional,
   IsDate,
   IsNumber,
+  MaxLength,
+  MinLength,
+  IsIn,
 } from 'class-validator';
 import type {
   AnnouncementStatus,
@@ -20,6 +23,8 @@ export class CreateAnnouncementDto {
   @ApiProperty({ description: '제목', example: '2024년 1월 정기 공지사항' })
   @IsNotEmpty()
   @IsString()
+  @MaxLength(500)
+  @MinLength(1)
   title: string;
 
   @ApiProperty({
@@ -28,6 +33,7 @@ export class CreateAnnouncementDto {
   })
   @IsNotEmpty()
   @IsString()
+  @MinLength(1)
   content: string;
 
   @ApiProperty({
@@ -101,11 +107,14 @@ export class UpdateAnnouncementDto {
   @ApiPropertyOptional({ description: '제목' })
   @IsOptional()
   @IsString()
+  @MaxLength(500)
+  @MinLength(1)
   title?: string;
 
   @ApiPropertyOptional({ description: '내용' })
   @IsOptional()
   @IsString()
+  @MinLength(1)
   content?: string;
 
   @ApiPropertyOptional({ description: '상단 고정 여부' })
@@ -116,6 +125,14 @@ export class UpdateAnnouncementDto {
   @ApiPropertyOptional({ description: '카테고리' })
   @IsOptional()
   category?: AnnouncementCategory;
+
+  @ApiPropertyOptional({
+    description: '상태',
+    enum: ['draft', 'approved', 'under_review', 'rejected', 'opened'],
+  })
+  @IsOptional()
+  @IsIn(['draft', 'approved', 'under_review', 'rejected', 'opened'])
+  status?: AnnouncementStatus;
 
   @ApiPropertyOptional({ description: '공개 일시' })
   @IsOptional()

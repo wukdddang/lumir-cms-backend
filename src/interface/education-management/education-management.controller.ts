@@ -12,6 +12,7 @@ import * as Decorators from './decorators/education-management.decorators';
 @ApiTags('교육 관리')
 @Controller('education-management')
 export class EducationManagementController {
+  // ========== 교육 관리 CRUD ==========
   @Get()
   @Decorators.GetAllEducationManagements()
   async 교육_관리_목록을_조회_한다() {
@@ -40,6 +41,7 @@ export class EducationManagementController {
   @Decorators.DeleteEducationManagement()
   async 교육_관리를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 수강자 관리 ==========
   @Get(':id/attendees')
   @Decorators.GetAttendees()
   async 수강자_목록을_조회_한다(@Param('id') id: string) {
@@ -56,6 +58,7 @@ export class EducationManagementController {
     return {};
   }
 
+  // ========== 첨부파일 CRUD ==========
   @Get(':id/attachments')
   @Decorators.GetEducationManagementAttachments()
   async 첨부파일_목록을_조회_한다(@Param('id') id: string) {

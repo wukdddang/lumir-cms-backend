@@ -76,9 +76,9 @@ export class AnnouncementPopupService {
     // managerId가 제공된 경우 Employee 객체로 변환
     let manager: Employee | undefined;
     if (data.managerId) {
-      manager = await this.employeeRepository.findOne({
+      manager = (await this.employeeRepository.findOne({
         where: { id: data.managerId },
-      });
+      })) ?? undefined;
 
       if (!manager) {
         throw new Error(`관리자를 찾을 수 없습니다. ID: ${data.managerId}`);
@@ -95,8 +95,8 @@ export class AnnouncementPopupService {
       isPublic: restData.isPublic,
       category: restData.category,
       language: restData.language,
-      tags: restData.tags || [],
-      attachments: restData.attachments || [],
+      tags: Array.isArray(restData.tags) ? restData.tags : [],
+      attachments: Array.isArray(restData.attachments) ? restData.attachments : [],
       releasedAt: restData.releasedAt,
       ...(manager && { manager }),
     };
@@ -141,9 +141,9 @@ export class AnnouncementPopupService {
     // managerId가 제공된 경우 Employee 객체로 변환
     let manager: Employee | undefined;
     if (data.managerId) {
-      manager = await this.employeeRepository.findOne({
+      manager = (await this.employeeRepository.findOne({
         where: { id: data.managerId },
-      });
+      })) ?? undefined;
 
       if (!manager) {
         throw new Error(`관리자를 찾을 수 없습니다. ID: ${data.managerId}`);
@@ -152,10 +152,17 @@ export class AnnouncementPopupService {
 
     // DTO에서 managerId 제거하고 manager 객체 추가
     const { managerId, ...restData } = data;
-    const updateData = {
+    
+    // undefined 값을 제거하여 기존 필드가 덮어써지지 않도록 함
+    const updateData = Object.entries({
       ...restData,
       ...(manager && { manager }),
-    };
+    }).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as any);
 
     Object.assign(popup, updateData);
     const updatedPopup = await this.popupRepository.save(popup);
@@ -170,6 +177,21 @@ export class AnnouncementPopupService {
    * 팝업을 삭제한다 (Soft Delete)
    */
   async 팝업을_삭제_한다(popupId: string): Promise<ApiResponse<void>> {
+    // 먼저 팝업이 존재하는지 확인 (이미 삭제된 것도 포함)
+    const popup = await this.popupRepository.findOne({
+      where: { id: popupId },
+      withDeleted: true, // 삭제된 것도 조회
+    });
+
+    if (!popup) {
+      throw new Error(`팝업을 찾을 수 없습니다. ID: ${popupId}`);
+    }
+
+    // 이미 삭제된 경우
+    if (popup.deletedAt) {
+      throw new Error(`팝업을 찾을 수 없습니다. ID: ${popupId}`);
+    }
+
     const result = await this.popupRepository.softDelete(popupId);
 
     if (result.affected === 0) {

@@ -27,7 +27,8 @@
       "@context/*": ["src/context/*"],
       "@business/*": ["src/business/*"],
       "@interface/*": ["src/interface/*"],
-      "@libs/*": ["libs/*"]
+      "@libs/*": ["libs/*"],
+      "@test/*": ["test/*"]
     }
   }
 }

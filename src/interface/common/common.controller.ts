@@ -47,7 +47,8 @@ export class CmsCommonController {
     private readonly organizationService: OrganizationService,
     private readonly notificationService: NotificationService,
   ) {}
-  // ========== 직원 관련 엔드포인트 ==========
+
+  // ========== GET 엔드포인트 ==========
 
   /**
    * 전체 직원 목록을 조회한다
@@ -69,8 +70,6 @@ export class CmsCommonController {
     return result.data as any;
   }
 
-  // ========== 부서 관련 엔드포인트 ==========
-
   /**
    * 전체 부서 목록을 조회한다
    */
@@ -91,8 +90,6 @@ export class CmsCommonController {
     return result.data as any;
   }
 
-  // ========== 직책 관련 엔드포인트 ==========
-
   /**
    * 전체 직책 목록을 조회한다
    */
@@ -110,8 +107,6 @@ export class CmsCommonController {
     const result = await this.positionService.직책을_조회_한다(id);
     return result.data as any;
   }
-
-  // ========== 직급 관련 엔드포인트 ==========
 
   /**
    * 전체 직급 목록을 조회한다
@@ -131,8 +126,6 @@ export class CmsCommonController {
     return result.data as any;
   }
 
-  // ========== 조직 하이라키 관련 엔드포인트 ==========
-
   /**
    * 조직 하이라키를 조회한다
    */
@@ -145,7 +138,7 @@ export class CmsCommonController {
     return result.data as any;
   }
 
-  // ========== 알림 관련 엔드포인트 ==========
+  // ========== POST 엔드포인트 ==========
 
   /**
    * 알림을 전송한다

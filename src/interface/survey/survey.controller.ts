@@ -6,6 +6,7 @@ import { GetAllSurveys, GetSurvey, CreateSurvey, UpdateSurvey, DeleteSurvey, Get
 @ApiTags('설문조사')
 @Controller('surveys')
 export class SurveyController {
+  // ========== 설문조사 CRUD ==========
   @GetAllSurveys()
   async getAllSurveys(): Promise<SurveyResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -13,6 +14,11 @@ export class SurveyController {
 
   @GetSurvey()
   async getSurvey(@Param('id') id: string): Promise<SurveyResponseDto> {
+    throw new Error('Business Layer 구현 필요');
+  }
+
+  @GetSurveyResults()
+  async getResults(@Param('id') id: string): Promise<SurveySubmissionResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
   }
 
@@ -31,6 +37,7 @@ export class SurveyController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 카테고리 CRUD ==========
   @GetAllSurveyCategories()
   async getAllCategories(): Promise<SurveyCategoryResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -41,13 +48,9 @@ export class SurveyController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 응답 제출 ==========
   @SubmitSurveyResponse()
   async submitResponse(@Param('id') id: string, @Body() dto: SubmitSurveyResponseDto): Promise<SurveySubmissionResponseDto> {
-    throw new Error('Business Layer 구현 필요');
-  }
-
-  @GetSurveyResults()
-  async getResults(@Param('id') id: string): Promise<SurveySubmissionResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
   }
 }

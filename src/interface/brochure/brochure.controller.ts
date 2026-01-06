@@ -31,6 +31,7 @@ import {
 @ApiTags('브로슈어')
 @Controller('brochures')
 export class BrochureController {
+  // ========== 브로슈어 문서 CRUD ==========
   @GetAllBrochures()
   async getAllBrochures(): Promise<BrochureResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -61,6 +62,7 @@ export class BrochureController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 카테고리 CRUD ==========
   @GetAllBrochureCategories()
   async getAllCategories(): Promise<BrochureCategoryResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -73,6 +75,7 @@ export class BrochureController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 언어 CRUD ==========
   @GetAllBrochureLanguages()
   async getAllLanguages(): Promise<BrochureLanguageResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -85,6 +88,7 @@ export class BrochureController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 번역 CRUD ==========
   @GetBrochureTranslations()
   async getTranslations(
     @Param('documentId') documentId: string,

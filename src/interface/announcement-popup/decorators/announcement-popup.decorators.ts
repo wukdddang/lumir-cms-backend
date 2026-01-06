@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   HttpCode,
 } from '@nestjs/common';
@@ -114,7 +115,7 @@ export function CreateAnnouncementPopup() {
  */
 export function UpdateAnnouncementPopup() {
   return applyDecorators(
-    Put(':id'),
+    Patch(':id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '공지사항 팝업 수정',

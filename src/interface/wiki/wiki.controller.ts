@@ -11,6 +11,7 @@ import * as Decorators from './decorators/wiki.decorators';
 @ApiTags('위키')
 @Controller('wiki')
 export class WikiController {
+  // ========== 위키 문서 CRUD ==========
   @Get()
   @Decorators.GetAllWikis()
   async Wiki_목록을_조회_한다() {
@@ -45,6 +46,7 @@ export class WikiController {
   @Decorators.DeleteWiki()
   async Wiki를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 파일 시스템 CRUD ==========
   @Get('file-system')
   @Decorators.GetWikiFileSystem()
   async 파일_시스템을_조회_한다() {

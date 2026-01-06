@@ -167,10 +167,9 @@ describe('POST /announcement-popups (E2E)', () => {
         .expect(201);
 
       // Then
-      console.log('Response body:', JSON.stringify(response.body, null, 2));
-      console.log('Tags:', response.body.tags);
       expect(response.body.tags).toHaveLength(2);
       expect(response.body.tags[0].name).toBe('긴급');
+      expect(response.body.tags[1].name).toBe('중요');
     });
   });
 

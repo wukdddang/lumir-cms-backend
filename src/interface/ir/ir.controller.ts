@@ -6,6 +6,7 @@ import { GetAllIrs, GetIr, CreateIr, UpdateIr, DeleteIr, GetAllIrCategories, Cre
 @ApiTags('IR')
 @Controller('ir')
 export class IrController {
+  // ========== IR 문서 CRUD ==========
   @GetAllIrs()
   async getAllIrs(): Promise<IrResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -31,6 +32,7 @@ export class IrController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 카테고리 CRUD ==========
   @GetAllIrCategories()
   async getAllCategories(): Promise<IrCategoryResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -41,6 +43,7 @@ export class IrController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 언어 CRUD ==========
   @GetAllIrLanguages()
   async getAllLanguages(): Promise<IrLanguageResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -51,6 +54,7 @@ export class IrController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 번역 CRUD ==========
   @GetIrTranslations()
   async getTranslations(@Param('documentId') documentId: string): Promise<IrTranslationResponseDto[]> {
     throw new Error('Business Layer 구현 필요');

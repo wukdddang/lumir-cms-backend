@@ -37,6 +37,7 @@ import {
 @ApiTags('뉴스')
 @Controller('news')
 export class NewsController {
+  // ========== 뉴스 문서 CRUD ==========
   @GetAllNews()
   async getAllNews(): Promise<NewsResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -65,6 +66,7 @@ export class NewsController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 카테고리 CRUD ==========
   @GetAllNewsCategories()
   async getAllCategories(): Promise<NewsCategoryResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -77,6 +79,7 @@ export class NewsController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 언어 CRUD ==========
   @GetAllNewsLanguages()
   async getAllLanguages(): Promise<NewsLanguageResponseDto[]> {
     throw new Error('Business Layer 구현 필요');
@@ -89,6 +92,7 @@ export class NewsController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== 번역 CRUD ==========
   @GetNewsTranslations()
   async getTranslations(
     @Param('documentId') documentId: string,
@@ -120,6 +124,7 @@ export class NewsController {
     throw new Error('Business Layer 구현 필요');
   }
 
+  // ========== URL CRUD ==========
   @GetNewsUrl()
   async getUrl(@Param('documentId') documentId: string): Promise<NewsUrlResponseDto> {
     throw new Error('Business Layer 구현 필요');

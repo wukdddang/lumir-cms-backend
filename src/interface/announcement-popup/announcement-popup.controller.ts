@@ -32,6 +32,8 @@ export class AnnouncementPopupController {
     private readonly announcementPopupService: AnnouncementPopupService,
   ) {}
 
+  // ========== 공지사항 팝업 CRUD ==========
+
   /**
    * 모든 공지사항 팝업을 조회한다
    */
@@ -98,6 +100,12 @@ export class AnnouncementPopupController {
         }
         if (error.message.includes('invalid input syntax for type uuid')) {
           throw new BadRequestException('잘못된 UUID 형식입니다.');
+        }
+        if (error.message.includes('invalid input value for enum')) {
+          throw new BadRequestException('유효하지 않은 상태 값입니다.');
+        }
+        if (error.message.includes('value too long for type')) {
+          throw new BadRequestException('입력 값이 최대 길이를 초과했습니다.');
         }
       }
       throw error;

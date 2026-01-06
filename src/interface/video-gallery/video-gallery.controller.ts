@@ -15,6 +15,7 @@ import * as Decorators from './decorators/video-gallery.decorators';
 @ApiTags('비디오 갤러리')
 @Controller('video-gallery')
 export class VideoGalleryController {
+  // ========== 비디오 갤러리 문서 CRUD ==========
   @Get()
   @Decorators.GetAllVideoGalleries()
   async 비디오_갤러리_목록을_조회_한다() {
@@ -43,6 +44,7 @@ export class VideoGalleryController {
   @Decorators.DeleteVideoGallery()
   async 비디오_갤러리를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 카테고리 CRUD ==========
   @Get('categories')
   @Decorators.GetAllVideoGalleryCategories()
   async 카테고리_목록을_조회_한다() {
@@ -65,6 +67,7 @@ export class VideoGalleryController {
   @Decorators.DeleteVideoGalleryCategory()
   async 카테고리를_삭제_한다(@Param('id') id: string) {}
 
+  // ========== 번역 CRUD ==========
   @Get(':documentId/translations')
   @Decorators.GetVideoGalleryTranslations()
   async 번역_목록을_조회_한다(@Param('documentId') documentId: string) {
@@ -97,6 +100,7 @@ export class VideoGalleryController {
   @Decorators.DeleteVideoGalleryTranslation()
   async 번역을_삭제_한다(@Param('documentId') documentId: string, @Param('languageId') languageId: string) {}
 
+  // ========== 첨부파일 CRUD ==========
   @Get(':documentId/translations/:languageId/attachments')
   @Decorators.GetVideoGalleryAttachments()
   async 첨부파일_목록을_조회_한다(@Param('documentId') documentId: string, @Param('languageId') languageId: string) {

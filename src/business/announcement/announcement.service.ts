@@ -116,7 +116,13 @@ export class AnnouncementService {
       throw new Error(`공지사항을 찾을 수 없습니다. ID: ${announcementId}`);
     }
 
-    Object.assign(announcement, data);
+    // undefined 값을 제외하고 업데이트
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== undefined) {
+        announcement[key] = data[key];
+      }
+    });
+
     const updatedAnnouncement = await this.announcementRepository.save(announcement);
 
     return successResponse(
