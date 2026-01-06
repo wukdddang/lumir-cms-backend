@@ -1,28 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
-// Database Module
-import { DatabaseModule } from '@libs/database/database.module';
-
-// Common Modules
-import { CmsCommonInterfaceModule } from '@interface/common';
-
-// Core Domain Interface Modules
-import { AnnouncementPopupInterfaceModule } from '@interface/announcement-popup';
-import { AnnouncementInterfaceModule } from '@interface/announcement';
-import { NewsInterfaceModule } from '@interface/news';
-import { BrochureInterfaceModule } from '@interface/brochure';
-import { IrInterfaceModule } from '@interface/ir';
-import { ShareholdersMeetingModule } from '@interface/shareholders-meeting';
-import { ElectronicNoticeModule } from '@interface/electronic-notice';
-
-// Sub Domain Interface Modules
-import { SurveyInterfaceModule } from '@interface/survey';
-import { LumirStoryModule } from '@interface/lumir-story';
-import { VideoGalleryModule } from '@interface/video-gallery';
-import { EducationManagementModule } from '@interface/education-management';
-import { WikiModule } from '@interface/wiki';
-
 /**
  * 루미르 CMS 애플리케이션 모듈
  *
@@ -38,28 +16,6 @@ import { WikiModule } from '@interface/wiki';
       isGlobal: true,
       envFilePath: '.env',
     }),
-
-    // 데이터베이스 연결 (DatabaseModule 사용)
-    DatabaseModule,
-
-    // ========== 공통 모듈 ==========
-    CmsCommonInterfaceModule,
-
-    // ========== Core Domain 모듈 (7개) ==========
-    AnnouncementPopupInterfaceModule,
-    AnnouncementInterfaceModule,
-    NewsInterfaceModule,
-    BrochureInterfaceModule,
-    IrInterfaceModule,
-    ShareholdersMeetingModule,
-    ElectronicNoticeModule,
-
-    // ========== Sub Domain 모듈 (5개) ==========
-    SurveyInterfaceModule,
-    LumirStoryModule,
-    VideoGalleryModule,
-    EducationManagementModule,
-    WikiModule,
   ],
 })
 export class AppModule {}
