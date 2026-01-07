@@ -95,6 +95,7 @@ enum CategoryEntityType {
   VIDEO_GALLERY = 'video_gallery',
   NEWS = 'news',
   SURVEY = 'survey',
+  EDUCATION_MANAGEMENT = 'education_management',
 }
 
 interface CategoryEntity extends BaseEntity {
@@ -179,40 +180,7 @@ abstract class BaseEntity<T> {
 
 ## Core Domain (핵심 비즈니스)
 
-### 1. MainPopup (메인 팝업)
-
-**파일 위치**: `src/domain/core/main-popup/`
-
-```typescript
-interface MainPopupEntity extends BaseEntity {
-  status: ContentStatus;
-  isPublic: boolean;
-  releasedAt?: Date; // Date 타입으로 수정
-  order: number; // 정렬 순서
-  // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'main_popup')
-  // translations는 MainPopupTranslation 테이블로 관리
-}
-
-// 언어별 번역
-interface MainPopupTranslationEntity extends BaseEntity {
-  mainPopupId: string; // MainPopup 엔티티 참조
-  languageId: string; // Language 엔티티 참조
-  title: string;
-  description: string; // 설명
-  imageUrl?: string; // AWS S3 URL (팝업 이미지, 언어별)
-}
-```
-
-**구현 파일**:
-
-- `main-popup.entity.ts` - TypeORM Entity
-- `main-popup-translation.entity.ts` - TypeORM Translation Entity
-- `main-popup.types.ts` - DTO 타입 정의
-- `main-popup.service.ts` - Domain Service
-- `main-popup.module.ts` - NestJS Module
-
-### 2. ShareholdersMeeting (주주총회)
+### 1. ShareholdersMeeting (주주총회)
 
 **파일 위치**: `src/domain/core/shareholders-meeting/`
 
@@ -258,6 +226,7 @@ interface ShareholdersMeetingTranslationEntity extends BaseEntity {
   content: string; // 상세 내용
   resultText: string; // 의결 결과 텍스트
   summary: string; // 요약
+  imageUrl?: string; // AWS S3 URL (주주총회 이미지, 언어별)
 }
 ```
 
@@ -270,7 +239,7 @@ interface ShareholdersMeetingTranslationEntity extends BaseEntity {
 - `shareholders-meeting-translation.entity.ts`
 - `shareholders-meeting.types.ts`
 
-### 3. ElectronicDisclosure (전자공시)
+### 2. ElectronicDisclosure (전자공시)
 
 **파일 위치**: `src/domain/core/electronic-disclosure/`
 
@@ -292,7 +261,7 @@ interface ElectronicDisclosureTranslationEntity extends BaseEntity {
 }
 ```
 
-### 4. IR (투자자 관계)
+### 3. IR (투자자 관계)
 
 **파일 위치**: `src/domain/core/ir/`
 
@@ -302,6 +271,7 @@ interface IREntity extends BaseEntity {
   status: IRStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
+  // attachments는 Attachment 테이블로 관리 (entityType = 'ir')
   // translations는 IRTranslation 테이블로 관리
 }
 
@@ -315,7 +285,7 @@ interface IRTranslationEntity extends BaseEntity {
 }
 ```
 
-### 5. Brochure (브로슈어)
+### 4. Brochure (브로슈어)
 
 **파일 위치**: `src/domain/core/brochure/`
 
@@ -338,7 +308,7 @@ interface BrochureTranslationEntity extends BaseEntity {
 }
 ```
 
-### 6. News (뉴스)
+### 5. News (뉴스)
 
 **파일 위치**: `src/domain/core/news/`
 
@@ -351,6 +321,7 @@ interface NewsEntity extends BaseEntity {
   status: NewsStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
+  // attachments는 Attachment 테이블로 관리 (entityType = 'news')
 }
 ```
 
@@ -361,7 +332,7 @@ interface NewsEntity extends BaseEntity {
 - `news.service.ts` - Domain Service
 - `news.module.ts` - NestJS Module
 
-### 7. Announcement (공지사항)
+### 6. Announcement (공지사항)
 
 **파일 위치**: `src/domain/core/announcement/`
 
@@ -408,7 +379,40 @@ interface AnnouncementEntity extends BaseEntity {
 
 ## Sub Domain (부가 기능)
 
-### 1. LumirStory (루미르 스토리)
+### 1. MainPopup (메인 팝업)
+
+**파일 위치**: `src/domain/sub/main-popup/`
+
+```typescript
+interface MainPopupEntity extends BaseEntity {
+  status: ContentStatus;
+  isPublic: boolean;
+  releasedAt?: Date; // Date 타입으로 수정
+  order: number; // 정렬 순서
+  // categories는 CategoryMapping 중간 테이블로 관리
+  // attachments는 Attachment 테이블로 관리 (entityType = 'main_popup')
+  // translations는 MainPopupTranslation 테이블로 관리
+}
+
+// 언어별 번역
+interface MainPopupTranslationEntity extends BaseEntity {
+  mainPopupId: string; // MainPopup 엔티티 참조
+  languageId: string; // Language 엔티티 참조
+  title: string;
+  description: string; // 설명
+  imageUrl?: string; // AWS S3 URL (팝업 이미지, 언어별)
+}
+```
+
+**구현 파일**:
+
+- `main-popup.entity.ts` - TypeORM Entity
+- `main-popup-translation.entity.ts` - TypeORM Translation Entity
+- `main-popup.types.ts` - DTO 타입 정의
+- `main-popup.service.ts` - Domain Service
+- `main-popup.module.ts` - NestJS Module
+
+### 2. LumirStory (루미르 스토리)
 
 **파일 위치**: `src/domain/sub/lumir-story/`
 
@@ -421,6 +425,7 @@ interface LumirStoryEntity extends BaseEntity {
   status: LumirStoryStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
+  // attachments는 Attachment 테이블로 관리 (entityType = 'lumir_story')
 }
 ```
 
@@ -431,7 +436,7 @@ interface LumirStoryEntity extends BaseEntity {
 - `lumir-story.service.ts` - Domain Service
 - `lumir-story.module.ts` - NestJS Module
 
-### 2. VideoGallery (비디오 갤러리)
+### 3. VideoGallery (비디오 갤러리)
 
 **파일 위치**: `src/domain/sub/video-gallery/`
 
@@ -439,11 +444,11 @@ interface LumirStoryEntity extends BaseEntity {
 interface VideoGalleryEntity extends BaseEntity {
   title: string;
   description: string;
-  videoUrl: string; // AWS S3 URL 또는 외부 비디오 URL
   isPublic: boolean;
   status: VideoGalleryStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
+  // attachments는 Attachment 테이블로 관리 (entityType = 'video_gallery')
 }
 ```
 
@@ -454,7 +459,7 @@ interface VideoGalleryEntity extends BaseEntity {
 - `video-gallery.service.ts` - Domain Service
 - `video-gallery.module.ts` - NestJS Module
 
-### 3. Survey (설문조사)
+### 4. Survey (설문조사)
 
 **파일 위치**: `src/domain/sub/survey/`
 
@@ -531,7 +536,7 @@ interface SurveyEntity extends BaseEntity {
 - `survey.entity.ts`
 - `survey.types.ts`
 
-### 4. EducationManagement (교육 관리)
+### 5. EducationManagement (교육 관리)
 
 **파일 위치**: `src/domain/sub/education-management/`
 
@@ -562,6 +567,7 @@ interface EducationManagementEntity extends BaseEntity {
   managerId: string; // 담당자 ID (외부 시스템 직원 ID - SSO, uuid)
   deadline: Date; // Date 타입
   order: number; // 정렬 순서
+  // categories는 CategoryMapping 중간 테이블로 관리
   // attachments는 Attachment 테이블로 관리 (entityType = 'education_management')
 }
 ````
@@ -573,7 +579,7 @@ interface EducationManagementEntity extends BaseEntity {
 - `education-management.entity.ts`
 - `education-management.types.ts`
 
-### 5. WikiFileSystem (위키 파일 시스템)
+### 6. WikiFileSystem (위키 파일 시스템)
 
 **파일 위치**: `src/domain/sub/wiki-file-system/`
 
@@ -609,7 +615,7 @@ interface WikiFileSystemEntity extends BaseEntity {
 - `wiki-file-system.service.ts` - Domain Service
 - `wiki-file-system.module.ts` - NestJS Module
 
-### 6. PageView (페이지 조회 통계)
+### 7. PageView (페이지 조회 통계)
 
 **파일 위치**: `src/domain/sub/page-view/`
 

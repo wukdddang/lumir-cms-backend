@@ -4,7 +4,10 @@
 
 ```mermaid
 erDiagram
-    %% 공통 엔티티 - Language (최상단 배치)
+    %% ==========================================
+    %% 공통 엔티티 (Common Entities)
+    %% ==========================================
+    
     Language {
         uuid id PK "description"
         varchar code "ko|en|ja|zh"
@@ -18,7 +21,6 @@ erDiagram
         int version
     }
 
-    %% 공통 엔티티 - Attachment (최상단 배치)
     Attachment {
         uuid id PK "description"
         varchar entityType "main_popup|shareholders_meeting|announcement|education_management|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
@@ -26,7 +28,7 @@ erDiagram
         varchar fileName "원본 파일명"
         bigint fileSize "파일 크기(bytes)"
         varchar mimeType "MIME 타입"
-        varchar url "AWS S3 URL"
+        text url "AWS S3 URL"
         int order "순서"
         timestamp createdAt
         timestamp updatedAt
@@ -36,10 +38,9 @@ erDiagram
         int version
     }
 
-    %% 카테고리 엔티티 (통합)
     Category {
         uuid id PK "description"
-        varchar entityType "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        varchar entityType "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey|education_management"
         varchar name
         text description "설명"
         boolean isActive
@@ -52,7 +53,6 @@ erDiagram
         int version
     }
 
-    %% 카테고리 매핑 중간 테이블
     CategoryMapping {
         uuid id PK "description"
         varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
@@ -66,36 +66,12 @@ erDiagram
         int version
     }
 
-    %% Core Domain
-    MainPopup {
-        uuid id PK "description"
-        varchar status "draft|approved|under_review|rejected|opened"
-        boolean isPublic
-        timestamp releasedAt "nullable"
-        int order
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt "nullable"
-        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
-        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
-        int version
-    }
-
-    MainPopupTranslation {
-        uuid id PK "description"
-        uuid mainPopupId UK "FK - 유니크 제약조건: (mainPopupId, languageId)"
-        uuid languageId UK "FK"
-        varchar title
-        text description "설명"
-        varchar imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt "nullable"
-        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
-        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
-        int version
-    }
-
+    %% ==========================================
+    %% Core Domain (핵심 비즈니스 로직)
+    %% - ShareholdersMeeting, ElectronicDisclosure, IR
+    %% - Brochure, News, Announcement
+    %% ==========================================
+    
     ShareholdersMeeting {
         uuid id PK "description"
         boolean isPublic
@@ -151,6 +127,7 @@ erDiagram
         text content "상세 내용"
         text resultText "의결 결과 텍스트"
         text summary "요약"
+        text imageUrl "nullable - AWS S3 URL (주주총회 이미지, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -205,7 +182,7 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        varchar fileUrl "nullable - AWS S3 URL (IR 자료 파일, 언어별)"
+        text fileUrl "nullable - AWS S3 URL (IR 자료 파일, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -233,7 +210,7 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        varchar fileUrl "nullable - AWS S3 URL (브로슈어 파일, 언어별)"
+        text fileUrl "nullable - AWS S3 URL (브로슈어 파일, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -246,7 +223,7 @@ erDiagram
         uuid id PK "description"
         varchar title
         text description "설명"
-        varchar url "외부 링크 또는 상세 페이지 URL"
+        text url "외부 링크 또는 상세 페이지 URL"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
         int order
@@ -296,12 +273,46 @@ erDiagram
         int version
     }
 
-    %% Sub Domain
+    %% ==========================================
+    %% Sub Domain (부가 지원 기능)
+    %% - MainPopup, LumirStory, VideoGallery, Survey
+    %% - EducationManagement, WikiFileSystem, PageView
+    %% ==========================================
+    
+    MainPopup {
+        uuid id PK "description"
+        varchar status "draft|approved|under_review|rejected|opened"
+        boolean isPublic
+        timestamp releasedAt "nullable"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
+    MainPopupTranslation {
+        uuid id PK "description"
+        uuid mainPopupId UK "FK - 유니크 제약조건: (mainPopupId, languageId)"
+        uuid languageId UK "FK"
+        varchar title
+        text description "설명"
+        text imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
     LumirStory {
         uuid id PK "description"
         varchar title
         text content
-        varchar imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
+        text imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
         int order
@@ -317,7 +328,6 @@ erDiagram
         uuid id PK "description"
         varchar title
         text description
-        varchar videoUrl "AWS S3 URL 또는 외부 비디오 URL"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
         int order
@@ -412,7 +422,7 @@ erDiagram
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable, self-reference"
-        varchar fileUrl "nullable - AWS S3 URL"
+        text fileUrl "nullable - AWS S3 URL"
         bigint fileSize "nullable - 파일 크기(bytes)"
         varchar mimeType "nullable - MIME 타입"
         boolean isPublic
@@ -430,9 +440,9 @@ erDiagram
         uuid id PK "description"
         uuid employeeId "nullable - 외부 시스템 직원 ID (SSO)"
         varchar sessionId "세션 ID"
-        varchar pageUrl "방문한 페이지 URL"
+        text pageUrl "방문한 페이지 URL"
         varchar pageTitle "nullable - 페이지 제목"
-        varchar referrerUrl "nullable - 이전 페이지 URL"
+        text referrerUrl "nullable - 이전 페이지 URL"
         varchar entityType "nullable - main_popup|shareholders_meeting|announcement|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey|education_management|wiki_file_system"
         uuid entityId "nullable - 엔티티 ID"
         timestamp viewedAt "방문 시각"
@@ -450,14 +460,12 @@ erDiagram
         int version
     }
 
-    %% Relationships (Many-to-Many via CategoryMapping)
-    MainPopup ||--o{ CategoryMapping : "has"
-    CategoryMapping }o--|| Category : "references"
-    MainPopup ||--o{ MainPopupTranslation : "has translations"
-    MainPopupTranslation }o--|| Language : "in language"
-    MainPopup ||--o{ Attachment : "has attachments"
+    %% ==========================================
+    %% Relationships - Core Domain
+    %% ==========================================
     
     ShareholdersMeeting ||--o{ CategoryMapping : "has"
+    CategoryMapping }o--|| Category : "references"
     ShareholdersMeeting ||--o{ VoteResult : "has vote results"
     VoteResult ||--o{ VoteResultTranslation : "has translations"
     VoteResultTranslation }o--|| Language : "in language"
@@ -472,26 +480,40 @@ erDiagram
     IR ||--o{ CategoryMapping : "has"
     IR ||--o{ IRTranslation : "has translations"
     IRTranslation }o--|| Language : "in language"
+    IR ||--o{ Attachment : "has attachments"
     
     Brochure ||--o{ CategoryMapping : "has"
     Brochure ||--o{ BrochureTranslation : "has translations"
     BrochureTranslation }o--|| Language : "in language"
     
     News ||--o{ CategoryMapping : "has"
+    News ||--o{ Attachment : "has attachments"
     
     Announcement ||--o{ CategoryMapping : "has"
     Announcement ||--o{ AnnouncementEmployee : "has many"
     Announcement ||--o{ Attachment : "has attachments"
     
+    %% ==========================================
+    %% Relationships - Sub Domain
+    %% ==========================================
+    
+    MainPopup ||--o{ CategoryMapping : "has"
+    MainPopup ||--o{ MainPopupTranslation : "has translations"
+    MainPopupTranslation }o--|| Language : "in language"
+    MainPopup ||--o{ Attachment : "has attachments"
+    
     LumirStory ||--o{ CategoryMapping : "has"
+    LumirStory ||--o{ Attachment : "has attachments"
     
     VideoGallery ||--o{ CategoryMapping : "has"
+    VideoGallery ||--o{ Attachment : "has attachments"
     
     Survey ||--o{ CategoryMapping : "has"
     Survey ||--o{ SurveyQuestion : "has many"
     
     SurveyQuestion ||--o{ SurveyResponse : "has many"
     
+    EducationManagement ||--o{ CategoryMapping : "has"
     EducationManagement ||--o{ Attendee : "has many"
     EducationManagement ||--o{ Attachment : "has attachments"
     
@@ -517,7 +539,7 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "설명"
-        varchar imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
+        text imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
     }
     
     CategoryMapping {
@@ -550,7 +572,7 @@ erDiagram
         varchar fileName
         bigint fileSize
         varchar mimeType
-        varchar url
+        text url
         int order
     }
     
@@ -601,6 +623,7 @@ erDiagram
         text content "상세 내용"
         text resultText "의결 결과 텍스트"
         text summary "요약"
+        text imageUrl "nullable - AWS S3 URL (주주총회 이미지, 언어별)"
     }
     
     CategoryMapping {
@@ -633,7 +656,7 @@ erDiagram
         varchar fileName
         bigint fileSize
         varchar mimeType
-        varchar url
+        text url
         int order
     }
     
@@ -699,7 +722,7 @@ erDiagram
         varchar fileName
         bigint fileSize
         varchar mimeType
-        varchar url
+        text url
         int order
     }
     
@@ -787,6 +810,22 @@ erDiagram
         timestamp completedAt "nullable"
     }
     
+    CategoryMapping {
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey|education_management"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
+    }
+    
+    Category {
+        uuid id PK "description"
+        varchar entityType "education_management"
+        varchar name
+        text description "설명"
+        boolean isActive
+        int order
+    }
+    
     Attachment {
         uuid id PK "description"
         varchar entityType "education_management"
@@ -794,10 +833,12 @@ erDiagram
         varchar fileName
         bigint fileSize
         varchar mimeType
-        varchar url
+        text url
         int order
     }
     
+    EducationManagement ||--o{ CategoryMapping : "has"
+    CategoryMapping }o--|| Category : "references"
     EducationManagement ||--o{ Attendee : "has many"
     EducationManagement ||--o{ Attachment : "has attachments"
 ```
@@ -810,7 +851,7 @@ erDiagram
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable"
-        varchar fileUrl "nullable - AWS S3 URL"
+        text fileUrl "nullable - AWS S3 URL"
         bigint fileSize "nullable - bytes"
         varchar mimeType "nullable"
         boolean isPublic
@@ -832,9 +873,9 @@ erDiagram
         uuid id PK "description"
         uuid employeeId "nullable - 외부 시스템 직원 ID (SSO)"
         varchar sessionId "세션 ID"
-        varchar pageUrl "방문한 페이지 URL"
+        text pageUrl "방문한 페이지 URL"
         varchar pageTitle "nullable - 페이지 제목"
-        varchar referrerUrl "nullable - 이전 페이지 URL"
+        text referrerUrl "nullable - 이전 페이지 URL"
         varchar entityType "nullable - main_popup|shareholders_meeting|announcement|..."
         uuid entityId "nullable - 엔티티 ID"
         timestamp viewedAt "방문 시각"
@@ -973,6 +1014,7 @@ CREATE INDEX idx_pageview_session_viewed ON page_view(session_id, viewed_at DESC
 - `video_gallery` - 비디오 갤러리
 - `news` - 뉴스
 - `survey` - 설문조사
+- `education_management` - 교육 관리
 
 ### ContentStatus
 - `draft` - 초안
@@ -1062,6 +1104,7 @@ CREATE INDEX idx_pageview_session_viewed ON page_view(session_id, viewed_at DESC
 - LumirStory
 - VideoGallery
 - Survey
+- EducationManagement
 
 ### 독립 테이블로 분리된 구조
 다음 엔티티들은 JSONB에서 독립 테이블로 분리되었습니다:
@@ -1155,7 +1198,7 @@ CREATE INDEX idx_pageview_session_viewed ON page_view(session_id, viewed_at DESC
 
 **번역 테이블이 있는 엔티티들**:
 - **MainPopup** ↔ `MainPopupTranslation` (title, description, imageUrl)
-- **ShareholdersMeeting** ↔ `ShareholdersMeetingTranslation` (title, description, content, resultText, summary)
+- **ShareholdersMeeting** ↔ `ShareholdersMeetingTranslation` (title, description, content, resultText, summary, imageUrl)
 - **VoteResult** ↔ `VoteResultTranslation` (title)
 - **ElectronicDisclosure** ↔ `ElectronicDisclosureTranslation` (title, description)
 - **IR** ↔ `IRTranslation` (title, description, fileUrl)
