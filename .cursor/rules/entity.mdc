@@ -200,7 +200,7 @@ interface MainPopupTranslationEntity extends BaseEntity {
   mainPopupId: string; // MainPopup 엔티티 참조
   languageId: string; // Language 엔티티 참조
   title: string;
-  content: string; // 상세 내용
+  description: string; // 설명
 }
 ```
 
@@ -336,7 +336,6 @@ interface BrochureTranslationEntity extends BaseEntity {
   languageId: string; // Language 엔티티 참조
   title: string;
   description: string; // 간단한 설명
-  content: string; // 상세 내용
 }
 ```
 
@@ -372,12 +371,13 @@ interface NewsEntity extends BaseEntity {
 // 생성 시점: 공지사항 생성 시 permissionEmployeeIds에 해당하는 모든 직원 레코드 자동 생성
 interface AnnouncementEmployeeEntity extends BaseEntity {
   announcementId: string; // Announcement 엔티티 참조
-  employeeId: string; // 외부 시스템 직원 ID
+  employeeId: string; // 외부 시스템 직원 ID (uuid)
   isRead: boolean;
   isSubmitted: boolean;
   submittedAt?: Date; // Date 타입
   readAt?: Date; // Date 타입
   responseMessage?: string;
+  // 유니크 제약조건: (announcementId, employeeId) - 같은 직원이 같은 공지사항에 중복 레코드 불가
 }
 
 ````typescript
@@ -503,10 +503,11 @@ interface SurveyQuestionEntity extends BaseEntity {
 interface SurveyResponseEntity extends BaseEntity {
   surveyId: string; // Survey 엔티티 참조 (설문 완료 추적용)
   questionId: string; // SurveyQuestion 엔티티 참조
-  employeeId: string; // 외부 시스템 직원 ID
+  employeeId: string; // 외부 시스템 직원 ID (uuid)
   response: InqueryResponseData; // JSONB - 응답 데이터
-  submittedAt: Date;
+  submittedAt: Date; // 응답 제출 시각 (모든 질문 응답 완료 시 surveyId와 employeeId로 완료 여부 판단)
   // 유니크 제약조건: (questionId, employeeId) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능
+  // 설문 완료 여부: SELECT COUNT(*) FROM survey_response WHERE survey_id = ? AND employee_id = ? 와 survey_question 개수 비교
 }
 
 interface SurveyEntity extends BaseEntity {
@@ -547,10 +548,11 @@ enum AttendeeStatus {
 // 수강 직원
 interface AttendeeEntity extends BaseEntity {
   educationManagementId: string; // EducationManagement 엔티티 참조
-  employeeId: string; // 외부 시스템 직원 ID
+  employeeId: string; // 외부 시스템 직원 ID (uuid)
   status: AttendeeStatus;
   completedAt?: Date; // Date 타입
   // deadline은 EducationManagement.deadline을 사용
+  // 유니크 제약조건: (educationManagementId, employeeId) - 같은 직원이 같은 교육에 중복 등록 불가
 }
 
 ```typescript
@@ -558,7 +560,7 @@ interface EducationManagementEntity extends BaseEntity {
   title: string;
   content: string;
   isPublic: boolean;
-  managerId: string; // 담당자 ID (외부 시스템 직원 ID - SSO)
+  managerId: string; // 담당자 ID (외부 시스템 직원 ID - SSO, uuid)
   deadline: Date; // Date 타입
   order: number; // 정렬 순서
   // attachments는 Attachment 테이블로 관리 (entityType = 'education_management')

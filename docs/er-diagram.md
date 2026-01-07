@@ -84,10 +84,10 @@ erDiagram
 
     MainPopupTranslation {
         uuid id PK "description"
-        uuid mainPopupId FK
-        uuid languageId FK
+        uuid mainPopupId UK "FK - 유니크 제약조건: (mainPopupId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text content "상세 내용"
+        text description "설명"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -131,8 +131,8 @@ erDiagram
 
     VoteResultTranslation {
         uuid id PK "description"
-        uuid voteResultId FK
-        uuid languageId FK
+        uuid voteResultId UK "FK - 유니크 제약조건: (voteResultId, languageId)"
+        uuid languageId UK "FK"
         varchar title "안건 제목"
         timestamp createdAt
         timestamp updatedAt
@@ -144,8 +144,8 @@ erDiagram
 
     ShareholdersMeetingTranslation {
         uuid id PK "description"
-        uuid shareholdersMeetingId FK
-        uuid languageId FK
+        uuid shareholdersMeetingId UK "FK - 유니크 제약조건: (shareholdersMeetingId, languageId)"
+        uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
         text content "상세 내용"
@@ -174,8 +174,8 @@ erDiagram
 
     ElectronicDisclosureTranslation {
         uuid id PK "description"
-        uuid electronicDisclosureId FK
-        uuid languageId FK
+        uuid electronicDisclosureId UK "FK - 유니크 제약조건: (electronicDisclosureId, languageId)"
+        uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
         timestamp createdAt
@@ -202,8 +202,8 @@ erDiagram
 
     IRTranslation {
         uuid id PK "description"
-        uuid irId FK
-        uuid languageId FK
+        uuid irId UK "FK - 유니크 제약조건: (irId, languageId)"
+        uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
         text content "상세 내용"
@@ -231,11 +231,10 @@ erDiagram
 
     BrochureTranslation {
         uuid id PK "description"
-        uuid brochureId FK
-        uuid languageId FK
+        uuid brochureId UK "FK - 유니크 제약조건: (brochureId, languageId)"
+        uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        text content "상세 내용"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -283,8 +282,8 @@ erDiagram
 
     AnnouncementEmployee {
         uuid id PK "description"
-        uuid announcementId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 공지사항에 중복 레코드 불가"
         boolean isRead
         boolean isSubmitted
         timestamp submittedAt "nullable"
@@ -368,7 +367,7 @@ erDiagram
         uuid id PK "description"
         uuid surveyId FK "설문 완료 추적용"
         uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
-        varchar employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
         jsonb response "InqueryResponseData"
         timestamp submittedAt
         timestamp createdAt
@@ -384,7 +383,7 @@ erDiagram
         varchar title
         text content
         boolean isPublic
-        varchar managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
+        uuid managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
         date deadline
         int order
         timestamp createdAt
@@ -397,8 +396,8 @@ erDiagram
 
     Attendee {
         uuid id PK "description"
-        uuid educationManagementId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid educationManagementId UK "FK - 유니크 제약조건: (educationManagementId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 교육에 중복 등록 불가"
         varchar status "pending|in_progress|completed|overdue"
         timestamp completedAt "nullable"
         timestamp createdAt
@@ -430,7 +429,7 @@ erDiagram
 
     PageView {
         uuid id PK "description"
-        varchar employeeId "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid employeeId "nullable - 외부 시스템 직원 ID (SSO)"
         varchar sessionId "세션 ID"
         varchar pageUrl "방문한 페이지 URL"
         varchar pageTitle "nullable - 페이지 제목"
@@ -516,10 +515,10 @@ erDiagram
     
     MainPopupTranslation {
         uuid id PK "description"
-        uuid mainPopupId FK
-        uuid languageId FK
+        uuid mainPopupId UK "FK - 유니크 제약조건: (mainPopupId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text content "상세 내용"
+        text description "설명"
     }
     
     CategoryMapping {
@@ -589,15 +588,15 @@ erDiagram
     
     VoteResultTranslation {
         uuid id PK "description"
-        uuid voteResultId FK
-        uuid languageId FK
+        uuid voteResultId UK "FK - 유니크 제약조건: (voteResultId, languageId)"
+        uuid languageId UK "FK"
         varchar title "안건 제목"
     }
     
     ShareholdersMeetingTranslation {
         uuid id PK "description"
-        uuid shareholdersMeetingId FK
-        uuid languageId FK
+        uuid shareholdersMeetingId UK "FK - 유니크 제약조건: (shareholdersMeetingId, languageId)"
+        uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
         text content "상세 내용"
@@ -669,8 +668,8 @@ erDiagram
     
     AnnouncementEmployee {
         uuid id PK "description"
-        uuid announcementId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 공지사항에 중복 레코드 불가"
         boolean isRead
         boolean isSubmitted
         timestamp submittedAt "nullable"
@@ -741,7 +740,7 @@ erDiagram
         uuid id PK "description"
         uuid surveyId FK "설문 완료 추적용"
         uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
-        varchar employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
         jsonb response "InqueryResponseData"
         timestamp submittedAt
     }
@@ -776,15 +775,15 @@ erDiagram
         varchar title
         text content
         boolean isPublic
-        varchar managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
+        uuid managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
         date deadline
         int order
     }
     
     Attendee {
         uuid id PK "description"
-        uuid educationManagementId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid educationManagementId UK "FK - 유니크 제약조건: (educationManagementId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 교육에 중복 등록 불가"
         varchar status "pending|in_progress|completed|overdue"
         timestamp completedAt "nullable"
     }
@@ -832,7 +831,7 @@ erDiagram
 erDiagram
     PageView {
         uuid id PK "description"
-        varchar employeeId "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid employeeId "nullable - 외부 시스템 직원 ID (SSO)"
         varchar sessionId "세션 ID"
         varchar pageUrl "방문한 페이지 URL"
         varchar pageTitle "nullable - 페이지 제목"
@@ -884,12 +883,24 @@ GROUP BY entity_type;
 
 **인덱스 권장사항**:
 ```sql
-CREATE INDEX idx_pageview_viewed_at ON page_view(viewed_at);
-CREATE INDEX idx_pageview_employee_id ON page_view(employee_id);
+-- 성능 최적화를 위한 인덱스
+CREATE INDEX idx_pageview_viewed_at ON page_view(viewed_at DESC);
+CREATE INDEX idx_pageview_employee_id ON page_view(employee_id) WHERE employee_id IS NOT NULL;
 CREATE INDEX idx_pageview_session_id ON page_view(session_id);
-CREATE INDEX idx_pageview_entity ON page_view(entity_type, entity_id);
+CREATE INDEX idx_pageview_entity ON page_view(entity_type, entity_id) WHERE entity_type IS NOT NULL;
 CREATE INDEX idx_pageview_page_url ON page_view(page_url);
+CREATE INDEX idx_pageview_employee_viewed ON page_view(employee_id, viewed_at DESC) WHERE employee_id IS NOT NULL;
+CREATE INDEX idx_pageview_session_viewed ON page_view(session_id, viewed_at DESC);
 ```
+
+**인덱스 설명**:
+- `idx_pageview_viewed_at`: 시간대별 조회 (최신순 정렬 최적화)
+- `idx_pageview_employee_id`: 로그인 사용자 필터링 (부분 인덱스)
+- `idx_pageview_session_id`: 세션별 추적
+- `idx_pageview_entity`: 특정 엔티티의 조회수 집계 (부분 인덱스)
+- `idx_pageview_page_url`: URL별 통계
+- `idx_pageview_employee_viewed`: 직원별 방문 기록 조회 (복합 인덱스)
+- `idx_pageview_session_viewed`: 세션별 방문 기록 조회 (복합 인덱스)
 
 ## JSONB 필드 구조
 
@@ -1144,12 +1155,12 @@ CREATE INDEX idx_pageview_page_url ON page_view(page_url);
 - 하나의 엔티티는 여러 언어로 번역될 수 있음 (1:N 관계)
 
 **번역 테이블이 있는 엔티티들**:
-- **MainPopup** ↔ `MainPopupTranslation` (title, content)
+- **MainPopup** ↔ `MainPopupTranslation` (title, description)
 - **ShareholdersMeeting** ↔ `ShareholdersMeetingTranslation` (title, description, content, resultText, summary)
 - **VoteResult** ↔ `VoteResultTranslation` (title)
 - **ElectronicDisclosure** ↔ `ElectronicDisclosureTranslation` (title, description)
 - **IR** ↔ `IRTranslation` (title, description, content)
-- **Brochure** ↔ `BrochureTranslation` (title, description, content)
+- **Brochure** ↔ `BrochureTranslation` (title, description)
 
 **단일 언어 엔티티들** (번역 테이블 없음):
 - **Announcement**: 내부 공지사항으로 단일 언어만 사용
