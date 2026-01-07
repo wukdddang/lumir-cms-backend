@@ -6,7 +6,7 @@
 erDiagram
     %% 공통 엔티티 - Language (최상단 배치)
     Language {
-        uuid id PK
+        uuid id PK "description"
         varchar code "ko|en|ja|zh"
         varchar name "예: 한국어, English"
         boolean isActive
@@ -20,8 +20,8 @@ erDiagram
 
     %% 공통 엔티티 - Attachment (최상단 배치)
     Attachment {
-        uuid id PK
-        varchar entityType "main_popup|shareholders_meeting|announcement|education_management"
+        uuid id PK "description"
+        varchar entityType "main_popup|shareholders_meeting|announcement|education_management|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
         uuid entityId "참조할 엔티티 ID"
         varchar fileName "원본 파일명"
         bigint fileSize "파일 크기(bytes)"
@@ -38,10 +38,10 @@ erDiagram
 
     %% 카테고리 엔티티 (통합)
     Category {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
         timestamp createdAt
@@ -54,9 +54,10 @@ erDiagram
 
     %% 카테고리 매핑 중간 테이블
     CategoryMapping {
-        uuid id PK
-        uuid entityId "엔티티 ID"
-        uuid categoryId FK
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -67,10 +68,11 @@ erDiagram
 
     %% Core Domain
     MainPopup {
-        uuid id PK
+        uuid id PK "description"
         varchar status "draft|approved|under_review|rejected|opened"
         boolean isPublic
         timestamp releasedAt "nullable"
+        varchar imageUrl "nullable - AWS S3 URL (팝업 이미지)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -81,10 +83,11 @@ erDiagram
     }
 
     MainPopupTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid mainPopupId FK
         uuid languageId FK
         varchar title
+        text content "상세 내용"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -94,7 +97,7 @@ erDiagram
     }
 
     ShareholdersMeeting {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar location
         date meetingDate
@@ -109,7 +112,7 @@ erDiagram
     }
 
     VoteResult {
-        uuid id PK
+        uuid id PK "description"
         uuid shareholdersMeetingId FK
         int agendaNumber "안건 번호"
         int totalVote
@@ -127,7 +130,7 @@ erDiagram
     }
 
     VoteResultTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid voteResultId FK
         uuid languageId FK
         varchar title "안건 제목"
@@ -140,7 +143,7 @@ erDiagram
     }
 
     ShareholdersMeetingTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid shareholdersMeetingId FK
         uuid languageId FK
         varchar title
@@ -157,7 +160,7 @@ erDiagram
     }
 
     ElectronicDisclosure {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
         int order
@@ -170,12 +173,11 @@ erDiagram
     }
 
     ElectronicDisclosureTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid electronicDisclosureId FK
         uuid languageId FK
         varchar title
         text description "간단한 설명"
-        text content "상세 내용"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -185,9 +187,10 @@ erDiagram
     }
 
     IR {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        varchar fileUrl "nullable - AWS S3 URL (IR 자료 파일)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -198,7 +201,7 @@ erDiagram
     }
 
     IRTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid irId FK
         uuid languageId FK
         varchar title
@@ -213,9 +216,10 @@ erDiagram
     }
 
     Brochure {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        varchar fileUrl "nullable - AWS S3 URL (브로슈어 파일)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -226,7 +230,7 @@ erDiagram
     }
 
     BrochureTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid brochureId FK
         uuid languageId FK
         varchar title
@@ -241,7 +245,7 @@ erDiagram
     }
 
     News {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         varchar url "외부 링크 또는 상세 페이지 URL"
@@ -257,7 +261,7 @@ erDiagram
     }
 
     Announcement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         boolean isFixed
@@ -277,7 +281,7 @@ erDiagram
     }
 
     AnnouncementEmployee {
-        uuid id PK
+        uuid id PK "description"
         uuid announcementId FK
         varchar employeeId "외부 시스템 직원 ID (SSO)"
         boolean isRead
@@ -295,7 +299,7 @@ erDiagram
 
     %% Sub Domain
     LumirStory {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         varchar imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
@@ -311,7 +315,7 @@ erDiagram
     }
 
     VideoGallery {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text description
         varchar videoUrl "AWS S3 URL 또는 외부 비디오 URL"
@@ -327,7 +331,7 @@ erDiagram
     }
 
     Survey {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text description
         varchar status "draft|approved|under_review|rejected|opened"
@@ -344,7 +348,7 @@ erDiagram
     }
 
     SurveyQuestion {
-        uuid id PK
+        uuid id PK "description"
         uuid surveyId FK
         varchar title
         varchar type "short_answer|paragraph|multiple_choice|dropdown|checkboxes|file_upload|datetime|linear_scale|grid_scale"
@@ -360,9 +364,10 @@ erDiagram
     }
 
     SurveyResponse {
-        uuid id PK
-        uuid questionId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid id PK "description"
+        uuid surveyId FK "설문 완료 추적용"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        varchar employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
         jsonb response "InqueryResponseData"
         timestamp submittedAt
         timestamp createdAt
@@ -374,7 +379,7 @@ erDiagram
     }
 
     EducationManagement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         boolean isPublic
@@ -389,12 +394,11 @@ erDiagram
     }
 
     Attendee {
-        uuid id PK
+        uuid id PK "description"
         uuid educationManagementId FK
         varchar employeeId "외부 시스템 직원 ID (SSO)"
         varchar status "pending|in_progress|completed|overdue"
         timestamp completedAt "nullable"
-        date deadline
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -404,7 +408,7 @@ erDiagram
     }
 
     WikiFileSystem {
-        uuid id PK
+        uuid id PK "description"
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable, self-reference"
@@ -476,44 +480,47 @@ erDiagram
 ```mermaid
 erDiagram
     MainPopup {
-        uuid id PK
+        uuid id PK "description"
         varchar status "draft|approved|under_review|rejected|opened"
         boolean isPublic
         timestamp releasedAt "nullable"
+        varchar imageUrl "nullable - AWS S3 URL (팝업 이미지)"
         int order
     }
     
     MainPopupTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid mainPopupId FK
         uuid languageId FK
         varchar title
+        text content "상세 내용"
     }
     
     CategoryMapping {
-        uuid id PK
-        uuid entityId
-        uuid categoryId FK
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
     }
     
     Category {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "main_popup"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
     }
     
     Language {
-        uuid id PK
+        uuid id PK "description"
         varchar code "ko|en|ja|zh"
         varchar name
         boolean isActive
     }
     
     Attachment {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "main_popup"
         uuid entityId
         varchar fileName
@@ -534,7 +541,7 @@ erDiagram
 ```mermaid
 erDiagram
     ShareholdersMeeting {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar location
         date meetingDate
@@ -543,7 +550,7 @@ erDiagram
     }
     
     VoteResult {
-        uuid id PK
+        uuid id PK "description"
         uuid shareholdersMeetingId FK
         int agendaNumber "안건 번호"
         int totalVote
@@ -555,14 +562,14 @@ erDiagram
     }
     
     VoteResultTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid voteResultId FK
         uuid languageId FK
         varchar title "안건 제목"
     }
     
     ShareholdersMeetingTranslation {
-        uuid id PK
+        uuid id PK "description"
         uuid shareholdersMeetingId FK
         uuid languageId FK
         varchar title
@@ -573,29 +580,30 @@ erDiagram
     }
     
     CategoryMapping {
-        uuid id PK
-        uuid entityId
-        uuid categoryId FK
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
     }
     
     Category {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "shareholders_meeting"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
     }
     
     Language {
-        uuid id PK
+        uuid id PK "description"
         varchar code "ko|en|ja|zh"
         varchar name
         boolean isActive
     }
     
     Attachment {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "shareholders_meeting"
         uuid entityId
         varchar fileName
@@ -619,7 +627,7 @@ erDiagram
 ```mermaid
 erDiagram
     Announcement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         boolean isFixed
@@ -633,7 +641,7 @@ erDiagram
     }
     
     AnnouncementEmployee {
-        uuid id PK
+        uuid id PK "description"
         uuid announcementId FK
         varchar employeeId "외부 시스템 직원 ID (SSO)"
         boolean isRead
@@ -644,22 +652,23 @@ erDiagram
     }
     
     CategoryMapping {
-        uuid id PK
-        uuid entityId
-        uuid categoryId FK
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
     }
     
     Category {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "announcement"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
     }
     
     Attachment {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "announcement"
         uuid entityId
         varchar fileName
@@ -681,7 +690,7 @@ erDiagram
 ```mermaid
 erDiagram
     Survey {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text description
         varchar status "draft|approved|under_review|rejected|opened"
@@ -692,7 +701,7 @@ erDiagram
     }
     
     SurveyQuestion {
-        uuid id PK
+        uuid id PK "description"
         uuid surveyId FK
         varchar title
         varchar type "short_answer|paragraph|multiple_choice|dropdown|checkboxes|file_upload|datetime|linear_scale|grid_scale"
@@ -702,24 +711,26 @@ erDiagram
     }
     
     SurveyResponse {
-        uuid id PK
-        uuid questionId FK
-        varchar employeeId "외부 시스템 직원 ID (SSO)"
+        uuid id PK "description"
+        uuid surveyId FK "설문 완료 추적용"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        varchar employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능"
         jsonb response "InqueryResponseData"
         timestamp submittedAt
     }
     
     CategoryMapping {
-        uuid id PK
-        uuid entityId
-        uuid categoryId FK
+        uuid id PK "description"
+        varchar entityType UK "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey"
+        uuid entityId UK "엔티티 ID"
+        uuid categoryId FK "유니크 제약조건: (entityType, entityId, categoryId)"
     }
     
     Category {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "survey"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
     }
@@ -734,7 +745,7 @@ erDiagram
 ```mermaid
 erDiagram
     EducationManagement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
         boolean isPublic
@@ -743,16 +754,15 @@ erDiagram
     }
     
     Attendee {
-        uuid id PK
+        uuid id PK "description"
         uuid educationManagementId FK
         varchar employeeId "외부 시스템 직원 ID (SSO)"
         varchar status "pending|in_progress|completed|overdue"
         timestamp completedAt "nullable"
-        date deadline
     }
     
     Attachment {
-        uuid id PK
+        uuid id PK "description"
         varchar entityType "education_management"
         uuid entityId
         varchar fileName
@@ -770,7 +780,7 @@ erDiagram
 ```mermaid
 erDiagram
     WikiFileSystem {
-        uuid id PK
+        uuid id PK "description"
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable"
@@ -895,6 +905,13 @@ erDiagram
 - `shareholders_meeting` - 주주총회
 - `announcement` - 공지사항
 - `education_management` - 교육 관리
+- `electronic_disclosure` - 전자공시
+- `ir` - IR
+- `brochure` - 브로슈어
+- `lumir_story` - 루미르 스토리
+- `video_gallery` - 비디오 갤러리
+- `news` - 뉴스
+- `survey` - 설문조사
 
 ## 외부 시스템 참조
 
@@ -930,9 +947,11 @@ erDiagram
 - **AnnouncementEmployee**: 공지사항 직원 응답 관리
   - 개별 직원의 읽음/제출 상태 추적
   - 공지사항과 1:N 관계
+  - **생성 시점**: 공지사항 생성 시 `permissionEmployeeIds`에 해당하는 모든 직원 레코드 자동 생성
 - **Attendee**: 교육 수강 직원 관리
   - 개별 직원의 수강 진행 상태 추적
   - 교육 관리와 1:N 관계
+  - 마감일은 `EducationManagement.deadline`을 사용 (개별 마감일 없음)
 - **VoteResult**: 주주총회 의결 결과 관리
   - 개별 안건의 의결 결과 추적
   - 주주총회와 1:N 관계
@@ -946,14 +965,18 @@ erDiagram
   - 설문과 1:N 관계
 - **SurveyResponse**: 설문 응답 관리
   - 개별 직원의 질문별 응답 추적
-  - 질문과 1:N 관계
+  - 설문과 질문 모두 참조 (`surveyId`, `questionId`)
+  - 설문 완료 여부 추적 가능 (같은 `surveyId`와 `employeeId`의 응답 개수로 판단)
+  - **유니크 제약조건**: `(questionId, employeeId)` - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능
 - **Attachment**: 첨부파일 메타데이터 관리
   - 파일명, 크기, MIME 타입 등의 메타데이터
   - 여러 엔티티와 다형성 관계 (Polymorphic Association)
 - **CategoryMapping**: 카테고리 매핑 중간 테이블
   - 엔티티와 카테고리 간의 다대다 관계를 정규화
-  - `entityId`, `categoryId`로 관계 관리
-  - `categoryId`를 통해 Category를 조회하면 entityType을 알 수 있음
+  - `entityType`, `entityId`, `categoryId`로 관계 관리
+  - `entityType`은 성능 최적화를 위한 비정규화 필드 (Category에도 존재하지만 JOIN 없이 필터링 가능)
+  - **유니크 제약조건**: `(entityType, entityId, categoryId)` - 같은 엔티티가 같은 카테고리를 중복으로 가질 수 없음
+  - 애플리케이션 레벨에서 `Category.entityType`과 일치 여부 확인 필요
 - **번역 테이블**: 다국어 지원 엔티티용 번역 테이블 (MainPopup, ShareholdersMeeting, VoteResult, ElectronicDisclosure, IR, Brochure)
   - 각 엔티티의 언어별 콘텐츠를 별도 테이블로 관리
   - `entityId`, `languageId`로 엔티티 및 언어 참조
@@ -987,14 +1010,17 @@ erDiagram
 엔티티와 카테고리는 **CategoryMapping 중간 테이블**을 통한 정규화된 다대다 관계입니다:
 - 하나의 엔티티는 여러 개의 카테고리에 속할 수 있습니다
 - 하나의 카테고리는 여러 개의 엔티티를 포함할 수 있습니다
-- `CategoryMapping` 테이블이 `entityId`, `categoryId`를 저장
-- `entityType`은 중복이므로 제거 (Category를 통해 알 수 있음)
+- `CategoryMapping` 테이블이 `entityType`, `entityId`, `categoryId`를 저장
+- `entityType`은 성능 최적화를 위한 비정규화 필드 (Category에도 존재하지만 JOIN 없이 필터링 가능)
+- **유니크 제약조건**: `(entityType, entityId, categoryId)` - 같은 엔티티가 같은 카테고리를 중복으로 가질 수 없음
 - **장점**: 
   - 데이터 정규화 및 무결성 보장
-  - 복잡한 쿼리 성능 향상
+  - 복잡한 쿼리 성능 향상 (JOIN 없이 entityType으로 필터링)
   - 카테고리별 엔티티 조회 용이
-  - Category JOIN 시 entityType 확인 가능
-- **복합 인덱스**: `(entityId)`, `(categoryId)`
+  - 복합 인덱스 활용 가능
+  - DB 레벨에서 중복 방지
+- **복합 인덱스**: `(entityType, entityId)`, `(categoryId)`
+- **무결성 체크**: 애플리케이션 레벨에서 `Category.entityType`과 `CategoryMapping.entityType` 일치 여부 확인 필요
 - 예: 하나의 공지사항이 "인사", "복지", "교육" 카테고리에 동시에 속할 수 있습니다
 
 ### 다국어 지원 (Translation Tables)
@@ -1007,10 +1033,10 @@ erDiagram
 - 하나의 엔티티는 여러 언어로 번역될 수 있음 (1:N 관계)
 
 **번역 테이블이 있는 엔티티들**:
-- **MainPopup** ↔ `MainPopupTranslation` (title)
+- **MainPopup** ↔ `MainPopupTranslation` (title, content)
 - **ShareholdersMeeting** ↔ `ShareholdersMeetingTranslation` (title, description, content, resultText, summary)
 - **VoteResult** ↔ `VoteResultTranslation` (title)
-- **ElectronicDisclosure** ↔ `ElectronicDisclosureTranslation` (title, description, content)
+- **ElectronicDisclosure** ↔ `ElectronicDisclosureTranslation` (title, description)
 - **IR** ↔ `IRTranslation` (title, description, content)
 - **Brochure** ↔ `BrochureTranslation` (title, description, content)
 
@@ -1081,10 +1107,10 @@ WHERE l.code = 'ko' AND mp.is_public = true;
 **주요 변경**: 
 - Category 통합 테이블로 변경 (10개 → 1개, entityType으로 도메인 구분)
 - CategoryMapping 중간 테이블 추가 (EntityCategory에서 이름 변경, 정규화된 다대다 관계)
-- CategoryMapping의 entityType 제거 (Category를 통해 알 수 있으므로 중복 제거)
+- CategoryMapping의 entityType 추가 (성능 최적화용 비정규화 필드, JOIN 없이 필터링 가능)
 - 다국어 지원: 언어별 번역 테이블 추가 (MainPopup, ShareholdersMeeting, VoteResult, ElectronicDisclosure, IR, Brochure)
 - VoteResult 다국어 지원 추가 (VoteResultTranslation)
-- ElectronicDisclosure, IR, Brochure Translation에 description, content 필드 추가
+- ElectronicDisclosure, IR, Brochure Translation에 description 필드 추가
 - 단일 언어 유지: Announcement, Survey, News, LumirStory, VideoGallery는 번역 테이블 없이 단일 언어만 지원
 - 모든 콘텐츠 엔티티 및 WikiFileSystem에 order 필드 추가 (정렬 기능)
 - JSONB → 독립 테이블 분리 (AnnouncementEmployee, Attendee, VoteResult, SurveyQuestion, SurveyResponse, Attachment, CategoryMapping)

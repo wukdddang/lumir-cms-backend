@@ -52,6 +52,13 @@ enum AttachmentEntityType {
   SHAREHOLDERS_MEETING = 'shareholders_meeting',
   ANNOUNCEMENT = 'announcement',
   EDUCATION_MANAGEMENT = 'education_management',
+  ELECTRONIC_DISCLOSURE = 'electronic_disclosure',
+  IR = 'ir',
+  BROCHURE = 'brochure',
+  LUMIR_STORY = 'lumir_story',
+  VIDEO_GALLERY = 'video_gallery',
+  NEWS = 'news',
+  SURVEY = 'survey',
 }
 
 interface AttachmentEntity extends BaseEntity {
@@ -112,8 +119,10 @@ interface CategoryEntity extends BaseEntity {
 
 ```typescript
 interface CategoryMappingEntity extends BaseEntity {
+  entityType: CategoryEntityType; // 어느 엔티티의 카테고리인지 (성능 최적화용)
   entityId: string; // 엔티티 ID
   categoryId: string; // Category 엔티티 참조
+  // 유니크 제약조건: (entityType, entityId, categoryId) - 같은 엔티티가 같은 카테고리를 중복으로 가질 수 없음
 }
 ```
 
@@ -179,6 +188,7 @@ interface MainPopupEntity extends BaseEntity {
   status: ContentStatus;
   isPublic: boolean;
   releasedAt?: Date; // Date 타입으로 수정
+  imageUrl?: string; // AWS S3 URL (팝업 이미지)
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
   // attachments는 Attachment 테이블로 관리 (entityType = 'main_popup')
@@ -190,6 +200,7 @@ interface MainPopupTranslationEntity extends BaseEntity {
   mainPopupId: string; // MainPopup 엔티티 참조
   languageId: string; // Language 엔티티 참조
   title: string;
+  content: string; // 상세 내용
 }
 ```
 
@@ -278,7 +289,6 @@ interface ElectronicDisclosureTranslationEntity extends BaseEntity {
   languageId: string; // Language 엔티티 참조
   title: string;
   description: string; // 간단한 설명
-  content: string; // 상세 내용
 }
 ```
 
@@ -290,6 +300,7 @@ interface ElectronicDisclosureTranslationEntity extends BaseEntity {
 interface IREntity extends BaseEntity {
   isPublic: boolean;
   status: IRStatus;
+  fileUrl?: string; // AWS S3 URL (IR 자료 파일)
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
   // translations는 IRTranslation 테이블로 관리
@@ -313,6 +324,7 @@ interface IRTranslationEntity extends BaseEntity {
 interface BrochureEntity extends BaseEntity {
   isPublic: boolean;
   status: BrochureStatus;
+  fileUrl?: string; // AWS S3 URL (브로슈어 파일)
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
   // translations는 BrochureTranslation 테이블로 관리
@@ -357,6 +369,7 @@ interface NewsEntity extends BaseEntity {
 
 `````typescript
 // 공지사항 받은 직원 정보
+// 생성 시점: 공지사항 생성 시 permissionEmployeeIds에 해당하는 모든 직원 레코드 자동 생성
 interface AnnouncementEmployeeEntity extends BaseEntity {
   announcementId: string; // Announcement 엔티티 참조
   employeeId: string; // 외부 시스템 직원 ID
@@ -487,10 +500,12 @@ interface SurveyQuestionEntity extends BaseEntity {
 
 // 설문 응답 (독립 테이블)
 interface SurveyResponseEntity extends BaseEntity {
+  surveyId: string; // Survey 엔티티 참조 (설문 완료 추적용)
   questionId: string; // SurveyQuestion 엔티티 참조
   employeeId: string; // 외부 시스템 직원 ID
   response: InqueryResponseData; // JSONB - 응답 데이터
   submittedAt: Date;
+  // 유니크 제약조건: (questionId, employeeId) - 같은 직원이 같은 질문에 중복 응답 불가, 수정 가능
 }
 
 interface SurveyEntity extends BaseEntity {
@@ -534,7 +549,7 @@ interface AttendeeEntity extends BaseEntity {
   employeeId: string; // 외부 시스템 직원 ID
   status: AttendeeStatus;
   completedAt?: Date; // Date 타입
-  deadline: Date; // Date 타입
+  // deadline은 EducationManagement.deadline을 사용
 }
 
 ```typescript
@@ -704,7 +719,7 @@ announcement-popup/
 
 - Category 통합 테이블로 변경 (entityType으로 도메인 구분)
 - CategoryMapping 중간 테이블 추가 (정규화된 다대다 관계)
-- CategoryMapping의 entityType 제거 (Category를 통해 알 수 있으므로 중복 제거)
+- CategoryMapping의 entityType 추가 (성능 최적화용 비정규화 필드)
 - 모든 콘텐츠 엔티티 및 WikiFileSystem에 order 필드 추가
 - Language 엔티티화
 - 다국어 지원: 언어별 번역 테이블 추가 (MainPopup, ShareholdersMeeting, VoteResult, ElectronicDisclosure, IR, Brochure)
