@@ -515,14 +515,44 @@ WHERE deleted_at IS NULL;
 
 ```sql
 -- 부모 폴더별 자식 조회
-CREATE INDEX idx_wiki_file_system_parent 
-ON wiki_file_system(parent_id, "order") 
+CREATE INDEX idx_wiki_file_system_parent
+ON wiki_file_system(parent_id, type DESC, "order")
 WHERE deleted_at IS NULL;
 
 -- 루트 폴더 조회
-CREATE INDEX idx_wiki_file_system_root 
-ON wiki_file_system(parent_id, "order") 
+CREATE INDEX idx_wiki_file_system_root
+ON wiki_file_system(parent_id, "order")
 WHERE deleted_at IS NULL AND parent_id IS NULL;
+
+-- depth 기반 조회
+CREATE INDEX idx_wiki_file_system_depth
+ON wiki_file_system(depth)
+WHERE deleted_at IS NULL;
+
+-- type별 조회
+CREATE INDEX idx_wiki_file_system_type
+ON wiki_file_system(type)
+WHERE deleted_at IS NULL;
+```
+
+### WikiFileSystemClosure
+
+```sql
+-- ancestor 기반 조회 (하위 항목 조회 시)
+CREATE INDEX idx_wiki_closure_ancestor
+ON wiki_file_system_closure(ancestor, depth);
+
+-- descendant 기반 조회 (상위 경로 조회 시)
+CREATE INDEX idx_wiki_closure_descendant
+ON wiki_file_system_closure(descendant, depth);
+
+-- depth별 조회
+CREATE INDEX idx_wiki_closure_depth
+ON wiki_file_system_closure(depth);
+
+-- 복합 인덱스 (가장 빈번한 쿼리 최적화)
+CREATE INDEX idx_wiki_closure_ancestor_depth_desc
+ON wiki_file_system_closure(ancestor, depth DESC, descendant);
 ```
 
 ### 번역 테이블
@@ -655,6 +685,10 @@ ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_size
     (type = 'file' AND file_size > 0)
   );
 
+-- depth는 0 이상
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_depth
+  CHECK (depth >= 0);
+
 -- 제한공개 시 최소 하나의 권한 필드 필요
 ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_permissions
   CHECK (
@@ -665,6 +699,30 @@ ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_permissions
       jsonb_array_length(permission_department_codes) > 0
     ))
   );
+```
+
+### WikiFileSystemClosure
+
+```sql
+-- depth는 0 이상
+ALTER TABLE wiki_file_system_closure ADD CONSTRAINT chk_closure_depth
+  CHECK (depth >= 0);
+
+-- 자기 자신 참조는 depth = 0
+ALTER TABLE wiki_file_system_closure ADD CONSTRAINT chk_closure_self_reference
+  CHECK (
+    (ancestor = descendant AND depth = 0) OR
+    (ancestor != descendant AND depth > 0)
+  );
+
+-- FK 제약조건 (CASCADE 삭제)
+ALTER TABLE wiki_file_system_closure
+  ADD CONSTRAINT fk_closure_ancestor
+  FOREIGN KEY (ancestor) REFERENCES wiki_file_system(id) ON DELETE CASCADE;
+
+ALTER TABLE wiki_file_system_closure
+  ADD CONSTRAINT fk_closure_descendant
+  FOREIGN KEY (descendant) REFERENCES wiki_file_system(id) ON DELETE CASCADE;
 ```
 
 ### EducationManagement (교육 관리)
@@ -689,6 +747,15 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ---
 
 ## 변경 이력
+
+### v5.12 (2026-01-08)
+- ✅ **WikiFileSystem Closure Table 도입**
+  - `WikiFileSystemClosure` 엔티티 추가 (조상-자손 관계 미리 저장)
+  - `WikiFileSystem.depth` 필드 추가 (계층 깊이 캐싱)
+  - 인덱스 추가: `idx_wiki_closure_ancestor`, `idx_wiki_closure_descendant`, `idx_wiki_file_system_depth` 등
+  - CHECK 제약조건 추가: `chk_closure_depth`, `chk_closure_self_reference`, `chk_wiki_depth`
+  - FK 제약조건 추가: CASCADE 삭제 지원
+  - 트리거로 Closure Table 자동 유지
 
 ### v5.11 (2026-01-08)
 - ✅ **WikiFileSystem 권한 관리 개선**
@@ -768,4 +835,4 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.11
+**버전**: v5.13

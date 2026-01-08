@@ -166,6 +166,7 @@ erDiagram
     ShareholdersMeeting {
         uuid id PK
         boolean isPublic
+        varchar status "draft|approved|under_review|rejected|opened"
         varchar location
         date meetingDate
         timestamp releasedAt "nullable"
@@ -217,6 +218,7 @@ erDiagram
 ```
 
 **특징**:
+- **상태 관리**: ContentStatus enum 사용 (draft, approved, under_review, rejected, opened)
 - **다국어 지원**: ShareholdersMeetingTranslation, VoteResultTranslation
 - **의결 결과**: VoteResult 테이블로 여러 안건 관리
 - **첨부파일**: 언어 독립적 (모든 언어에서 공유)
@@ -727,12 +729,13 @@ erDiagram
         varchar title
         text content
         boolean isPublic
+        varchar status "scheduled|in_progress|completed|cancelled|postponed"
         uuid managerId "담당자 ID"
         date deadline
         jsonb attachments "nullable"
         int order
     }
-    
+
     Attendee {
         uuid id PK
         uuid educationManagementId UK "FK"
@@ -740,14 +743,27 @@ erDiagram
         varchar status "pending|in_progress|completed|overdue"
         timestamp completedAt "nullable"
     }
-    
+
     EducationManagement ||--o{ Attendee : "has"
 ```
 
 **특징**:
+- **교육 상태 관리**: EducationStatus enum 사용
+  - `scheduled`: 예정됨 (시작 전)
+  - `in_progress`: 진행 중
+  - `completed`: 완료됨
+  - `cancelled`: 취소됨
+  - `postponed`: 연기됨
 - **수강 관리**: Attendee 테이블로 직원별 진행 상태 추적
 - **담당자**: managerId로 교육 담당자 지정
 - **유니크 제약**: `(educationManagementId, employeeId)` - 중복 등록 방지
+
+**상태 전환 흐름**:
+```
+scheduled → in_progress → completed
+    ↓            ↓
+cancelled    postponed → scheduled
+```
 
 ---
 
@@ -760,6 +776,7 @@ erDiagram
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable - self-reference"
+        int depth "계층 깊이 (0=루트)"
         text fileUrl "nullable - AWS S3 URL"
         bigint fileSize "nullable"
         varchar mimeType "nullable"
@@ -770,16 +787,27 @@ erDiagram
         int order
     }
     
+    WikiFileSystemClosure {
+        uuid ancestor PK "FK"
+        uuid descendant PK "FK"
+        int depth "거리 (0=자기자신)"
+        timestamp createdAt
+    }
+    
     WikiFileSystem }o--o| WikiFileSystem : "parent-child"
+    WikiFileSystem ||--o{ WikiFileSystemClosure : "ancestor"
+    WikiFileSystem ||--o{ WikiFileSystemClosure : "descendant"
 ```
 
 **특징**:
 - **계층 구조**: parentId를 통한 자기 참조 (트리 구조)
+- **Closure Table**: 모든 조상-자손 관계를 미리 저장하여 조회 성능 극대화
+- **빈번한 이동 최적화**: 폴더/파일 이동 시에도 효율적인 업데이트
 - **파일 타입**: folder (폴더) / file (파일)
 - **AWS S3**: 모든 파일은 S3에 업로드 후 URL 참조
 - **세밀한 권한**: 직급, 직책, 부서별 공개 설정 (Announcement와 동일한 패턴)
 
-**권한 로직** (OR 조건):
+**권한 로직** (Closure Table 활용):
 ```typescript
 // 단일 파일/폴더 권한 체크
 function canAccessWiki(wiki: WikiFileSystem, employee: Employee): boolean {
@@ -792,17 +820,24 @@ function canAccessWiki(wiki: WikiFileSystem, employee: Employee): boolean {
   );
 }
 
-// 계층적 권한 체크 (상위 폴더 권한 상속)
+// 계층적 권한 체크 (Closure Table 활용 - 최적화)
 async function canAccessWikiHierarchy(
   wikiId: string,
   employee: Employee
 ): Promise<boolean> {
-  // 1. 현재 파일/폴더부터 루트까지 경로 조회
-  const path = await getWikiPath(wikiId); // [child, parent, grandparent, ...]
+  // Closure Table로 한 번의 쿼리로 모든 조상 조회
+  const ancestors = await db.query(`
+    SELECT w.*
+    FROM wiki_file_system w
+    JOIN wiki_file_system_closure c ON w.id = c.ancestor
+    WHERE c.descendant = $1
+      AND w.deleted_at IS NULL
+    ORDER BY c.depth DESC
+  `, [wikiId]);
   
-  // 2. 상위 폴더부터 순차적으로 권한 체크 (역순)
-  for (const wiki of path.reverse()) {
-    if (!canAccessWiki(wiki, employee)) {
+  // 루트부터 순차적으로 권한 체크
+  for (const ancestor of ancestors) {
+    if (!canAccessWiki(ancestor, employee)) {
       return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가
     }
   }
@@ -810,55 +845,188 @@ async function canAccessWikiHierarchy(
   return true;
 }
 
-// 재귀 쿼리로 전체 경로 조회
-async function getWikiPath(wikiId: string): Promise<WikiFileSystem[]> {
-  return db.query(`
-    WITH RECURSIVE path AS (
-      SELECT * FROM wiki_file_system WHERE id = $1
-      UNION ALL
-      SELECT w.* FROM wiki_file_system w
-      JOIN path p ON w.id = p.parent_id
-    )
-    SELECT * FROM path WHERE deleted_at IS NULL
-  `, [wikiId]);
+// 폴더 이동 (순환 참조 방지)
+async function moveFolder(
+  folderId: string,
+  newParentId: string | null
+): Promise<void> {
+  // 1. 순환 참조 체크 (Closure Table 활용)
+  if (newParentId) {
+    const isDescendant = await db.query(`
+      SELECT 1 FROM wiki_file_system_closure
+      WHERE ancestor = $1 AND descendant = $2
+    `, [folderId, newParentId]);
+    
+    if (isDescendant.length > 0) {
+      throw new Error('Cannot move folder to its own descendant');
+    }
+  }
+  
+  // 2. 이동 실행 (트리거가 자동으로 Closure 테이블 업데이트)
+  await db.query(`
+    UPDATE wiki_file_system
+    SET parent_id = $1, updated_at = NOW()
+    WHERE id = $2
+  `, [newParentId, folderId]);
 }
 ```
 
 **⚠️ 중요: 계층적 권한 관리**
 - **상위 폴더의 권한이 더 제한적이면 하위 항목도 접근 불가**
 - 애플리케이션 레벨에서 처리 (데이터베이스 제약조건으로는 불가능)
-- 폴더/파일 조회 시 항상 `canAccessWikiHierarchy()` 사용 권장
-- 성능 최적화: 경로 정보 캐싱 고려
+- Closure Table을 활용하여 한 번의 쿼리로 모든 조상 조회 가능
+- 폴더 이동 시 순환 참조 체크 필수
 
-**쿼리 예시**:
+**쿼리 예시** (Closure Table 활용):
 ```sql
--- 루트 폴더 조회
+-- 1. 루트 폴더 조회
 SELECT * FROM wiki_file_system 
 WHERE parent_id IS NULL AND deleted_at IS NULL
 ORDER BY "order";
 
--- 특정 폴더의 하위 항목 조회
-SELECT * FROM wiki_file_system 
-WHERE parent_id = 'folder-uuid' AND deleted_at IS NULL
-ORDER BY type DESC, "order";  -- 폴더 먼저, 그 다음 파일
+-- 2. 특정 폴더의 직접 자식만 조회 (1 depth)
+SELECT w.* 
+FROM wiki_file_system w
+JOIN wiki_file_system_closure c ON w.id = c.descendant
+WHERE c.ancestor = 'folder-uuid' 
+  AND c.depth = 1
+  AND w.deleted_at IS NULL
+ORDER BY w.type DESC, w."order";
 
--- 파일 경로 추적 (재귀 쿼리)
-WITH RECURSIVE path AS (
-  SELECT id, name, parent_id, name as full_path
-  FROM wiki_file_system
-  WHERE id = 'file-uuid'
-  
-  UNION ALL
-  
-  SELECT w.id, w.name, w.parent_id, w.name || '/' || p.full_path
-  FROM wiki_file_system w
-  JOIN path p ON w.id = p.parent_id
-)
-SELECT full_path FROM path WHERE parent_id IS NULL;
+-- 3. 특정 폴더의 모든 하위 항목 조회 (재귀, depth 포함)
+SELECT w.*, c.depth
+FROM wiki_file_system w
+JOIN wiki_file_system_closure c ON w.id = c.descendant
+WHERE c.ancestor = 'folder-uuid' 
+  AND c.depth > 0
+  AND w.deleted_at IS NULL
+ORDER BY c.depth, w."order";
+
+-- 4. 상위 경로 조회 (Breadcrumb)
+SELECT w.*, c.depth
+FROM wiki_file_system w
+JOIN wiki_file_system_closure c ON w.id = c.ancestor
+WHERE c.descendant = 'file-uuid'
+  AND w.deleted_at IS NULL
+ORDER BY c.depth DESC;
+
+-- 5. 권한 체크용 조상 조회
+SELECT w.*
+FROM wiki_file_system w
+JOIN wiki_file_system_closure c ON w.id = c.ancestor
+WHERE c.descendant = 'file-uuid'
+  AND w.deleted_at IS NULL
+ORDER BY c.depth DESC;
+
+-- 6. 특정 depth까지만 조회 (예: 3단계까지)
+SELECT w.*, c.depth
+FROM wiki_file_system w
+JOIN wiki_file_system_closure c ON w.id = c.descendant
+WHERE c.ancestor = 'folder-uuid' 
+  AND c.depth > 0
+  AND c.depth <= 3
+  AND w.deleted_at IS NULL
+ORDER BY c.depth, w."order";
 ```
+
+**트리거 (Closure Table 자동 관리)**:
+```sql
+-- 1. 삽입 시 트리거
+CREATE OR REPLACE FUNCTION maintain_closure_on_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- 자기 자신 추가 (depth = 0)
+  INSERT INTO wiki_file_system_closure (ancestor, descendant, depth)
+  VALUES (NEW.id, NEW.id, 0);
+  
+  -- 부모의 모든 조상을 자신의 조상으로 추가
+  IF NEW.parent_id IS NOT NULL THEN
+    INSERT INTO wiki_file_system_closure (ancestor, descendant, depth)
+    SELECT ancestor, NEW.id, depth + 1
+    FROM wiki_file_system_closure
+    WHERE descendant = NEW.parent_id;
+    
+    -- depth 필드 업데이트
+    UPDATE wiki_file_system
+    SET depth = (
+      SELECT MAX(depth) FROM wiki_file_system_closure
+      WHERE descendant = NEW.id AND ancestor != NEW.id
+    ) + 1
+    WHERE id = NEW.id;
+  ELSE
+    -- 루트 노드
+    UPDATE wiki_file_system SET depth = 0 WHERE id = NEW.id;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_closure_insert
+AFTER INSERT ON wiki_file_system
+FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_insert();
+
+-- 2. 이동(업데이트) 시 트리거
+CREATE OR REPLACE FUNCTION maintain_closure_on_move()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.parent_id IS DISTINCT FROM OLD.parent_id THEN
+    -- 기존 관계 제거 (자기 자신 제외)
+    DELETE FROM wiki_file_system_closure
+    WHERE descendant IN (
+      SELECT descendant FROM wiki_file_system_closure WHERE ancestor = NEW.id
+    )
+    AND ancestor IN (
+      SELECT ancestor FROM wiki_file_system_closure WHERE descendant = OLD.id
+    )
+    AND ancestor != descendant;
+    
+    -- 새로운 관계 추가
+    IF NEW.parent_id IS NOT NULL THEN
+      INSERT INTO wiki_file_system_closure (ancestor, descendant, depth)
+      SELECT pa.ancestor, cd.descendant, pa.depth + cd.depth + 1
+      FROM wiki_file_system_closure pa
+      CROSS JOIN wiki_file_system_closure cd
+      WHERE pa.descendant = NEW.parent_id
+        AND cd.ancestor = NEW.id;
+      
+      -- depth 업데이트 (이동된 노드와 모든 하위 노드)
+      UPDATE wiki_file_system w
+      SET depth = c.max_depth
+      FROM (
+        SELECT 
+          c1.descendant as id,
+          MAX(c1.depth) - MIN(c2.depth) as max_depth
+        FROM wiki_file_system_closure c1
+        JOIN wiki_file_system_closure c2 ON c1.descendant = c2.descendant
+        WHERE c2.ancestor = NEW.id
+          AND c1.ancestor != c1.descendant
+        GROUP BY c1.descendant
+      ) c
+      WHERE w.id = c.id;
+    ELSE
+      -- 루트로 이동
+      UPDATE wiki_file_system SET depth = 0 WHERE id = NEW.id;
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_closure_move
+AFTER UPDATE OF parent_id ON wiki_file_system
+FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_move();
+```
+
+**성능 특징**:
+- ✅ **조회 성능**: O(1) - Closure Table에서 직접 조회
+- ✅ **이동 성능**: O(N×M) - N: 이동되는 서브트리 크기, M: 새 부모의 조상 수
+- ✅ **삽입 성능**: O(D) - D: 트리 깊이
+- ✅ **삭제 성능**: O(1) - CASCADE로 자동 처리
 
 ---
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.11
+**버전**: v5.13

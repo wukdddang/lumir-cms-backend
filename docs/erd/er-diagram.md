@@ -73,6 +73,7 @@ erDiagram
     ShareholdersMeeting {
         uuid id PK "description"
         boolean isPublic
+        varchar status "draft|approved|under_review|rejected|opened"
         varchar location
         date meetingDate
         timestamp releasedAt "nullable"
@@ -495,6 +496,7 @@ erDiagram
         varchar title
         text content
         boolean isPublic
+        varchar status "scheduled|in_progress|completed|cancelled|postponed"
         uuid managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
         date deadline
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
@@ -526,6 +528,7 @@ erDiagram
         varchar name
         varchar type "folder|file"
         uuid parentId "nullable, self-reference"
+        int depth "계층 깊이 (0=루트)"
         text fileUrl "nullable - AWS S3 URL"
         bigint fileSize "nullable - 파일 크기(bytes)"
         varchar mimeType "nullable - MIME 타입"
@@ -540,6 +543,13 @@ erDiagram
         uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
         uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
         int version
+    }
+
+    WikiFileSystemClosure {
+        uuid ancestor PK "FK - 조상 노드 ID"
+        uuid descendant PK "FK - 자손 노드 ID"
+        int depth "거리 (0=자기자신, 1=직접자식)"
+        timestamp createdAt
     }
 
     %% ==========================================
@@ -599,6 +609,8 @@ erDiagram
     EducationManagement ||--o{ Attendee : "has many"
     
     WikiFileSystem }o--o| WikiFileSystem : "parentId (self-reference)"
+    WikiFileSystem ||--o{ WikiFileSystemClosure : "ancestor"
+    WikiFileSystem ||--o{ WikiFileSystemClosure : "descendant"
 ```
 
 ---
@@ -678,6 +690,28 @@ enum ContentStatus {
   UNDER_REVIEW = 'under_review',  // 검토중
   REJECTED = 'rejected',     // 거부됨
   OPENED = 'opened'          // 공개됨
+}
+
+// ContentStatus를 사용하는 엔티티
+type ShareholdersMeetingStatus = ContentStatus;
+type ElectronicDisclosureStatus = ContentStatus;
+type IRStatus = ContentStatus;
+type BrochureStatus = ContentStatus;
+type LumirStoryStatus = ContentStatus;
+type VideoGalleryStatus = ContentStatus;
+type NewsStatus = ContentStatus;
+type AnnouncementStatus = ContentStatus;
+type MainPopupStatus = ContentStatus;
+```
+
+### EducationStatus (교육 상태)
+```typescript
+enum EducationStatus {
+  SCHEDULED = 'scheduled',       // 예정됨 (시작 전)
+  IN_PROGRESS = 'in_progress',   // 진행 중
+  COMPLETED = 'completed',       // 완료됨
+  CANCELLED = 'cancelled',       // 취소됨
+  POSTPONED = 'postponed'        // 연기됨
 }
 ```
 
@@ -786,6 +820,24 @@ enum WikiFileSystemType {
 
 ## 변경 이력
 
+### v5.13 (2026-01-08)
+- ✅ **상태 관리 필드 추가**
+  - `ShareholdersMeeting.status` 필드 추가 (ContentStatus enum)
+  - `EducationManagement.status` 필드 추가 (EducationStatus enum)
+  - `EducationStatus` enum 정의 추가: scheduled, in_progress, completed, cancelled, postponed
+  - ContentStatus 타입 별칭 정리 및 문서화
+
+### v5.12 (2026-01-08)
+- ✅ **WikiFileSystem Closure Table 도입**
+  - `WikiFileSystemClosure` 엔티티 추가 (조상-자손 관계 미리 저장)
+  - `WikiFileSystem.depth` 필드 추가 (계층 깊이 캐싱)
+  - 빈번한 폴더 이동/추가/삭제 작업 최적화
+  - 조회 성능 극대화 (재귀 쿼리 불필요)
+  - 트리거 자동화: 삽입/이동 시 Closure Table 자동 유지
+  - 인덱스 추가: `idx_wiki_closure_ancestor`, `idx_wiki_closure_descendant` 등
+  - CHECK 제약조건 추가: depth 검증, 자기 참조 검증
+  - 순환 참조 방지 로직 추가
+
 ### v5.11 (2026-01-08)
 - ✅ **WikiFileSystem 권한 관리 개선**
   - `WikiFileSystem.permissionEmployeeIds` 제거
@@ -818,4 +870,4 @@ enum WikiFileSystemType {
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.11
+**버전**: v5.13
