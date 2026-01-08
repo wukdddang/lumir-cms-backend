@@ -25,284 +25,597 @@ erDiagram
     %% ==========================================
     
     Language {
-        uuid id PK
-        varchar code
-        varchar name
+        uuid id PK "description"
+        varchar code "ko|en|ja|zh"
+        varchar name "예: 한국어, English"
         boolean isActive
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     Category {
-        uuid id PK
-        varchar entityType
+        uuid id PK "description"
+        varchar entityType "announcement|main_popup|shareholders_meeting|electronic_disclosure|ir|brochure|lumir_story|video_gallery|news|survey|education_management"
         varchar name
-        text description
+        text description "설명"
         boolean isActive
         int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     CategoryMapping {
-        uuid id PK
-        uuid entityId
-        uuid categoryId FK
+        uuid id PK "description"
+        uuid entityId "엔티티 ID - UK composite: (entityId, categoryId)"
+        uuid categoryId FK "UK composite: (entityId, categoryId)"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     %% ==========================================
     %% Core Domain (핵심 비즈니스 로직)
+    %% - ShareholdersMeeting, ElectronicDisclosure, IR
+    %% - Brochure, News, Announcement
     %% ==========================================
     
     ShareholdersMeeting {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
         varchar location
         date meetingDate
-        jsonb attachments
+        timestamp releasedAt "nullable"
+        text imageUrl "nullable - AWS S3 URL (대표 이미지)"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     VoteResult {
-        uuid id PK
+        uuid id PK "description"
         uuid shareholdersMeetingId FK
-        int agendaNumber
+        int agendaNumber "안건 번호"
         int totalVote
-        varchar result
+        int yesVote
+        int noVote
+        float approvalRating "찬성률(%)"
+        varchar result "accepted|rejected"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     VoteResultTranslation {
-        uuid id PK
-        uuid voteResultId FK
-        uuid languageId FK
-        varchar title
+        uuid id PK "description"
+        uuid voteResultId UK "FK - 유니크 제약조건: (voteResultId, languageId)"
+        uuid languageId UK "FK"
+        varchar title "안건 제목"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     ShareholdersMeetingTranslation {
-        uuid id PK
-        uuid shareholdersMeetingId FK
-        uuid languageId FK
+        uuid id PK "description"
+        uuid shareholdersMeetingId UK "FK - 유니크 제약조건: (shareholdersMeetingId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text content
+        text description "간단한 설명"
+        text content "상세 내용"
+        text resultText "의결 결과 텍스트"
+        text summary "요약"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     ElectronicDisclosure {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
-        varchar status
+        varchar status "draft|approved|under_review|rejected|opened"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     ElectronicDisclosureTranslation {
-        uuid id PK
-        uuid electronicDisclosureId FK
-        uuid languageId FK
+        uuid id PK "description"
+        uuid electronicDisclosureId UK "FK - 유니크 제약조건: (electronicDisclosureId, languageId)"
+        uuid languageId UK "FK"
         varchar title
+        text description "간단한 설명"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     IR {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
-        varchar status
-        jsonb attachments
+        varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     IRTranslation {
-        uuid id PK
-        uuid irId FK
-        uuid languageId FK
+        uuid id PK "description"
+        uuid irId UK "FK - 유니크 제약조건: (irId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text fileUrl
+        text description "간단한 설명"
+        text fileUrl "nullable - AWS S3 URL (IR 자료 파일, 언어별)"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     Brochure {
-        uuid id PK
+        uuid id PK "description"
         boolean isPublic
-        varchar status
+        varchar status "draft|approved|under_review|rejected|opened"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     BrochureTranslation {
-        uuid id PK
-        uuid brochureId FK
-        uuid languageId FK
+        uuid id PK "description"
+        uuid brochureId UK "FK - 유니크 제약조건: (brochureId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text fileUrl
+        text description "간단한 설명"
+        text fileUrl "nullable - AWS S3 URL (브로슈어 파일, 언어별)"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     News {
-        uuid id PK
+        uuid id PK "description"
         varchar title
+        text description "설명"
+        text url "외부 링크 또는 상세 페이지 URL"
         boolean isPublic
-        varchar status
-        jsonb attachments
+        varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     Announcement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
-        boolean isPublic
-        varchar status
-        jsonb attachments
+        boolean isFixed "상단 고정 여부"
+        boolean isPublic "true=전사공개, false=제한공개"
+        timestamp releasedAt "nullable"
+        timestamp expiredAt "nullable"
+        boolean mustRead "필독 여부"
+        boolean requiresResponse "응답 필요 여부"
+        varchar status "draft|approved|under_review|rejected|opened"
+        jsonb permissionEmployeeIds "특정 직원 ID 목록"
+        jsonb permissionRankCodes "직급 코드 목록"
+        jsonb permissionPositionCodes "직책 코드 목록"
+        jsonb permissionDepartmentCodes "부서 코드 목록"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order "정렬 순서"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     AnnouncementRead {
-        uuid id PK
-        uuid announcementId FK
-        uuid employeeId
-        timestamp readAt
+        uuid id PK "description"
+        uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId) - 직원이 읽을 때 생성"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        timestamp readAt "읽은 시각"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     AnnouncementResponse {
-        uuid id PK
-        uuid announcementId FK
-        uuid employeeId
-        text responseMessage
+        uuid id PK "description"
+        uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId) - 직원이 응답할 때 생성"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        text responseMessage "응답 메시지"
+        timestamp submittedAt "응답 제출 시각"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     %% ==========================================
     %% Sub Domain (부가 지원 기능)
+    %% - MainPopup, LumirStory, VideoGallery, Survey
+    %% - EducationManagement, WikiFileSystem
     %% ==========================================
     
     MainPopup {
-        uuid id PK
-        varchar status
+        uuid id PK "description"
+        varchar status "draft|approved|under_review|rejected|opened"
         boolean isPublic
-        jsonb attachments
+        timestamp releasedAt "nullable"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     MainPopupTranslation {
-        uuid id PK
-        uuid mainPopupId FK
-        uuid languageId FK
+        uuid id PK "description"
+        uuid mainPopupId UK "FK - 유니크 제약조건: (mainPopupId, languageId)"
+        uuid languageId UK "FK"
         varchar title
-        text imageUrl
+        text description "설명"
+        text imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     LumirStory {
-        uuid id PK
+        uuid id PK "description"
         varchar title
         text content
+        text imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
         boolean isPublic
-        jsonb attachments
+        varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     VideoGallery {
-        uuid id PK
+        uuid id PK "description"
         varchar title
+        text description
         boolean isPublic
-        jsonb attachments
+        varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     Survey {
-        uuid id PK
+        uuid id PK "description"
         varchar title
-        varchar status
-        jsonb permissionEmployeeIds
+        text description
+        varchar status "draft|approved|under_review|rejected|opened"
+        date startDate "nullable"
+        date endDate "nullable"
+        jsonb permissionEmployeeIds "외부 시스템 직원 IDs (SSO)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     SurveyQuestion {
-        uuid id PK
+        uuid id PK "description"
         uuid surveyId FK
         varchar title
-        varchar type
-        jsonb form
+        varchar type "short_answer|paragraph|multiple_choice|dropdown|checkboxes|file_upload|datetime|linear_scale|grid_scale"
+        jsonb form "InqueryFormData"
+        boolean isRequired
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     SurveyResponseText {
-        uuid id PK
-        uuid questionId FK
-        uuid employeeId
-        text textValue
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        text textValue "텍스트 응답"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     SurveyResponseChoice {
-        uuid id PK
-        uuid questionId FK
-        uuid employeeId
-        varchar selectedOption
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        varchar selectedOption "선택한 옵션"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
+    SurveyResponseCheckbox {
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId, selectedOption)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        varchar selectedOption UK "선택한 옵션 (다중 선택 가능)"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     SurveyResponseScale {
-        uuid id PK
-        uuid questionId FK
-        uuid employeeId
-        int scaleValue
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        int scaleValue "척도 값 (1-10)"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
+    SurveyResponseGrid {
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId, rowName)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        varchar rowName UK "행 이름"
+        varchar columnValue "열 값"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
+    SurveyResponseFile {
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId, fileUrl)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        text fileUrl UK "AWS S3 URL"
+        varchar fileName "원본 파일명"
+        bigint fileSize "파일 크기(bytes)"
+        varchar mimeType "MIME 타입"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
+    }
+
+    SurveyResponseDatetime {
+        uuid id PK "description"
+        uuid questionId UK "FK - 유니크 제약조건: (questionId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        timestamp datetimeValue "날짜/시간 값"
+        timestamp submittedAt
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     SurveyCompletion {
-        uuid id PK
-        uuid surveyId FK
-        uuid employeeId
-        boolean isCompleted
+        uuid id PK "description"
+        uuid surveyId UK "FK - 유니크 제약조건: (surveyId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
+        int totalQuestions "전체 질문 수"
+        int answeredQuestions "응답한 질문 수"
+        boolean isCompleted "완료 여부 (generated: totalQuestions === answeredQuestions)"
+        timestamp completedAt "nullable - 완료 일시"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     EducationManagement {
-        uuid id PK
+        uuid id PK "description"
         varchar title
-        uuid managerId
+        text content
+        boolean isPublic
+        uuid managerId "담당자 ID (외부 시스템 직원 ID - SSO)"
         date deadline
-        jsonb attachments
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     Attendee {
-        uuid id PK
-        uuid educationManagementId FK
-        uuid employeeId
-        varchar status
+        uuid id PK "description"
+        uuid educationManagementId UK "FK - 유니크 제약조건: (educationManagementId, employeeId)"
+        uuid employeeId UK "외부 시스템 직원 ID (SSO) - 같은 직원이 같은 교육에 중복 등록 불가"
+        varchar status "pending|in_progress|completed|overdue"
+        timestamp completedAt "nullable"
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     WikiFileSystem {
-        uuid id PK
+        uuid id PK "description"
         varchar name
-        varchar type
-        uuid parentId
-        text fileUrl
-        jsonb permissionEmployeeIds
+        varchar type "folder|file"
+        uuid parentId "nullable, self-reference"
+        text fileUrl "nullable - AWS S3 URL"
+        bigint fileSize "nullable - 파일 크기(bytes)"
+        varchar mimeType "nullable - MIME 타입"
+        boolean isPublic
+        jsonb permissionEmployeeIds "외부 시스템 직원 IDs (SSO)"
+        int order
+        timestamp createdAt
+        timestamp updatedAt
+        timestamp deletedAt "nullable"
+        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
+        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
+        int version
     }
 
     %% ==========================================
-    %% Relationships
+    %% Relationships - Core Domain
     %% ==========================================
     
     ShareholdersMeeting ||--o{ CategoryMapping : "has"
     CategoryMapping }o--|| Category : "references"
-    ShareholdersMeeting ||--o{ VoteResult : "has"
-    VoteResult ||--o{ VoteResultTranslation : "translates"
-    VoteResultTranslation }o--|| Language : "in"
-    ShareholdersMeeting ||--o{ ShareholdersMeetingTranslation : "translates"
-    ShareholdersMeetingTranslation }o--|| Language : "in"
+    ShareholdersMeeting ||--o{ VoteResult : "has vote results"
+    VoteResult ||--o{ VoteResultTranslation : "has translations"
+    VoteResultTranslation }o--|| Language : "in language"
+    ShareholdersMeeting ||--o{ ShareholdersMeetingTranslation : "has translations"
+    ShareholdersMeetingTranslation }o--|| Language : "in language"
     
     ElectronicDisclosure ||--o{ CategoryMapping : "has"
-    ElectronicDisclosure ||--o{ ElectronicDisclosureTranslation : "translates"
-    ElectronicDisclosureTranslation }o--|| Language : "in"
+    ElectronicDisclosure ||--o{ ElectronicDisclosureTranslation : "has translations"
+    ElectronicDisclosureTranslation }o--|| Language : "in language"
     
     IR ||--o{ CategoryMapping : "has"
-    IR ||--o{ IRTranslation : "translates"
-    IRTranslation }o--|| Language : "in"
+    IR ||--o{ IRTranslation : "has translations"
+    IRTranslation }o--|| Language : "in language"
     
     Brochure ||--o{ CategoryMapping : "has"
-    Brochure ||--o{ BrochureTranslation : "translates"
-    BrochureTranslation }o--|| Language : "in"
+    Brochure ||--o{ BrochureTranslation : "has translations"
+    BrochureTranslation }o--|| Language : "in language"
     
     News ||--o{ CategoryMapping : "has"
     
     Announcement ||--o{ CategoryMapping : "has"
-    Announcement ||--o{ AnnouncementRead : "tracks"
-    Announcement ||--o{ AnnouncementResponse : "collects"
+    Announcement ||--o{ AnnouncementRead : "has reads (lazy)"
+    Announcement ||--o{ AnnouncementResponse : "has responses (optional)"
+    
+    %% ==========================================
+    %% Relationships - Sub Domain
+    %% ==========================================
     
     MainPopup ||--o{ CategoryMapping : "has"
-    MainPopup ||--o{ MainPopupTranslation : "translates"
-    MainPopupTranslation }o--|| Language : "in"
+    MainPopup ||--o{ MainPopupTranslation : "has translations"
+    MainPopupTranslation }o--|| Language : "in language"
     
     LumirStory ||--o{ CategoryMapping : "has"
+    
     VideoGallery ||--o{ CategoryMapping : "has"
     
     Survey ||--o{ CategoryMapping : "has"
-    Survey ||--o{ SurveyQuestion : "has"
-    Survey ||--o{ SurveyCompletion : "tracks"
-    SurveyQuestion ||--o{ SurveyResponseText : "collects"
-    SurveyQuestion ||--o{ SurveyResponseChoice : "collects"
-    SurveyQuestion ||--o{ SurveyResponseScale : "collects"
+    Survey ||--o{ SurveyQuestion : "has many"
+    Survey ||--o{ SurveyCompletion : "has completions"
+    
+    SurveyQuestion ||--o{ SurveyResponseText : "has text responses"
+    SurveyQuestion ||--o{ SurveyResponseChoice : "has choice responses"
+    SurveyQuestion ||--o{ SurveyResponseCheckbox : "has checkbox responses"
+    SurveyQuestion ||--o{ SurveyResponseScale : "has scale responses"
+    SurveyQuestion ||--o{ SurveyResponseGrid : "has grid responses"
+    SurveyQuestion ||--o{ SurveyResponseFile : "has file responses"
+    SurveyQuestion ||--o{ SurveyResponseDatetime : "has datetime responses"
     
     EducationManagement ||--o{ CategoryMapping : "has"
-    EducationManagement ||--o{ Attendee : "has"
+    EducationManagement ||--o{ Attendee : "has many"
     
-    WikiFileSystem }o--o| WikiFileSystem : "parent-child"
+    WikiFileSystem }o--o| WikiFileSystem : "parentId (self-reference)"
 ```
 
 ---
