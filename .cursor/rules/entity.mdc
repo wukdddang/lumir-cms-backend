@@ -1,4 +1,4 @@
----
+﻿---
 alwaysApply: true
 ---
 
@@ -210,9 +210,9 @@ interface ShareholdersMeetingEntity extends BaseEntity {
   location: string;
   meetingDate: Date; // Date 타입
   releasedAt?: Date; // Date 타입
+  imageUrl?: string; // AWS S3 URL (대표 이미지, 선택적)
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'shareholders_meeting')
   // translations는 ShareholdersMeetingTranslation 테이블로 관리
   // voteResults는 VoteResult 테이블로 관리 (1:N 관계)
 }
@@ -226,7 +226,7 @@ interface ShareholdersMeetingTranslationEntity extends BaseEntity {
   content: string; // 상세 내용
   resultText: string; // 의결 결과 텍스트
   summary: string; // 요약
-  imageUrl?: string; // AWS S3 URL (주주총회 이미지, 언어별)
+  attachments?: any[]; // JSONB - 첨부파일 목록 (AWS S3 URLs, 언어별, 선택적)
 }
 ```
 
@@ -271,7 +271,7 @@ interface IREntity extends BaseEntity {
   status: IRStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'ir')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'ir', nullable)
   // translations는 IRTranslation 테이블로 관리
 }
 
@@ -321,7 +321,7 @@ interface NewsEntity extends BaseEntity {
   status: NewsStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'news')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'news', nullable)
 }
 ```
 
@@ -364,7 +364,7 @@ interface AnnouncementEntity extends BaseEntity {
   permissionEmployeeIds: string[]; // 권한 있는 직원 ID 목록 (SSO)
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'announcement')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'announcement', nullable)
 }
 `````
 
@@ -390,7 +390,7 @@ interface MainPopupEntity extends BaseEntity {
   releasedAt?: Date; // Date 타입으로 수정
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'main_popup')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'main_popup', nullable)
   // translations는 MainPopupTranslation 테이블로 관리
 }
 
@@ -425,7 +425,7 @@ interface LumirStoryEntity extends BaseEntity {
   status: LumirStoryStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'lumir_story')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'lumir_story', nullable)
 }
 ```
 
@@ -448,7 +448,7 @@ interface VideoGalleryEntity extends BaseEntity {
   status: VideoGalleryStatus;
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'video_gallery')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'video_gallery', nullable)
 }
 ```
 
@@ -568,7 +568,7 @@ interface EducationManagementEntity extends BaseEntity {
   deadline: Date; // Date 타입
   order: number; // 정렬 순서
   // categories는 CategoryMapping 중간 테이블로 관리
-  // attachments는 Attachment 테이블로 관리 (entityType = 'education_management')
+  // attachments는 Attachment 테이블로 관리 (entityType = 'education_management', nullable)
 }
 ````
 
@@ -615,7 +615,7 @@ interface WikiFileSystemEntity extends BaseEntity {
 - `wiki-file-system.service.ts` - Domain Service
 - `wiki-file-system.module.ts` - NestJS Module
 
-### 7. PageView (페이지 조회 통계)
+ (페이지 조회 통계)
 
 **파일 위치**: `src/domain/sub/page-view/`
 
