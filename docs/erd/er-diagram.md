@@ -182,7 +182,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        text fileUrl "nullable - AWS S3 URL (IR 자료 파일, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -195,6 +194,7 @@ erDiagram
         uuid id PK "description"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -210,7 +210,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        text fileUrl "nullable - AWS S3 URL (브로슈어 파일, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -315,7 +314,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "설명"
-        text imageUrl "nullable - AWS S3 URL (팝업 이미지, 언어별)"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -801,6 +799,19 @@ enum WikiFileSystemType {
 
 ---
 
+## 변경 이력
+
+### v5.9 (2026-01-08)
+- ✅ **첨부파일 관리 단순화**
+  - Brochure: attachments JSONB 필드 추가 (기본 테이블)
+  - BrochureTranslation: fileUrl 필드 제거
+  - IRTranslation: fileUrl 필드 제거
+  - MainPopupTranslation: imageUrl 필드 제거
+  - **파일명으로 언어 구분**: 다국어 파일은 파일명으로 구분 (예: `brochure_ko.pdf`, `brochure_en.pdf`, `popup_image_ko.jpg`)
+  - 모든 첨부파일은 기본 테이블의 attachments JSONB 배열로 통합 관리
+
+---
+
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.8
+**버전**: v5.9

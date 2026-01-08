@@ -265,6 +265,7 @@ erDiagram
         uuid id PK
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일"
         int order
     }
     
@@ -274,7 +275,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        text fileUrl "nullable - IR 자료 파일(언어별)"
     }
     
     Language {
@@ -288,7 +288,7 @@ erDiagram
 
 **특징**:
 - **다국어 지원**: IRTranslation
-- **언어별 파일**: fileUrl이 번역 테이블에 있어 언어별 다른 파일 제공 가능
+- **첨부파일**: attachments JSONB 배열로 관리 (파일명으로 언어 구분 가능)
 
 ---
 
@@ -300,6 +300,7 @@ erDiagram
         uuid id PK
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일"
         int order
     }
     
@@ -309,7 +310,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
-        text fileUrl "nullable - 브로슈어 파일(언어별)"
     }
     
     Language {
@@ -323,7 +323,7 @@ erDiagram
 
 **특징**:
 - **다국어 지원**: BrochureTranslation
-- **언어별 파일**: fileUrl이 번역 테이블에 있어 언어별 다른 파일 제공 가능
+- **첨부파일**: attachments JSONB 배열로 관리 (파일명으로 언어 구분 가능) 가능
 
 ---
 
@@ -449,7 +449,6 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "설명"
-        text imageUrl "nullable - 팝업 이미지(언어별)"
     }
     
     Language {
@@ -463,7 +462,7 @@ erDiagram
 
 **특징**:
 - **다국어 지원**: MainPopupTranslation
-- **언어별 이미지**: imageUrl이 번역 테이블에 있어 언어별 다른 이미지 제공
+- **첨부파일**: attachments JSONB 배열로 관리 (이미지 포함, 파일명으로 언어 구분 가능)
 
 ---
 
@@ -751,4 +750,4 @@ SELECT full_path FROM path WHERE parent_id IS NULL;
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.8
+**버전**: v5.9

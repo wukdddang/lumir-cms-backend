@@ -23,6 +23,7 @@
 
 ### attachments (첨부파일)
 
+**단일 언어 파일 예시**:
 ```json
 [
   {
@@ -42,14 +43,50 @@
 ]
 ```
 
+**다국어 파일 예시** (Brochure, IR, MainPopup):
+```json
+[
+  {
+    "fileName": "brochure_ko.pdf",
+    "fileSize": 2048000,
+    "mimeType": "application/pdf",
+    "url": "https://s3.amazonaws.com/bucket/files/brochure_ko.pdf",
+    "order": 0
+  },
+  {
+    "fileName": "brochure_en.pdf",
+    "fileSize": 2150000,
+    "mimeType": "application/pdf",
+    "url": "https://s3.amazonaws.com/bucket/files/brochure_en.pdf",
+    "order": 1
+  },
+  {
+    "fileName": "popup_image_ko.jpg",
+    "fileSize": 512000,
+    "mimeType": "image/jpeg",
+    "url": "https://s3.amazonaws.com/bucket/files/popup_image_ko.jpg",
+    "order": 2
+  },
+  {
+    "fileName": "popup_image_en.jpg",
+    "fileSize": 498000,
+    "mimeType": "image/jpeg",
+    "url": "https://s3.amazonaws.com/bucket/files/popup_image_en.jpg",
+    "order": 3
+  }
+]
+```
+
 **적용 엔티티**:
-- ShareholdersMeeting, IR, News, Announcement
+- ShareholdersMeeting, IR, Brochure, News, Announcement
 - MainPopup, LumirStory, VideoGallery, EducationManagement
 
 **특징**:
 - AWS S3에 파일 업로드 후 메타데이터만 저장
 - `order` 필드로 첨부파일 순서 관리
 - 파일 크기는 bytes 단위
+- **파일명으로 언어 구분**: 다국어 파일은 파일명에 언어 코드 포함 (예: `brochure_ko.pdf`, `brochure_en.pdf`, `popup_image_ja.jpg`)
+- **파일명 규칙**: `{파일명}_{언어코드}.{확장자}` 형식 권장
 
 ---
 
@@ -636,6 +673,15 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 ## 변경 이력
 
+### v5.9 (2026-01-08)
+- ✅ **첨부파일 관리 단순화**
+  - Brochure: attachments JSONB 필드 추가 (기본 테이블)
+  - BrochureTranslation: fileUrl 필드 제거
+  - IRTranslation: fileUrl 필드 제거
+  - MainPopupTranslation: imageUrl 필드 제거
+  - **파일명으로 언어 구분**: 다국어 파일은 파일명으로 구분 (예: `brochure_ko.pdf`, `brochure_en.pdf`, `popup_image_ko.jpg`)
+  - 모든 첨부파일은 기본 테이블의 attachments JSONB 배열로 통합 관리
+
 ### v5.8 (2026-01-08)
 - ✅ **파일 분리 완료**
   - 3개 파일로 분리: 메인(개요), 엔티티(상세), 데이터베이스(구현)
@@ -687,4 +733,4 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.8
+**버전**: v5.9
