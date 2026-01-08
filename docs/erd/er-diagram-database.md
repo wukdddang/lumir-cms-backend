@@ -446,7 +446,7 @@ ON announcement(released_at, expired_at)
 WHERE deleted_at IS NULL AND is_public = true;
 ```
 
-### AnnouncementRead / AnnouncementResponse
+### AnnouncementRead
 
 ```sql
 -- 공지사항별 통계
@@ -462,6 +462,20 @@ WHERE deleted_at IS NULL;
 -- 유니크 제약
 CREATE UNIQUE INDEX idx_announcement_read_unique 
 ON announcement_read(announcement_id, employee_id) 
+WHERE deleted_at IS NULL;
+```
+
+### Survey
+
+```sql
+-- 공지사항별 설문 조회 (유니크)
+CREATE UNIQUE INDEX idx_survey_announcement 
+ON survey(announcement_id) 
+WHERE deleted_at IS NULL;
+
+-- 설문 마감일 기준 정렬
+CREATE INDEX idx_survey_end_date 
+ON survey(end_date) 
 WHERE deleted_at IS NULL;
 ```
 
@@ -568,20 +582,12 @@ ALTER TABLE announcement ADD CONSTRAINT chk_announcement_permissions
   );
 ```
 
-### AnnouncementRead / AnnouncementResponse
+### AnnouncementRead
 
 ```sql
 -- 읽은 시각은 과거
 ALTER TABLE announcement_read ADD CONSTRAINT chk_announcement_read_time 
   CHECK (read_at <= NOW());
-
--- 응답 제출 시각은 과거
-ALTER TABLE announcement_response ADD CONSTRAINT chk_announcement_response_time 
-  CHECK (submitted_at <= NOW());
-
--- 응답 메시지는 비어있지 않음
-ALTER TABLE announcement_response ADD CONSTRAINT chk_announcement_response_message 
-  CHECK (LENGTH(TRIM(response_message)) > 0);
 ```
 
 ### Survey (설문조사)
@@ -591,9 +597,13 @@ ALTER TABLE announcement_response ADD CONSTRAINT chk_announcement_response_messa
 ALTER TABLE survey ADD CONSTRAINT chk_survey_dates 
   CHECK (end_date IS NULL OR start_date IS NULL OR end_date >= start_date);
 
--- 권한 배열은 비어있지 않음
-ALTER TABLE survey ADD CONSTRAINT chk_survey_permissions 
-  CHECK (jsonb_array_length(permission_employee_ids) > 0);
+-- announcementId는 필수 (NOT NULL)
+ALTER TABLE survey ALTER COLUMN announcement_id SET NOT NULL;
+
+-- announcementId는 유니크 (공지사항당 설문 1개)
+CREATE UNIQUE INDEX idx_survey_announcement_unique
+ON survey(announcement_id)
+WHERE deleted_at IS NULL;
 ```
 
 ### SurveyResponse (설문 응답)
@@ -632,22 +642,29 @@ ALTER TABLE survey_completion ADD CONSTRAINT chk_completion_valid
 
 ```sql
 -- file 타입은 fileUrl 필수
-ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_url 
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_url
   CHECK (
-    (type = 'file' AND file_url IS NOT NULL) OR 
+    (type = 'file' AND file_url IS NOT NULL) OR
     (type = 'folder' AND file_url IS NULL)
   );
 
 -- file 타입은 fileSize 양수
-ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_size 
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_size
   CHECK (
-    (type = 'folder') OR 
+    (type = 'folder') OR
     (type = 'file' AND file_size > 0)
   );
 
--- 권한 배열은 비어있지 않음
-ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_permissions 
-  CHECK (jsonb_array_length(permission_employee_ids) > 0);
+-- 제한공개 시 최소 하나의 권한 필드 필요
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_permissions
+  CHECK (
+    (is_public = true) OR
+    (is_public = false AND (
+      jsonb_array_length(permission_rank_codes) > 0 OR
+      jsonb_array_length(permission_position_codes) > 0 OR
+      jsonb_array_length(permission_department_codes) > 0
+    ))
+  );
 ```
 
 ### EducationManagement (교육 관리)
@@ -672,6 +689,24 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ---
 
 ## 변경 이력
+
+### v5.11 (2026-01-08)
+- ✅ **WikiFileSystem 권한 관리 개선**
+  - `WikiFileSystem.permissionEmployeeIds` 제거
+  - `WikiFileSystem.permissionRankCodes` 추가 (직급 코드 목록)
+  - `WikiFileSystem.permissionPositionCodes` 추가 (직책 코드 목록)
+  - `WikiFileSystem.permissionDepartmentCodes` 추가 (부서 코드 목록)
+  - CHECK 제약조건 업데이트: 제한공개 시 최소 하나의 권한 필드 필요 (Announcement 패턴과 동일)
+
+### v5.10 (2026-01-08)
+- ✅ **Survey-Announcement 통합**
+  - `Survey.announcementId` FK 추가 (필수, 유니크)
+  - `Survey.status` 제거 (Announcement.status 사용)
+  - `Survey.permissionEmployeeIds` 제거 (Announcement 권한 사용)
+  - `AnnouncementResponse` 엔티티 제거 (Survey로 통합)
+  - `Announcement.requiresResponse` 필드 제거
+  - CHECK 제약조건 업데이트: Survey의 permission 제약 제거, announcementId 유니크 제약 추가
+  - 인덱스 추가: `idx_survey_announcement`, `idx_survey_end_date`
 
 ### v5.9 (2026-01-08)
 - ✅ **첨부파일 관리 단순화**
@@ -733,4 +768,4 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.9
+**버전**: v5.11

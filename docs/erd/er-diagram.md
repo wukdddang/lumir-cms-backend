@@ -244,7 +244,6 @@ erDiagram
         timestamp releasedAt "nullable"
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
-        boolean requiresResponse "응답 필요 여부"
         varchar status "draft|approved|under_review|rejected|opened"
         jsonb permissionEmployeeIds "특정 직원 ID 목록"
         jsonb permissionRankCodes "직급 코드 목록"
@@ -265,20 +264,6 @@ erDiagram
         uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId) - 직원이 읽을 때 생성"
         uuid employeeId UK "외부 시스템 직원 ID (SSO)"
         timestamp readAt "읽은 시각"
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt "nullable"
-        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
-        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
-        int version
-    }
-
-    AnnouncementResponse {
-        uuid id PK "description"
-        uuid announcementId UK "FK - 유니크 제약조건: (announcementId, employeeId) - 직원이 응답할 때 생성"
-        uuid employeeId UK "외부 시스템 직원 ID (SSO)"
-        text responseMessage "응답 메시지"
-        timestamp submittedAt "응답 제출 시각"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
@@ -357,12 +342,11 @@ erDiagram
 
     Survey {
         uuid id PK "description"
+        uuid announcementId UK "FK - 공지사항 ID (유니크 제약조건: 공지사항당 설문 1개)"
         varchar title
         text description
-        varchar status "draft|approved|under_review|rejected|opened"
-        date startDate "nullable"
-        date endDate "nullable"
-        jsonb permissionEmployeeIds "외부 시스템 직원 IDs (SSO)"
+        date startDate "nullable - 설문 시작일"
+        date endDate "nullable - 설문 마감일"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -546,7 +530,9 @@ erDiagram
         bigint fileSize "nullable - 파일 크기(bytes)"
         varchar mimeType "nullable - MIME 타입"
         boolean isPublic
-        jsonb permissionEmployeeIds "외부 시스템 직원 IDs (SSO)"
+        jsonb permissionRankCodes "직급 코드 목록"
+        jsonb permissionPositionCodes "직책 코드 목록"
+        jsonb permissionDepartmentCodes "부서 코드 목록"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -584,7 +570,7 @@ erDiagram
     
     Announcement ||--o{ CategoryMapping : "has"
     Announcement ||--o{ AnnouncementRead : "has reads (lazy)"
-    Announcement ||--o{ AnnouncementResponse : "has responses (optional)"
+    Announcement ||--o| Survey : "has survey (optional)"
     
     %% ==========================================
     %% Relationships - Sub Domain
@@ -597,8 +583,7 @@ erDiagram
     LumirStory ||--o{ CategoryMapping : "has"
     
     VideoGallery ||--o{ CategoryMapping : "has"
-    
-    Survey ||--o{ CategoryMapping : "has"
+
     Survey ||--o{ SurveyQuestion : "has many"
     Survey ||--o{ SurveyCompletion : "has completions"
     
@@ -650,7 +635,7 @@ erDiagram
 | **MainPopup** | 메인 페이지 팝업 | ✅ |
 | **LumirStory** | 회사 스토리 및 콘텐츠 | ❌ |
 | **VideoGallery** | 비디오 콘텐츠 | ❌ |
-| **Survey** | 직원 설문조사 및 응답 (타입별 테이블 분리) | ❌ |
+| **Survey** | 공지사항 연동 설문조사 (타입별 응답 테이블 분리) | ❌ |
 | **EducationManagement** | 직원 교육 및 수강 관리 | ❌ |
 | **WikiFileSystem** | 문서 및 파일 관리 (계층 구조) | ❌ |
 
@@ -680,8 +665,8 @@ enum CategoryEntityType {
   LUMIR_STORY = 'lumir_story',
   VIDEO_GALLERY = 'video_gallery',
   NEWS = 'news',
-  SURVEY = 'survey',
   EDUCATION_MANAGEMENT = 'education_management'
+  // SURVEY 제거: Survey는 Announcement에 종속되어 카테고리 불필요
 }
 ```
 
@@ -801,6 +786,25 @@ enum WikiFileSystemType {
 
 ## 변경 이력
 
+### v5.11 (2026-01-08)
+- ✅ **WikiFileSystem 권한 관리 개선**
+  - `WikiFileSystem.permissionEmployeeIds` 제거
+  - `WikiFileSystem.permissionRankCodes` 추가 (직급 코드 목록)
+  - `WikiFileSystem.permissionPositionCodes` 추가 (직책 코드 목록)
+  - `WikiFileSystem.permissionDepartmentCodes` 추가 (부서 코드 목록)
+  - 세밀한 권한 관리 (Announcement와 동일한 패턴)
+  - CHECK 제약조건 업데이트: 제한공개 시 최소 하나의 권한 필드 필요
+
+### v5.10 (2026-01-08)
+- ✅ **Survey-Announcement 통합**
+  - `Survey.announcementId` FK 추가 (필수, 유니크)
+  - `Survey.status` 제거 (Announcement.status 사용)
+  - `Survey.permissionEmployeeIds` 제거 (Announcement 권한 사용)
+  - `AnnouncementResponse` 엔티티 제거 (Survey로 통합)
+  - `Announcement.requiresResponse` 필드 제거
+  - 설문조사는 공지사항에 종속되어 공지사항 상태/권한/마감일에 따라 제출 가능 여부 결정
+  - Survey의 CategoryMapping 관계 제거 (Announcement에서만 카테고리 관리)
+
 ### v5.9 (2026-01-08)
 - ✅ **첨부파일 관리 단순화**
   - Brochure: attachments JSONB 필드 추가 (기본 테이블)
@@ -814,4 +818,4 @@ enum WikiFileSystemType {
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.9
+**버전**: v5.11

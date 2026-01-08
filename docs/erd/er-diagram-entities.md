@@ -378,7 +378,6 @@ erDiagram
         timestamp releasedAt "nullable"
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
-        boolean requiresResponse "응답 필요"
         varchar status
         jsonb permissionEmployeeIds "특정 직원"
         jsonb permissionRankCodes "직급"
@@ -395,34 +394,60 @@ erDiagram
         timestamp readAt
     }
 
-    AnnouncementResponse {
+    Survey {
         uuid id PK
         uuid announcementId UK "FK"
-        uuid employeeId UK
-        text responseMessage
-        timestamp submittedAt
+        varchar title
+        text description
+        date startDate "nullable"
+        date endDate "nullable"
+        int order
     }
 
     Announcement ||--o{ AnnouncementRead : "tracks (lazy)"
-    Announcement ||--o{ AnnouncementResponse : "collects (optional)"
+    Announcement ||--o| Survey : "has survey (optional)"
 ```
 
 **특징**:
-- **Lazy Creation**: 읽음/응답 시점에 레코드 생성
+- **Lazy Creation**: 읽음 시점에 레코드 생성
 - **세밀한 권한**: 특정 직원, 직급, 직책, 부서별 공개 설정
-- **유니크 제약**: `(announcementId, employeeId)` - 중복 읽음/응답 방지
+- **유니크 제약**: `(announcementId, employeeId)` - 중복 읽음 방지
+- **설문조사 연결**: 공지사항에 설문조사를 선택적으로 연결 가능
 
 **권한 로직** (OR 조건):
 ```typescript
 function canAccess(announcement: Announcement, employee: Employee): boolean {
   if (announcement.isPublic) return true;
-  
+
   return (
     announcement.permissionEmployeeIds.includes(employee.id) ||
     announcement.permissionRankCodes.includes(employee.rankCode) ||
     announcement.permissionPositionCodes.includes(employee.positionCode) ||
     announcement.permissionDepartmentCodes.includes(employee.departmentCode)
   );
+}
+```
+
+**설문조사 제출 가능 조건**:
+```typescript
+function canSubmitSurvey(
+  survey: Survey,
+  announcement: Announcement,
+  employee: Employee
+): boolean {
+  // 1. 공지사항이 공개 상태여야 함
+  if (!announcement.isPublic) return false;
+  
+  // 2. 공지사항 상태가 'opened'여야 함
+  if (announcement.status !== 'opened') return false;
+  
+  // 3. 설문조사 마감일이 지나지 않았어야 함
+  if (survey.endDate && new Date() > survey.endDate) return false;
+  
+  // 4. 권한 확인
+  if (!canAccess(announcement, employee)) return false;
+  
+  return true;
 }
 ```
 
@@ -531,13 +556,19 @@ erDiagram
 erDiagram
     Survey {
         uuid id PK
+        uuid announcementId UK "FK - 공지사항 ID"
         varchar title
         text description
-        varchar status
         date startDate "nullable"
         date endDate "nullable"
-        jsonb permissionEmployeeIds
         int order
+    }
+    
+    Announcement {
+        uuid id PK
+        varchar title
+        varchar status
+        boolean isPublic
     }
     
     SurveyQuestion {
@@ -620,6 +651,7 @@ erDiagram
         timestamp completedAt "nullable"
     }
     
+    Announcement ||--o| Survey : "has (optional)"
     Survey ||--o{ SurveyQuestion : "has"
     Survey ||--o{ SurveyCompletion : "tracks"
     SurveyQuestion ||--o{ SurveyResponseText : "collects"
@@ -632,9 +664,35 @@ erDiagram
 ```
 
 **특징**:
+- **공지사항 종속**: Survey는 Announcement에 종속 (announcementId FK 필수)
+- **상태 관리**: Announcement.status로 통일 (Survey.status 제거)
+- **권한 관리**: Announcement의 권한 설정 사용 (Survey.permissionEmployeeIds 제거)
 - **타입별 응답 테이블**: 7개 테이블로 분리 (통계 쿼리 최적화)
 - **질문 타입**: short_answer, paragraph, multiple_choice, dropdown, checkboxes, file_upload, datetime, linear_scale, grid_scale
 - **완료 추적**: SurveyCompletion 테이블로 진행 상황 관리
+
+**설문조사 제출 가능 조건**:
+```typescript
+function canSubmitSurvey(
+  survey: Survey,
+  announcement: Announcement,
+  employee: Employee
+): boolean {
+  // 1. 공지사항이 공개 상태여야 함
+  if (!announcement.isPublic) return false;
+  
+  // 2. 공지사항 상태가 'opened'여야 함
+  if (announcement.status !== 'opened') return false;
+  
+  // 3. 설문조사 마감일이 지나지 않았어야 함
+  if (survey.endDate && new Date() > survey.endDate) return false;
+  
+  // 4. 권한 확인 (Announcement의 권한 사용)
+  if (!canAccessAnnouncement(announcement, employee)) return false;
+  
+  return true;
+}
+```
 
 **통계 쿼리 예시**:
 ```sql
@@ -706,7 +764,9 @@ erDiagram
         bigint fileSize "nullable"
         varchar mimeType "nullable"
         boolean isPublic
-        jsonb permissionEmployeeIds
+        jsonb permissionRankCodes "직급"
+        jsonb permissionPositionCodes "직책"
+        jsonb permissionDepartmentCodes "부서"
         int order
     }
     
@@ -717,7 +777,58 @@ erDiagram
 - **계층 구조**: parentId를 통한 자기 참조 (트리 구조)
 - **파일 타입**: folder (폴더) / file (파일)
 - **AWS S3**: 모든 파일은 S3에 업로드 후 URL 참조
-- **권한 관리**: permissionEmployeeIds로 접근 제어
+- **세밀한 권한**: 직급, 직책, 부서별 공개 설정 (Announcement와 동일한 패턴)
+
+**권한 로직** (OR 조건):
+```typescript
+// 단일 파일/폴더 권한 체크
+function canAccessWiki(wiki: WikiFileSystem, employee: Employee): boolean {
+  if (wiki.isPublic) return true;
+
+  return (
+    wiki.permissionRankCodes.includes(employee.rankCode) ||
+    wiki.permissionPositionCodes.includes(employee.positionCode) ||
+    wiki.permissionDepartmentCodes.includes(employee.departmentCode)
+  );
+}
+
+// 계층적 권한 체크 (상위 폴더 권한 상속)
+async function canAccessWikiHierarchy(
+  wikiId: string,
+  employee: Employee
+): Promise<boolean> {
+  // 1. 현재 파일/폴더부터 루트까지 경로 조회
+  const path = await getWikiPath(wikiId); // [child, parent, grandparent, ...]
+  
+  // 2. 상위 폴더부터 순차적으로 권한 체크 (역순)
+  for (const wiki of path.reverse()) {
+    if (!canAccessWiki(wiki, employee)) {
+      return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가
+    }
+  }
+  
+  return true;
+}
+
+// 재귀 쿼리로 전체 경로 조회
+async function getWikiPath(wikiId: string): Promise<WikiFileSystem[]> {
+  return db.query(`
+    WITH RECURSIVE path AS (
+      SELECT * FROM wiki_file_system WHERE id = $1
+      UNION ALL
+      SELECT w.* FROM wiki_file_system w
+      JOIN path p ON w.id = p.parent_id
+    )
+    SELECT * FROM path WHERE deleted_at IS NULL
+  `, [wikiId]);
+}
+```
+
+**⚠️ 중요: 계층적 권한 관리**
+- **상위 폴더의 권한이 더 제한적이면 하위 항목도 접근 불가**
+- 애플리케이션 레벨에서 처리 (데이터베이스 제약조건으로는 불가능)
+- 폴더/파일 조회 시 항상 `canAccessWikiHierarchy()` 사용 권장
+- 성능 최적화: 경로 정보 캐싱 고려
 
 **쿼리 예시**:
 ```sql
@@ -750,4 +861,4 @@ SELECT full_path FROM path WHERE parent_id IS NULL;
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.9
+**버전**: v5.11
