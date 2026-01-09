@@ -1,29 +1,16 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { LanguageCode } from './language-code.types';
 
 /**
  * Language Entity (언어)
- * 
+ *
  * 다국어 지원을 위한 언어 정보 관리
  */
 @Entity('languages')
 @Index('idx_language_code', ['code'])
 @Index('idx_language_is_active', ['isActive'])
-export class Language {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '언어 ID',
-  })
-  id: string;
-
+export class Language extends BaseEntity<Language> {
   @Column({
     type: 'varchar',
     length: 10,
@@ -46,41 +33,10 @@ export class Language {
   })
   isActive: boolean;
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): Language {
+    return this;
+  }
 }

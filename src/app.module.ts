@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from '@libs/database/database.module';
+import { LanguageInterfaceModule } from './interface/admin/language/language.module';
+import { BrochureInterfaceModule } from './interface/admin/brochure/brochure.module';
 
 /**
  * 루미르 CMS 애플리케이션 모듈
@@ -16,6 +19,13 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // 데이터베이스 모듈
+    DatabaseModule,
+
+    // Interface Layer 모듈
+    LanguageInterfaceModule,
+    BrochureInterfaceModule,
   ],
 })
 export class AppModule {}
