@@ -1,10 +1,10 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { Category } from './category.entity';
 
 /**
  * CategoryMapping Entity (카테고리 매핑)
- * 
+ *
  * 엔티티와 카테고리 간 다대다 관계 관리
  * 정규화된 구조로 유연한 카테고리 할당
  */

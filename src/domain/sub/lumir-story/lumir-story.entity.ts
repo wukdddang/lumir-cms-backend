@@ -1,10 +1,10 @@
 import { Entity, Column, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../../core/content-status.types';
 
 /**
  * LumirStory Entity (루미르 스토리)
- * 
+ *
  * 회사 스토리 및 콘텐츠 관리
  * 다국어 지원: 없음
  */

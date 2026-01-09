@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ElectronicDisclosure } from './electronic-disclosure.entity';
 import { Language } from '../../common/language/language.entity';
 

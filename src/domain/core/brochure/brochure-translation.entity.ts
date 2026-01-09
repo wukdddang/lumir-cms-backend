@@ -1,11 +1,11 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { Brochure } from './brochure.entity';
 import { Language } from '../../common/language/language.entity';
 
 /**
  * BrochureTranslation Entity (브로슈어 번역)
- * 
+ *
  * 브로슈어의 언어별 콘텐츠
  */
 @Entity('brochure_translations')

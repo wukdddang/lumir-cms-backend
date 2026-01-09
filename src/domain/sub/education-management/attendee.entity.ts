@@ -1,11 +1,11 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { AttendeeStatus } from './attendee-status.types';
 import { EducationManagement } from './education-management.entity';
 
 /**
  * Attendee Entity (수강자)
- * 
+ *
  * 교육별 수강자 정보 및 완료 상태
  * 같은 직원이 같은 교육에 중복 등록 불가
  */
@@ -22,11 +22,9 @@ export class Attendee extends BaseEntity<Attendee> {
   })
   educationManagementId: string;
 
-  @ManyToOne(
-    () => EducationManagement,
-    (education) => education.attendees,
-    { onDelete: 'CASCADE' },
-  )
+  @ManyToOne(() => EducationManagement, (education) => education.attendees, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'educationManagementId' })
   educationManagement: EducationManagement;
 

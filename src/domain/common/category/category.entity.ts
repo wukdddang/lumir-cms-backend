@@ -1,10 +1,10 @@
 import { Entity, Column, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { CategoryEntityType } from './category-entity-type.types';
 
 /**
  * Category Entity (카테고리)
- * 
+ *
  * 모든 도메인에서 공유하는 통합 카테고리 관리
  * entityType 필드로 도메인 구분
  */

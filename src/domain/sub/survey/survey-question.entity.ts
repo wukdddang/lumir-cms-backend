@@ -1,11 +1,11 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { InqueryType } from './inquery-type.types';
 import { Survey } from './survey.entity';
 
 /**
  * SurveyQuestion Entity (설문 질문)
- * 
+ *
  * 설문조사의 질문 항목
  * 질문 타입에 따라 form 필드에 동적 데이터 저장
  */

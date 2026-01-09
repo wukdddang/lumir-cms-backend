@@ -1,11 +1,11 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 import { ElectronicDisclosureTranslation } from './electronic-disclosure-translation.entity';
 
 /**
  * ElectronicDisclosure Entity (전자공시)
- * 
+ *
  * 법적 전자공시 문서 관리
  * 다국어 지원: ElectronicDisclosureTranslation
  */

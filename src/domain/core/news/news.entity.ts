@@ -1,10 +1,10 @@
 import { Entity, Column, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 
 /**
  * News Entity (뉴스)
- * 
+ *
  * 언론 보도 및 뉴스 관리
  * 다국어 지원: 없음
  */

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { WikiFileSystemType } from './wiki-file-system-type.types';
 import { WikiFileSystemClosure } from './wiki-file-system-closure.entity';
 import { WikiPermissionLog } from './wiki-permission-log.entity';

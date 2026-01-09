@@ -9,6 +9,7 @@ import {
   DeleteLanguageHandler,
   GetLanguageListHandler,
   GetLanguageDetailHandler,
+  InitializeDefaultLanguagesHandler,
 } from './handlers';
 
 /**
@@ -17,10 +18,7 @@ import {
  * 언어 생성, 수정, 삭제 및 조회 비즈니스 로직을 담당합니다.
  */
 @Module({
-  imports: [
-    CqrsModule,
-    TypeOrmModule.forFeature([Language]),
-  ],
+  imports: [CqrsModule, TypeOrmModule.forFeature([Language])],
   providers: [
     LanguageContextService,
     CreateLanguageHandler,
@@ -28,6 +26,7 @@ import {
     DeleteLanguageHandler,
     GetLanguageListHandler,
     GetLanguageDetailHandler,
+    InitializeDefaultLanguagesHandler,
   ],
   exports: [LanguageContextService],
 })

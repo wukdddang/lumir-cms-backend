@@ -1,11 +1,11 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { VoteResult } from './vote-result.entity';
 import { Language } from '../../common/language/language.entity';
 
 /**
  * VoteResultTranslation Entity (의결 결과 번역)
- * 
+ *
  * 의결 결과 안건의 언어별 콘텐츠
  */
 @Entity('vote_result_translations')
@@ -19,11 +19,9 @@ export class VoteResultTranslation extends BaseEntity<VoteResultTranslation> {
   })
   voteResultId: string;
 
-  @ManyToOne(
-    () => VoteResult,
-    (voteResult) => voteResult.translations,
-    { onDelete: 'CASCADE' },
-  )
+  @ManyToOne(() => VoteResult, (voteResult) => voteResult.translations, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'voteResultId' })
   voteResult: VoteResult;
 

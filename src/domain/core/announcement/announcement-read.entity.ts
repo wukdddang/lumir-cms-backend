@@ -1,10 +1,10 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { Announcement } from './announcement.entity';
 
 /**
  * AnnouncementRead Entity (공지사항 읽음 표시)
- * 
+ *
  * Lazy Creation 패턴: 직원이 읽을 때만 레코드 생성
  * 직원별 공지사항 읽음 여부 추적
  */

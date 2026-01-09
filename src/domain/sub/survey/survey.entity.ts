@@ -1,5 +1,5 @@
 import { Entity, Column, OneToOne, OneToMany, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { Announcement } from '../../core/announcement/announcement.entity';
 import { SurveyQuestion } from './survey-question.entity';
 import { SurveyCompletion } from './survey-completion.entity';

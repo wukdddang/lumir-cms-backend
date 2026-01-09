@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../../core/content-status.types';
 import { MainPopupTranslation } from './main-popup-translation.entity';
 

@@ -1,12 +1,12 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 import { VoteResult } from './vote-result.entity';
 import { ShareholdersMeetingTranslation } from './shareholders-meeting-translation.entity';
 
 /**
  * ShareholdersMeeting Entity (주주총회)
- * 
+ *
  * 주주총회 정보 및 의결 결과 관리
  * 다국어 지원: ShareholdersMeetingTranslation
  */
@@ -77,11 +77,9 @@ export class ShareholdersMeeting extends BaseEntity<ShareholdersMeeting> {
   })
   order: number;
 
-  @OneToMany(
-    () => VoteResult,
-    (voteResult) => voteResult.shareholdersMeeting,
-    { cascade: true },
-  )
+  @OneToMany(() => VoteResult, (voteResult) => voteResult.shareholdersMeeting, {
+    cascade: true,
+  })
   voteResults: VoteResult[];
 
   @OneToMany(

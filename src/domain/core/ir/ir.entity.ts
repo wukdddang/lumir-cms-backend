@@ -1,11 +1,11 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 import { IRTranslation } from './ir-translation.entity';
 
 /**
  * IR Entity (투자자 정보)
- * 
+ *
  * IR 자료 및 투자자 정보 관리
  * 다국어 지원: IRTranslation
  */

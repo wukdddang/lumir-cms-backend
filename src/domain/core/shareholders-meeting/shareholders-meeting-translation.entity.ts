@@ -1,17 +1,21 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ShareholdersMeeting } from './shareholders-meeting.entity';
 import { Language } from '../../common/language/language.entity';
 
 /**
  * ShareholdersMeetingTranslation Entity (주주총회 번역)
- * 
+ *
  * 주주총회의 언어별 콘텐츠
  */
 @Entity('shareholders_meeting_translations')
-@Index('uk_shareholders_meeting_translation', ['shareholdersMeetingId', 'languageId'], {
-  unique: true,
-})
+@Index(
+  'uk_shareholders_meeting_translation',
+  ['shareholdersMeetingId', 'languageId'],
+  {
+    unique: true,
+  },
+)
 export class ShareholdersMeetingTranslation extends BaseEntity<ShareholdersMeetingTranslation> {
   @Column({
     type: 'uuid',
@@ -19,11 +23,9 @@ export class ShareholdersMeetingTranslation extends BaseEntity<ShareholdersMeeti
   })
   shareholdersMeetingId: string;
 
-  @ManyToOne(
-    () => ShareholdersMeeting,
-    (meeting) => meeting.translations,
-    { onDelete: 'CASCADE' },
-  )
+  @ManyToOne(() => ShareholdersMeeting, (meeting) => meeting.translations, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'shareholdersMeetingId' })
   shareholdersMeeting: ShareholdersMeeting;
 

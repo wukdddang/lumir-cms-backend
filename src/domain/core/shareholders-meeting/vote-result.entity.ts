@@ -1,12 +1,19 @@
-import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+  Index,
+} from 'typeorm';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { VoteResultType } from './vote-result-type.types';
 import { ShareholdersMeeting } from './shareholders-meeting.entity';
 import { VoteResultTranslation } from './vote-result-translation.entity';
 
 /**
  * VoteResult Entity (의결 결과)
- * 
+ *
  * 주주총회 안건별 의결 결과
  * 다국어 지원: VoteResultTranslation
  */
@@ -20,11 +27,9 @@ export class VoteResult extends BaseEntity<VoteResult> {
   })
   shareholdersMeetingId: string;
 
-  @ManyToOne(
-    () => ShareholdersMeeting,
-    (meeting) => meeting.voteResults,
-    { onDelete: 'CASCADE' },
-  )
+  @ManyToOne(() => ShareholdersMeeting, (meeting) => meeting.voteResults, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'shareholdersMeetingId' })
   shareholdersMeeting: ShareholdersMeeting;
 

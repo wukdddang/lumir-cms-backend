@@ -98,4 +98,18 @@ export class LanguageBusinessService {
 
     return result;
   }
+
+  /**
+   * 기본 언어들을 추가한다
+   */
+  async 기본_언어들을_추가한다(createdBy?: string): Promise<Language[]> {
+    this.logger.log('기본 언어 추가 시작');
+
+    const result =
+      await this.languageContextService.기본_언어들을_추가한다(createdBy);
+
+    this.logger.log(`기본 언어 추가 완료 - 총 ${result.length}개 추가됨`);
+
+    return result;
+  }
 }

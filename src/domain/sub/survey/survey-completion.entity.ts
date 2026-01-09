@@ -1,10 +1,10 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { Survey } from './survey.entity';
 
 /**
  * SurveyCompletion Entity (설문 완료 추적)
- * 
+ *
  * 직원별 설문 완료 여부 관리
  * 완료 여부는 totalQuestions === answeredQuestions로 계산
  */

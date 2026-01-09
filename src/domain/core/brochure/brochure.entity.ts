@@ -1,11 +1,11 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 import { BrochureTranslation } from './brochure-translation.entity';
 
 /**
  * Brochure Entity (브로슈어)
- * 
+ *
  * 회사 소개 및 제품 브로슈어 관리
  * 다국어 지원: BrochureTranslation
  */
@@ -32,7 +32,8 @@ export class Brochure extends BaseEntity<Brochure> {
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '첨부파일 목록 (AWS S3 URLs) - 파일명으로 언어 구분 (예: brochure_ko.pdf)',
+    comment:
+      '첨부파일 목록 (AWS S3 URLs) - 파일명으로 언어 구분 (예: brochure_ko.pdf)',
   })
   attachments: Array<{
     fileName: string;

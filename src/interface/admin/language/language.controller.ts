@@ -91,6 +91,29 @@ export class LanguageController {
   }
 
   /**
+   * 기본 언어들을 추가한다
+   */
+  @Post('initialize-default')
+  @ApiOperation({
+    summary: '기본 언어 초기화',
+    description:
+      '한국어, 영어, 일본어, 중국어를 자동으로 추가합니다. 이미 존재하는 언어는 건너뜁니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '기본 언어 추가 성공',
+    type: [LanguageResponseDto],
+  })
+  async 기본_언어들을_추가한다(): Promise<LanguageListResponseDto> {
+    const items = await this.languageBusinessService.기본_언어들을_추가한다();
+
+    return {
+      items,
+      total: items.length,
+    };
+  }
+
+  /**
    * 언어를 수정한다
    */
   @Put(':id')

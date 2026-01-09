@@ -1,5 +1,5 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
-import { BaseEntity } from '@libs/base/base.entity';
+import { BaseEntity } from '@libs/database/base/base.entity';
 import { EducationStatus } from './education-status.types';
 import { Attendee } from './attendee.entity';
 
