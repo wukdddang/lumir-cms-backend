@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Public } from '@interface/common/decorators/public.decorator';
 import { BrochureBusinessService } from '@business/brochure-business/brochure-business.service';
 import { CreateBrochureDto } from '@interface/common/dto/brochure/create-brochure.dto';
 import {
@@ -36,6 +37,7 @@ import {
 
 @ApiTags('A-2. 관리자 - 브로슈어')
 @ApiBearerAuth('Bearer')
+@Public() // 테스트를 위해 임시로 Public 설정
 @Controller('admin/brochures')
 export class BrochureController {
   constructor(
@@ -67,22 +69,39 @@ export class BrochureController {
     description: '정렬 기준 (order: 정렬순서, createdAt: 생성일시)',
     enum: ['order', 'createdAt'],
   })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호 (기본값: 1)',
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '페이지당 개수 (기본값: 10)',
+    type: Number,
+    example: 10,
+  })
   async 브로슈어_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ): Promise<BrochureListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
 
-    const items = await this.brochureBusinessService.브로슈어_목록을_조회한다(
+    const result = await this.brochureBusinessService.브로슈어_목록을_조회한다(
       isPublicFilter,
       orderBy || 'order',
+      pageNum,
+      limitNum,
     );
 
-    return {
-      items,
-      total: items.length,
-    };
+    return result;
   }
 
   /**
@@ -102,6 +121,33 @@ export class BrochureController {
     @Body() createDto: CreateBrochureDto,
   ): Promise<BrochureResponseDto> {
     return await this.brochureBusinessService.브로슈어를_생성한다(createDto);
+  }
+
+  /**
+   * 기본 브로슈어들을 추가한다
+   */
+  @Post('initialize-default')
+  @ApiOperation({
+    summary: '기본 브로슈어 초기화',
+    description:
+      '기본 브로슈어 목 데이터를 추가합니다. (회사 소개, 제품 카탈로그, 기술 백서)',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '기본 브로슈어 추가 성공',
+    type: [BrochureResponseDto],
+  })
+  async 기본_브로슈어들을_추가한다(): Promise<BrochureListResponseDto> {
+    const items =
+      await this.brochureBusinessService.기본_브로슈어들을_추가한다();
+
+    return {
+      items,
+      total: items.length,
+      page: 1,
+      limit: items.length,
+      totalPages: 1,
+    };
   }
 
   /**
@@ -325,13 +371,11 @@ export class BrochureController {
   async 브로슈어_카테고리_오더를_변경한다(
     @Param('id') id: string,
     @Body() updateDto: UpdateBrochureCategoryOrderDto,
-  ): Promise<{ success: boolean }> {
-    const result =
-      await this.brochureBusinessService.브로슈어_카테고리_오더를_변경한다(
-        id,
-        updateDto,
-      );
-    return { success: result };
+  ): Promise<BrochureCategoryResponseDto> {
+    return await this.brochureBusinessService.브로슈어_카테고리_오더를_변경한다(
+      id,
+      updateDto,
+    );
   }
 
   /**

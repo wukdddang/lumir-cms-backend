@@ -12,6 +12,8 @@ export class GetBrochureListQuery {
   constructor(
     public readonly isPublic?: boolean,
     public readonly orderBy: 'order' | 'createdAt' = 'order',
+    public readonly page: number = 1,
+    public readonly limit: number = 10,
   ) {}
 }
 
@@ -28,9 +30,11 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
   ) {}
 
   async execute(query: GetBrochureListQuery): Promise<BrochureListResult> {
-    const { isPublic, orderBy } = query;
+    const { isPublic, orderBy, page, limit } = query;
 
-    this.logger.debug(`브로슈어 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}`);
+    this.logger.debug(
+      `브로슈어 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+    );
 
     const queryBuilder = this.brochureRepository
       .createQueryBuilder('brochure')
@@ -47,8 +51,12 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
       queryBuilder.orderBy('brochure.createdAt', 'DESC');
     }
 
+    // 페이지네이션 적용
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return { items, total };
+    return { items, total, page, limit };
   }
 }

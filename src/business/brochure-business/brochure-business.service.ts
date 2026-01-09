@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { BrochureContextService } from '@context/brochure-context/brochure-context.service';
+import { CategoryService } from '@domain/common/category/category.service';
+import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
+import { Category } from '@domain/common/category/category.entity';
 import { ContentStatus } from '@domain/core/content-status.types';
 import { BrochureDetailResult } from '@context/brochure-context/interfaces/brochure-context.interface';
 
@@ -17,6 +20,7 @@ export class BrochureBusinessService {
 
   constructor(
     private readonly brochureContextService: BrochureContextService,
+    private readonly categoryService: CategoryService,
   ) {}
 
   /**
@@ -25,19 +29,34 @@ export class BrochureBusinessService {
   async 브로슈어_목록을_조회한다(
     isPublic?: boolean,
     orderBy: 'order' | 'createdAt' = 'order',
-  ): Promise<Brochure[]> {
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{
+    items: Brochure[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     this.logger.log(
-      `브로슈어 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}`,
+      `브로슈어 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const result = await this.brochureContextService.브로슈어_목록을_조회한다(
       isPublic,
       orderBy,
+      page,
+      limit,
     );
+
+    const totalPages = Math.ceil(result.total / result.limit);
 
     this.logger.log(`브로슈어 목록 조회 완료 - 총 ${result.total}개`);
 
-    return result.items;
+    return {
+      ...result,
+      totalPages,
+    };
   }
 
   /**
@@ -90,15 +109,20 @@ export class BrochureBusinessService {
   /**
    * 브로슈어 카테고리 목록을 조회한다
    */
-  async 브로슈어_카테고리_목록을_조회한다(): Promise<any[]> {
+  async 브로슈어_카테고리_목록을_조회한다(): Promise<Category[]> {
     this.logger.log(`브로슈어 카테고리 목록 조회 시작`);
 
-    // TODO: 카테고리 관련 로직 구현 필요
-    // Category Context Service와 통합 필요
+    const categories =
+      await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+        CategoryEntityType.BROCHURE,
+        false, // 활성화된 것만
+      );
 
-    this.logger.log(`브로슈어 카테고리 목록 조회 완료`);
+    this.logger.log(
+      `브로슈어 카테고리 목록 조회 완료 - 총 ${categories.length}개`,
+    );
 
-    return [];
+    return categories;
   }
 
   /**
@@ -196,16 +220,24 @@ export class BrochureBusinessService {
    */
   async 브로슈어_카테고리를_생성한다(data: {
     name: string;
+    description?: string;
+    order?: number;
     createdBy?: string;
-  }): Promise<any> {
+  }): Promise<Category> {
     this.logger.log(`브로슈어 카테고리 생성 시작 - 이름: ${data.name}`);
 
-    // TODO: 카테고리 관련 로직 구현 필요
-    // Category Context Service와 통합 필요
+    const category = await this.categoryService.카테고리를_생성한다({
+      entityType: CategoryEntityType.BROCHURE,
+      name: data.name,
+      description: data.description,
+      isActive: true,
+      order: data.order ?? 0,
+      createdBy: data.createdBy,
+    });
 
-    this.logger.log(`브로슈어 카테고리 생성 완료`);
+    this.logger.log(`브로슈어 카테고리 생성 완료 - ID: ${category.id}`);
 
-    return {};
+    return category;
   }
 
   /**
@@ -217,15 +249,17 @@ export class BrochureBusinessService {
       order: number;
       updatedBy?: string;
     },
-  ): Promise<boolean> {
+  ): Promise<Category> {
     this.logger.log(`브로슈어 카테고리 오더 변경 시작 - ID: ${id}`);
 
-    // TODO: 카테고리 관련 로직 구현 필요
-    // Category Context Service와 통합 필요
+    const category = await this.categoryService.카테고리를_업데이트한다(id, {
+      order: data.order,
+      updatedBy: data.updatedBy,
+    });
 
     this.logger.log(`브로슈어 카테고리 오더 변경 완료 - ID: ${id}`);
 
-    return true;
+    return category;
   }
 
   /**
@@ -234,12 +268,11 @@ export class BrochureBusinessService {
   async 브로슈어_카테고리를_삭제한다(id: string): Promise<boolean> {
     this.logger.log(`브로슈어 카테고리 삭제 시작 - ID: ${id}`);
 
-    // TODO: 카테고리 관련 로직 구현 필요
-    // Category Context Service와 통합 필요
+    const result = await this.categoryService.카테고리를_삭제한다(id);
 
     this.logger.log(`브로슈어 카테고리 삭제 완료 - ID: ${id}`);
 
-    return true;
+    return result;
   }
 
   /**
@@ -265,6 +298,20 @@ export class BrochureBusinessService {
     );
 
     this.logger.log(`브로슈어 파일 수정 완료 - ID: ${id}`);
+
+    return result;
+  }
+
+  /**
+   * 기본 브로슈어들을 추가한다
+   */
+  async 기본_브로슈어들을_추가한다(createdBy?: string): Promise<Brochure[]> {
+    this.logger.log('기본 브로슈어 추가 시작');
+
+    const result =
+      await this.brochureContextService.기본_브로슈어들을_추가한다(createdBy);
+
+    this.logger.log(`기본 브로슈어 추가 완료 - 총 ${result.length}개 추가됨`);
 
     return result;
   }

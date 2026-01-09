@@ -99,6 +99,8 @@ export interface CreateBrochureResult {
 export interface BrochureListResult {
   items: Brochure[];
   total: number;
+  page: number;
+  limit: number;
 }
 
 /**

@@ -25,7 +25,10 @@ export class BrochureAttachmentDto {
   @ApiProperty({ description: '파일명', example: 'brochure_ko.pdf' })
   fileName: string;
 
-  @ApiProperty({ description: '파일 URL', example: 'https://s3.amazonaws.com/...' })
+  @ApiProperty({
+    description: '파일 URL',
+    example: 'https://s3.amazonaws.com/...',
+  })
   fileUrl: string;
 
   @ApiProperty({ description: '파일 크기 (bytes)', example: 1024000 })
@@ -45,8 +48,8 @@ export class BrochureResponseDto {
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
 
-  @ApiProperty({ 
-    description: '상태', 
+  @ApiProperty({
+    description: '상태',
     enum: ContentStatus,
     example: ContentStatus.OPENED,
   })
@@ -55,16 +58,16 @@ export class BrochureResponseDto {
   @ApiProperty({ description: '정렬 순서', example: 1 })
   order: number;
 
-  @ApiProperty({ 
-    description: '첨부파일 목록', 
+  @ApiProperty({
+    description: '첨부파일 목록',
     type: [BrochureAttachmentDto],
     required: false,
     nullable: true,
   })
   attachments: BrochureAttachmentDto[] | null;
 
-  @ApiProperty({ 
-    description: '번역 목록', 
+  @ApiProperty({
+    description: '번역 목록',
     type: [BrochureTranslationResponseDto],
   })
   translations: BrochureTranslationResponseDto[];
@@ -91,6 +94,15 @@ export class BrochureListResponseDto {
 
   @ApiProperty({ description: '총 개수', example: 10 })
   total: number;
+
+  @ApiProperty({ description: '현재 페이지', example: 1 })
+  page: number;
+
+  @ApiProperty({ description: '페이지당 개수', example: 10 })
+  limit: number;
+
+  @ApiProperty({ description: '총 페이지 수', example: 2 })
+  totalPages: number;
 }
 
 /**
@@ -103,16 +115,32 @@ export class BrochureCategoryResponseDto {
   @ApiProperty({ description: '카테고리 이름', example: '제품 소개' })
   name: string;
 
-  @ApiProperty({ description: '브로슈어 개수', example: 5 })
-  brochureCount: number;
+  @ApiProperty({
+    description: '카테고리 설명',
+    example: '제품 관련 브로슈어',
+    required: false,
+  })
+  description?: string | null;
+
+  @ApiProperty({ description: '활성화 여부', example: true })
+  isActive: boolean;
+
+  @ApiProperty({ description: '정렬 순서', example: 0 })
+  order: number;
+
+  @ApiProperty({ description: '생성일시' })
+  createdAt: Date;
+
+  @ApiProperty({ description: '수정일시' })
+  updatedAt: Date;
 }
 
 /**
  * 브로슈어 카테고리 목록 응답 DTO
  */
 export class BrochureCategoryListResponseDto {
-  @ApiProperty({ 
-    description: '카테고리 목록', 
+  @ApiProperty({
+    description: '카테고리 목록',
     type: [BrochureCategoryResponseDto],
   })
   items: BrochureCategoryResponseDto[];

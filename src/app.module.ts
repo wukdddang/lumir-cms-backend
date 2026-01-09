@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from '@libs/database/database.module';
+import { AuthInterfaceModule } from './interface/admin/auth/auth.module';
 import { LanguageInterfaceModule } from './interface/admin/language/language.module';
 import { BrochureInterfaceModule } from './interface/admin/brochure/brochure.module';
+import { AuthContextModule } from '@context/auth-context';
+import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
 
 /**
  * 루미르 CMS 애플리케이션 모듈
@@ -23,9 +27,20 @@ import { BrochureInterfaceModule } from './interface/admin/brochure/brochure.mod
     // 데이터베이스 모듈
     DatabaseModule,
 
+    // Context Layer 모듈
+    AuthContextModule,
+
     // Interface Layer 모듈
+    AuthInterfaceModule,
     LanguageInterfaceModule,
     BrochureInterfaceModule,
+  ],
+  providers: [
+    // 전역 JWT 인증 가드 설정
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
 })
 export class AppModule {}

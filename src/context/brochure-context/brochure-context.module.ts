@@ -14,6 +14,7 @@ import {
   UpdateBrochureFileHandler,
   GetBrochureListHandler,
   GetBrochureDetailHandler,
+  InitializeDefaultBrochuresHandler,
 } from './handlers';
 
 /**
@@ -36,6 +37,7 @@ import {
     UpdateBrochureFileHandler,
     GetBrochureListHandler,
     GetBrochureDetailHandler,
+    InitializeDefaultBrochuresHandler,
   ],
   exports: [BrochureContextService],
 })
