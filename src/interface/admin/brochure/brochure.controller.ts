@@ -20,6 +20,7 @@ import {
   ApiQuery,
   ApiConsumes,
   ApiBody,
+  ApiExcludeEndpoint,
 } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Public } from '@interface/common/decorators/public.decorator';
@@ -254,16 +255,7 @@ export class BrochureController {
    * 기본 브로슈어들을 생성한다
    */
   @Post('create-default')
-  @ApiOperation({
-    summary: '기본 브로슈어 생성',
-    description:
-      '기본 브로슈어 목 데이터를 생성합니다. (회사 소개, 제품 카탈로그, 기술 백서)',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '기본 브로슈어 생성 성공',
-    type: [BrochureResponseDto],
-  })
+  @ApiExcludeEndpoint()
   async 기본_브로슈어들을_생성한다(): Promise<BrochureResponseDto[]> {
     return await this.brochureBusinessService.기본_브로슈어들을_생성한다(
       'system',
@@ -274,22 +266,7 @@ export class BrochureController {
    * 기본 브로슈어들을 초기화한다 (일괄 제거)
    */
   @Delete('initialize-default')
-  @ApiOperation({
-    summary: '기본 브로슈어 초기화',
-    description:
-      '기본 브로슈어 목 데이터를 일괄 제거합니다. (system 사용자가 생성한 브로슈어 삭제)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '기본 브로슈어 초기화 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        deletedCount: { type: 'number', example: 3 },
-      },
-    },
-  })
+  @ApiExcludeEndpoint()
   async 기본_브로슈어들을_초기화한다(): Promise<{
     success: boolean;
     deletedCount: number;
