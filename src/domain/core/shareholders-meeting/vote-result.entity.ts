@@ -1,16 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { VoteResultType } from './vote-result-type.types';
 import { ShareholdersMeeting } from './shareholders-meeting.entity';
 import { VoteResultTranslation } from './vote-result-translation.entity';
@@ -24,12 +13,7 @@ import { VoteResultTranslation } from './vote-result-translation.entity';
 @Entity('vote_results')
 @Index('idx_vote_result_shareholders_meeting_id', ['shareholdersMeetingId'])
 @Index('idx_vote_result_agenda_number', ['agendaNumber'])
-export class VoteResult {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '의결 결과 ID',
-  })
-  id: string;
-
+export class VoteResult extends BaseEntity<VoteResult> {
   @Column({
     type: 'uuid',
     comment: '주주총회 ID',
@@ -88,41 +72,10 @@ export class VoteResult {
   )
   translations: VoteResultTranslation[];
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): VoteResult {
+    return this;
+  }
 }

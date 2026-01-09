@@ -1,15 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { AttendeeStatus } from './attendee-status.types';
 import { EducationManagement } from './education-management.entity';
 
@@ -25,12 +15,7 @@ import { EducationManagement } from './education-management.entity';
 })
 @Index('idx_attendee_employee_id', ['employeeId'])
 @Index('idx_attendee_status', ['status'])
-export class Attendee {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '수강자 ID',
-  })
-  id: string;
-
+export class Attendee extends BaseEntity<Attendee> {
   @Column({
     type: 'uuid',
     comment: '교육 관리 ID',
@@ -66,41 +51,10 @@ export class Attendee {
   })
   completedAt: Date | null;
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): Attendee {
+    return this;
+  }
 }

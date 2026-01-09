@@ -1,16 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { WikiFileSystemType } from './wiki-file-system-type.types';
 import { WikiFileSystemClosure } from './wiki-file-system-closure.entity';
 import { WikiPermissionLog } from './wiki-permission-log.entity';
@@ -29,12 +18,7 @@ import { WikiPermissionLog } from './wiki-permission-log.entity';
 @Index('idx_wiki_file_system_is_public', ['isPublic'])
 @Index('idx_wiki_file_system_depth', ['depth'])
 @Index('idx_wiki_file_system_order', ['order'])
-export class WikiFileSystem {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '위키 파일 시스템 ID',
-  })
-  id: string;
-
+export class WikiFileSystem extends BaseEntity<WikiFileSystem> {
   @Column({
     type: 'varchar',
     length: 500,
@@ -138,41 +122,10 @@ export class WikiFileSystem {
   @OneToMany(() => WikiPermissionLog, (log) => log.wikiFileSystem)
   permissionLogs: WikiPermissionLog[];
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): WikiFileSystem {
+    return this;
+  }
 }

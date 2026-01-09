@@ -1,15 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { Announcement } from './announcement.entity';
 
 /**
@@ -23,12 +13,7 @@ import { Announcement } from './announcement.entity';
   unique: true,
 })
 @Index('idx_announcement_read_employee_id', ['employeeId'])
-export class AnnouncementRead {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '공지사항 읽음 ID',
-  })
-  id: string;
-
+export class AnnouncementRead extends BaseEntity<AnnouncementRead> {
   @Column({
     type: 'uuid',
     comment: '공지사항 ID',
@@ -53,41 +38,10 @@ export class AnnouncementRead {
   })
   readAt: Date;
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): AnnouncementRead {
+    return this;
+  }
 }

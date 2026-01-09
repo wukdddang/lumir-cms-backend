@@ -1,16 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToOne,
-  OneToMany,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, OneToOne, OneToMany, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { Announcement } from '../../core/announcement/announcement.entity';
 import { SurveyQuestion } from './survey-question.entity';
 import { SurveyCompletion } from './survey-completion.entity';
@@ -28,12 +17,7 @@ import { SurveyCompletion } from './survey-completion.entity';
 @Index('idx_survey_start_date', ['startDate'])
 @Index('idx_survey_end_date', ['endDate'])
 @Index('idx_survey_order', ['order'])
-export class Survey {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '설문조사 ID',
-  })
-  id: string;
-
+export class Survey extends BaseEntity<Survey> {
   @Column({
     type: 'uuid',
     unique: true,
@@ -88,41 +72,10 @@ export class Survey {
   @OneToMany(() => SurveyCompletion, (completion) => completion.survey)
   completions: SurveyCompletion[];
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): Survey {
+    return this;
+  }
 }

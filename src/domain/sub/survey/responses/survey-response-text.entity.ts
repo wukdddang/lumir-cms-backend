@@ -1,13 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 
 /**
  * SurveyResponseText Entity (설문 응답 - 텍스트)
@@ -19,12 +11,7 @@ import {
   unique: true,
 })
 @Index('idx_survey_response_text_employee_id', ['employeeId'])
-export class SurveyResponseText {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '응답 ID',
-  })
-  id: string;
-
+export class SurveyResponseText extends BaseEntity<SurveyResponseText> {
   @Column({
     type: 'uuid',
     comment: '질문 ID',
@@ -49,41 +36,10 @@ export class SurveyResponseText {
   })
   submittedAt: Date;
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): SurveyResponseText {
+    return this;
+  }
 }

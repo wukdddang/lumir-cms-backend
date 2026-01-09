@@ -1,14 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { ContentStatus } from '../content-status.types';
 import { ElectronicDisclosureTranslation } from './electronic-disclosure-translation.entity';
 
@@ -22,12 +13,7 @@ import { ElectronicDisclosureTranslation } from './electronic-disclosure-transla
 @Index('idx_electronic_disclosure_status', ['status'])
 @Index('idx_electronic_disclosure_is_public', ['isPublic'])
 @Index('idx_electronic_disclosure_order', ['order'])
-export class ElectronicDisclosure {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '전자공시 ID',
-  })
-  id: string;
-
+export class ElectronicDisclosure extends BaseEntity<ElectronicDisclosure> {
   @Column({
     type: 'boolean',
     default: true,
@@ -57,41 +43,10 @@ export class ElectronicDisclosure {
   )
   translations: ElectronicDisclosureTranslation[];
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): ElectronicDisclosure {
+    return this;
+  }
 }

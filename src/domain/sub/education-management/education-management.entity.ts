@@ -1,14 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { EducationStatus } from './education-status.types';
 import { Attendee } from './attendee.entity';
 
@@ -24,12 +15,7 @@ import { Attendee } from './attendee.entity';
 @Index('idx_education_management_manager_id', ['managerId'])
 @Index('idx_education_management_deadline', ['deadline'])
 @Index('idx_education_management_order', ['order'])
-export class EducationManagement {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: '교육 관리 ID',
-  })
-  id: string;
-
+export class EducationManagement extends BaseEntity<EducationManagement> {
   @Column({
     type: 'varchar',
     length: 500,
@@ -92,41 +78,10 @@ export class EducationManagement {
   @OneToMany(() => Attendee, (attendee) => attendee.educationManagement)
   attendees: Attendee[];
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): EducationManagement {
+    return this;
+  }
 }

@@ -1,15 +1,5 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
-  VersionColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from '@libs/base/base.entity';
 import { IR } from './ir.entity';
 import { Language } from '../../common/language/language.entity';
 
@@ -22,12 +12,7 @@ import { Language } from '../../common/language/language.entity';
 @Index('uk_ir_translation', ['irId', 'languageId'], {
   unique: true,
 })
-export class IRTranslation {
-  @PrimaryGeneratedColumn('uuid', {
-    comment: 'IR 번역 ID',
-  })
-  id: string;
-
+export class IRTranslation extends BaseEntity<IRTranslation> {
   @Column({
     type: 'uuid',
     comment: 'IR ID',
@@ -62,41 +47,10 @@ export class IRTranslation {
   })
   description: string | null;
 
-  @CreateDateColumn({
-    type: 'timestamp',
-    comment: '생성 일시',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn({
-    type: 'timestamp',
-    comment: '수정 일시',
-  })
-  updatedAt: Date;
-
-  @DeleteDateColumn({
-    type: 'timestamp',
-    nullable: true,
-    comment: '삭제 일시 (Soft Delete)',
-  })
-  deletedAt: Date | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '생성자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  createdBy: string | null;
-
-  @Column({
-    type: 'uuid',
-    nullable: true,
-    comment: '수정자 ID (외부 시스템 직원 ID - SSO)',
-  })
-  updatedBy: string | null;
-
-  @VersionColumn({
-    comment: '버전 (Optimistic Locking)',
-  })
-  version: number;
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  DTO로_변환한다(): IRTranslation {
+    return this;
+  }
 }
