@@ -49,6 +49,13 @@ export class MainPopupTranslation extends BaseEntity<MainPopupTranslation> {
   })
   description: string | null;
 
+  @Column({
+    type: 'boolean',
+    default: true,
+    comment: '동기화 여부 (true: 원본과 동기화, false: 개별 수정됨)',
+  })
+  isSynced: boolean;
+
   /**
    * 엔티티를 DTO로 변환한다
    */

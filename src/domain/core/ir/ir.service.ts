@@ -1,6 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { IR } from './ir.entity';
 import { IRTranslation } from './ir-translation.entity';
 import { ContentStatus } from '../content-status.types';
@@ -43,7 +48,10 @@ export class IRService {
   }): Promise<IR[]> {
     this.logger.debug(`IR 목록 조회`);
 
-    const queryBuilder = this.irRepository.createQueryBuilder('ir');
+    const queryBuilder = this.irRepository
+      .createQueryBuilder('ir')
+      .leftJoinAndSelect('ir.translations', 'translations')
+      .leftJoinAndSelect('translations.language', 'language');
 
     if (options?.status) {
       queryBuilder.where('ir.status = :status', {
@@ -182,5 +190,114 @@ export class IRService {
       },
       relations: ['translations', 'translations.language'],
     });
+  }
+
+  /**
+   * IR 번역을 생성한다
+   */
+  async IR_번역을_생성한다(
+    irId: string,
+    translations: Array<{
+      languageId: string;
+      title: string;
+      description?: string;
+      isSynced?: boolean;
+    }>,
+    createdBy?: string,
+  ): Promise<void> {
+    this.logger.log(
+      `IR 번역 생성 시작 - IR ID: ${irId}, 번역 수: ${translations.length}`,
+    );
+
+    for (const translation of translations) {
+      const newTranslation = this.translationRepository.create({
+        irId,
+        languageId: translation.languageId,
+        title: translation.title,
+        description: translation.description || null,
+        isSynced: translation.isSynced ?? false,
+        createdBy,
+      });
+      await this.translationRepository.save(newTranslation);
+    }
+
+    this.logger.log(`IR 번역 생성 완료 - ${translations.length}개`);
+  }
+
+  /**
+   * IR 번역을 업데이트한다
+   */
+  async IR_번역을_업데이트한다(
+    translationId: string,
+    data: {
+      title?: string;
+      description?: string;
+      updatedBy?: string;
+    },
+  ): Promise<void> {
+    this.logger.log(`IR 번역 업데이트 - ID: ${translationId}`);
+
+    await this.translationRepository.update(translationId, data);
+  }
+
+  /**
+   * IR 오더를 일괄 업데이트한다
+   */
+  async IR_오더를_일괄_업데이트한다(
+    items: Array<{ id: string; order: number }>,
+    updatedBy?: string,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(
+      `IR 일괄 순서 수정 시작 - 수정할 IR 수: ${items.length}`,
+    );
+
+    if (items.length === 0) {
+      throw new Error('수정할 IR이 없습니다.');
+    }
+
+    // IR ID 목록 추출
+    const irIds = items.map((item) => item.id);
+
+    // IR 조회
+    const existingIRs = await this.irRepository.find({
+      where: { id: In(irIds) },
+    });
+
+    if (existingIRs.length !== items.length) {
+      const foundIds = existingIRs.map((ir) => ir.id);
+      const missingIds = irIds.filter((id) => !foundIds.includes(id));
+      throw new NotFoundException(
+        `일부 IR을 찾을 수 없습니다. 누락된 ID: ${missingIds.join(', ')}`,
+      );
+    }
+
+    // 순서 업데이트를 위한 맵 생성
+    const orderMap = new Map<string, number>();
+    items.forEach((item) => {
+      orderMap.set(item.id, item.order);
+    });
+
+    // 각 IR의 순서 업데이트
+    const updatePromises = existingIRs.map((ir) => {
+      const newOrder = orderMap.get(ir.id);
+      if (newOrder !== undefined) {
+        ir.order = newOrder;
+        if (updatedBy) {
+          ir.updatedBy = updatedBy;
+        }
+      }
+      return this.irRepository.save(ir);
+    });
+
+    await Promise.all(updatePromises);
+
+    this.logger.log(
+      `IR 일괄 순서 수정 완료 - 수정된 IR 수: ${existingIRs.length}`,
+    );
+
+    return {
+      success: true,
+      updatedCount: existingIRs.length,
+    };
   }
 }

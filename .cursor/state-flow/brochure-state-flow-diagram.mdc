@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+alwaysApply: false
 ---
 
 # 브로슈어 상태 흐름 다이어그램 (API 포함)
@@ -67,19 +67,19 @@ stateDiagram-v2
 
 ### 🔗 상태 전이와 API 매핑
 
-| 상태 전이 | 액션 | API 엔드포인트 |
-|-----------|------|----------------|
-| **[생성]** → draft | 브로슈어 생성 | `POST /api/admin/brochures` |
-| draft → under_review | 검토 요청 | `PATCH /api/admin/brochures/:id/status` |
-| draft → draft | 수정/삭제 | `PUT /api/admin/brochures/:id/translations`<br/>`PATCH /api/admin/brochures/:id/files`<br/>`DELETE /api/admin/brochures/:id/files`<br/>`PATCH /api/admin/brochures/:id/categories`<br/>`PATCH /api/admin/brochures/:id/public`<br/>`PUT /api/admin/brochures/batch-order`<br/>`DELETE /api/admin/brochures/:id` |
-| under_review → approved | 승인 | `PATCH /api/admin/brochures/:id/status` |
-| under_review → rejected | 거부 | `PATCH /api/admin/brochures/:id/status` |
-| under_review → draft | 검토 취소 | `PATCH /api/admin/brochures/:id/status` |
-| approved → opened | 공개 설정 | `PATCH /api/admin/brochures/:id/status` |
-| approved → draft | 수정 시작 | `PUT /api/admin/brochures/:id/translations` |
-| rejected → draft | 수정 시작 | `PATCH /api/admin/brochures/:id/status` |
-| opened → draft | 수정 시작 | `PUT /api/admin/brochures/:id/translations` |
-| opened → opened | 비공개 설정 | `PATCH /api/admin/brochures/:id/public` |
+| 상태 전이               | 액션          | API 엔드포인트                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[생성]** → draft      | 브로슈어 생성 | `POST /api/admin/brochures`                                                                                                                                                                                                                                                                                     |
+| draft → under_review    | 검토 요청     | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| draft → draft           | 수정/삭제     | `PUT /api/admin/brochures/:id/translations`<br/>`PATCH /api/admin/brochures/:id/files`<br/>`DELETE /api/admin/brochures/:id/files`<br/>`PATCH /api/admin/brochures/:id/categories`<br/>`PATCH /api/admin/brochures/:id/public`<br/>`PUT /api/admin/brochures/batch-order`<br/>`DELETE /api/admin/brochures/:id` |
+| under_review → approved | 승인          | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| under_review → rejected | 거부          | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| under_review → draft    | 검토 취소     | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| approved → opened       | 공개 설정     | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| approved → draft        | 수정 시작     | `PUT /api/admin/brochures/:id/translations`                                                                                                                                                                                                                                                                     |
+| rejected → draft        | 수정 시작     | `PATCH /api/admin/brochures/:id/status`                                                                                                                                                                                                                                                                         |
+| opened → draft          | 수정 시작     | `PUT /api/admin/brochures/:id/translations`                                                                                                                                                                                                                                                                     |
+| opened → opened         | 비공개 설정   | `PATCH /api/admin/brochures/:id/public`                                                                                                                                                                                                                                                                         |
 
 ## 🌐 전체 API 엔드포인트 맵
 
@@ -87,59 +87,59 @@ stateDiagram-v2
 
 ```mermaid
 graph LR
-    A[브로슈어 API] --> B[GET /api/admin/brochures]
-    A --> C[GET /api/admin/brochures/all]
-    A --> D[GET /api/admin/brochures/:id]
-    A --> E[GET /api/admin/brochures/categories]
-    
-    B --> B1[목록 조회<br/>페이징]
-    C --> C1[전체 목록 조회<br/>페이징 없음]
+    A[브로슈어 API] --> B[GET /brochures]
+    A --> C[GET /brochures/all]
+    A --> D[GET /brochures/:id]
+    A --> E[GET /brochures/categories]
+
+    B --> B1[목록 조회]
+    C --> C1[전체 목록]
     D --> D1[상세 조회]
-    E --> E1[카테고리 목록<br/>조회]
+    E --> E1[카테고리 목록]
 ```
 
 ### 상태별 가능한 API 액션
 
 ```mermaid
 graph TD
-    subgraph DRAFT["DRAFT (초안)"]
-        D1[POST /api/admin/brochures<br/>생성]
-        D2[PUT /api/admin/brochures/:id/translations<br/>번역 수정]
-        D3[PATCH /api/admin/brochures/:id/files<br/>파일 수정]
-        D4[DELETE /api/admin/brochures/:id/files<br/>파일 삭제]
-        D5[PATCH /api/admin/brochures/:id/categories<br/>카테고리 수정]
-        D6[PATCH /api/admin/brochures/:id/public<br/>공개 여부 수정]
-        D7[PUT /api/admin/brochures/batch-order<br/>정렬 순서 일괄 수정]
-        D8[DELETE /api/admin/brochures/:id<br/>삭제]
-        D9[PATCH /api/admin/brochures/:id/status<br/>→ UNDER_REVIEW 전이]
+    subgraph DRAFT["DRAFT 초안"]
+        D1[POST 생성]
+        D2[PUT translations]
+        D3[PATCH files]
+        D4[DELETE files]
+        D5[PATCH categories]
+        D6[PATCH public]
+        D7[PUT batch-order]
+        D8[DELETE 삭제]
+        D9[PATCH status → UNDER_REVIEW]
     end
-    
-    subgraph UNDER_REVIEW["UNDER_REVIEW (검토중)"]
-        U1[GET /api/admin/brochures/:id<br/>조회만 가능]
-        U2[PATCH /api/admin/brochures/:id/status<br/>→ APPROVED 승인]
-        U3[PATCH /api/admin/brochures/:id/status<br/>→ REJECTED 거부]
-        U4[PATCH /api/admin/brochures/:id/status<br/>→ DRAFT 취소]
+
+    subgraph UNDER_REVIEW["UNDER_REVIEW 검토중"]
+        U1[GET 조회만 가능]
+        U2[PATCH status → APPROVED]
+        U3[PATCH status → REJECTED]
+        U4[PATCH status → DRAFT]
     end
-    
-    subgraph APPROVED["APPROVED (승인됨)"]
-        A1[GET /api/admin/brochures/:id<br/>조회]
-        A2[PATCH /api/admin/brochures/:id/status<br/>→ OPENED 공개]
-        A3[PATCH /api/admin/brochures/:id/public<br/>공개 여부 수정]
-        A4[PUT /api/admin/brochures/:id/translations<br/>→ DRAFT로 전이 후 수정]
-        A5[DELETE /api/admin/brochures/:id<br/>삭제]
+
+    subgraph APPROVED["APPROVED 승인됨"]
+        A1[GET 조회]
+        A2[PATCH status → OPENED]
+        A3[PATCH public]
+        A4[PUT translations → DRAFT 전이]
+        A5[DELETE 삭제]
     end
-    
-    subgraph REJECTED["REJECTED (거부됨)"]
-        R1[GET /api/admin/brochures/:id<br/>조회]
-        R2[PATCH /api/admin/brochures/:id/status<br/>→ DRAFT로 전이]
-        R3[DELETE /api/admin/brochures/:id<br/>삭제]
+
+    subgraph REJECTED["REJECTED 거부됨"]
+        R1[GET 조회]
+        R2[PATCH status → DRAFT]
+        R3[DELETE 삭제]
     end
-    
-    subgraph OPENED["OPENED (공개됨)"]
-        O1[GET /api/admin/brochures/:id<br/>조회]
-        O2[PATCH /api/admin/brochures/:id/public<br/>비공개 설정]
-        O3[PUT /api/admin/brochures/:id/translations<br/>→ DRAFT로 전이 후 수정]
-        O4[DELETE /api/admin/brochures/:id<br/>삭제]
+
+    subgraph OPENED["OPENED 공개됨"]
+        O1[GET 조회]
+        O2[PATCH public]
+        O3[PUT translations → DRAFT 전이]
+        O4[DELETE 삭제]
     end
 
     style DRAFT fill:#e3f2fd
@@ -158,48 +158,52 @@ sequenceDiagram
     participant Admin as 관리자
     participant API as API 서버
     participant DB as 데이터베이스
-    
+
     Note over Admin,DB: 1. 브로슈어 생성
     Admin->>API: POST /api/admin/brochures
     API->>DB: INSERT (status: 'draft', isPublic: false)
     DB-->>API: 생성 완료
     API-->>Admin: 201 Created (DRAFT)
-    
+
     Note over Admin,DB: 2. 파일 및 내용 수정
     Admin->>API: PATCH /api/admin/brochures/:id/files
     API->>DB: UPDATE files
     DB-->>API: 수정 완료
     API-->>Admin: 200 OK
-    
+
     Admin->>API: PUT /api/admin/brochures/:id/translations
     API->>DB: UPDATE translations
     DB-->>API: 수정 완료
     API-->>Admin: 200 OK
-    
+
     Note over Admin,DB: 3. 검토 요청
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'under_review'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'under_review'}
     API->>DB: UPDATE status = 'under_review'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (UNDER_REVIEW)
-    
+
     Note over Admin,DB: 4. 승인
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'approved'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'approved'}
     API->>DB: UPDATE status = 'approved'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (APPROVED)
-    
+
     Note over Admin,DB: 5. 공개 설정
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'opened'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'opened'}
     API->>DB: UPDATE status = 'opened'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (OPENED)
-    
+
     Note over Admin,DB: 6. 공개 여부 활성화
-    Admin->>API: PATCH /api/admin/brochures/:id/public<br/>{isPublic: true}
+    Admin->>API: PATCH /api/admin/brochures/:id/public
+    Note right of API: {isPublic: true}
     API->>DB: UPDATE isPublic = true
     DB-->>API: 수정 완료
     API-->>Admin: 200 OK
-    
+
     Note over Admin,DB: ✅ 사용자에게 노출됨
 ```
 
@@ -210,33 +214,36 @@ sequenceDiagram
     participant Admin as 관리자
     participant API as API 서버
     participant DB as 데이터베이스
-    
+
     Note over Admin,DB: 1-3. 생성 → 검토 요청 (생략)
-    
+
     Note over Admin,DB: 4. 거부
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'rejected'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'rejected'}
     API->>DB: UPDATE status = 'rejected'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (REJECTED)
-    
+
     Note over Admin,DB: 5. 수정 시작
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'draft'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'draft'}
     API->>DB: UPDATE status = 'draft'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (DRAFT)
-    
+
     Note over Admin,DB: 6. 내용 수정
     Admin->>API: PUT /api/admin/brochures/:id/translations
     API->>DB: UPDATE translations
     DB-->>API: 수정 완료
     API-->>Admin: 200 OK
-    
+
     Note over Admin,DB: 7. 재검토 요청
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'under_review'}
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: {status: 'under_review'}
     API->>DB: UPDATE status = 'under_review'
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (UNDER_REVIEW)
-    
+
     Note over Admin,DB: 8-10. 승인 → 공개 (생략)
 ```
 
@@ -248,31 +255,33 @@ sequenceDiagram
     participant API as API 서버
     participant DB as 데이터베이스
     participant User as 사용자
-    
+
     Note over Admin,User: ✅ 현재 공개 중 (OPENED, isPublic: true)
     User->>API: GET /api/public/brochures
     API->>DB: SELECT WHERE status='opened' AND isPublic=true
     DB-->>API: 브로슈어 목록
     API-->>User: 200 OK (노출됨)
-    
+
     Note over Admin,User: 수정 필요 발생
     Admin->>API: PUT /api/admin/brochures/:id/translations
-    API->>DB: UPDATE status = 'draft' (자동 전이)<br/>UPDATE translations
+    API->>DB: UPDATE status = 'draft' (자동 전이)
+    API->>DB: UPDATE translations
     DB-->>API: 수정 완료
     API-->>Admin: 200 OK (DRAFT)
-    
+
     Note over Admin,User: ❌ 사용자에게 노출 중단
     User->>API: GET /api/public/brochures
     API->>DB: SELECT WHERE status='opened' AND isPublic=true
     DB-->>API: 해당 브로슈어 제외
     API-->>User: 200 OK (노출 안 됨)
-    
+
     Note over Admin,User: 수정 → 검토 → 승인 → 재공개
-    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>(under_review → approved → opened)
+    Admin->>API: PATCH /api/admin/brochures/:id/status
+    Note right of API: under_review → approved → opened
     API->>DB: UPDATE status
     DB-->>API: 상태 변경 완료
     API-->>Admin: 200 OK (OPENED)
-    
+
     Note over Admin,User: ✅ 사용자에게 다시 노출됨
 ```
 
@@ -417,21 +426,21 @@ Response: 200 OK
 flowchart TD
     Start([브로슈어 API 요청])
     Start --> CheckAPI{API 타입?}
-    
+
     CheckAPI -->|관리자 API| AdminAPI[전체 조회 가능]
     CheckAPI -->|공개 API| PublicAPI[필터링 필요]
-    
-    PublicAPI --> CheckDeleted{deletedAt이<br/>null인가?}
-    
+
+    PublicAPI --> CheckDeleted{deletedAt이 null인가?}
+
     CheckDeleted -->|No| NotVisible1[❌ 노출 안 됨]
-    CheckDeleted -->|Yes| CheckStatus{status가<br/>'opened'인가?}
-    
+    CheckDeleted -->|Yes| CheckStatus{status가 opened인가?}
+
     CheckStatus -->|No| NotVisible2[❌ 노출 안 됨]
-    CheckStatus -->|Yes| CheckPublic{isPublic이<br/>true인가?}
-    
+    CheckStatus -->|Yes| CheckPublic{isPublic이 true인가?}
+
     CheckPublic -->|No| NotVisible3[❌ 노출 안 됨]
-    CheckPublic -->|Yes| Visible[✅ 사용자에게<br/>노출됨]
-    
+    CheckPublic -->|Yes| Visible[✅ 사용자에게 노출됨]
+
     style NotVisible1 fill:#ffcccc
     style NotVisible2 fill:#ffcccc
     style NotVisible3 fill:#ffcccc
@@ -443,17 +452,17 @@ flowchart TD
 
 ### 허용되는 전이
 
-| 현재 상태      | 다음 상태      | API 엔드포인트                                | 조건         |
-| -------------- | -------------- | --------------------------------------------- | ------------ |
-| `draft`        | `under_review` | `PATCH /api/admin/brochures/:id/status`       | 검토 요청    |
-| `under_review` | `approved`     | `PATCH /api/admin/brochures/:id/status`       | 승인         |
-| `under_review` | `rejected`     | `PATCH /api/admin/brochures/:id/status`       | 거부         |
-| `under_review` | `draft`        | `PATCH /api/admin/brochures/:id/status`       | 검토 취소    |
-| `approved`     | `opened`       | `PATCH /api/admin/brochures/:id/status`       | 공개 설정    |
-| `approved`     | `draft`        | `PUT /api/admin/brochures/:id/translations`   | 수정 시작    |
-| `rejected`     | `draft`        | `PATCH /api/admin/brochures/:id/status`       | 수정 시작    |
-| `opened`       | `draft`        | `PUT /api/admin/brochures/:id/translations`   | 수정 시작    |
-| `opened`       | `opened`       | `PATCH /api/admin/brochures/:id/public`       | 비공개 설정  |
+| 현재 상태      | 다음 상태      | API 엔드포인트                              | 조건        |
+| -------------- | -------------- | ------------------------------------------- | ----------- |
+| `draft`        | `under_review` | `PATCH /api/admin/brochures/:id/status`     | 검토 요청   |
+| `under_review` | `approved`     | `PATCH /api/admin/brochures/:id/status`     | 승인        |
+| `under_review` | `rejected`     | `PATCH /api/admin/brochures/:id/status`     | 거부        |
+| `under_review` | `draft`        | `PATCH /api/admin/brochures/:id/status`     | 검토 취소   |
+| `approved`     | `opened`       | `PATCH /api/admin/brochures/:id/status`     | 공개 설정   |
+| `approved`     | `draft`        | `PUT /api/admin/brochures/:id/translations` | 수정 시작   |
+| `rejected`     | `draft`        | `PATCH /api/admin/brochures/:id/status`     | 수정 시작   |
+| `opened`       | `draft`        | `PUT /api/admin/brochures/:id/translations` | 수정 시작   |
+| `opened`       | `opened`       | `PATCH /api/admin/brochures/:id/public`     | 비공개 설정 |
 
 ### 금지되는 전이
 
