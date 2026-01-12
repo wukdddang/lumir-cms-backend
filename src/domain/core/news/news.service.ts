@@ -119,6 +119,65 @@ export class NewsService {
   }
 
   /**
+   * 뉴스 공개 여부를 변경한다
+   */
+  async 뉴스_공개_여부를_변경한다(
+    id: string,
+    isPublic: boolean,
+    updatedBy?: string,
+  ): Promise<News> {
+    this.logger.log(`뉴스 공개 여부 변경 - ID: ${id}, 공개: ${isPublic}`);
+
+    return await this.뉴스를_업데이트한다(id, { isPublic, updatedBy });
+  }
+
+  /**
+   * 다음 순서 번호를 계산한다
+   */
+  async 다음_순서를_계산한다(): Promise<number> {
+    const maxOrderNews = await this.repository.find({
+      order: { order: 'DESC' },
+      select: ['order'],
+      take: 1,
+    });
+
+    return maxOrderNews.length > 0 ? maxOrderNews[0].order + 1 : 0;
+  }
+
+  /**
+   * 뉴스 오더를 일괄 업데이트한다
+   */
+  async 뉴스_오더를_일괄_업데이트한다(
+    items: Array<{ id: string; order: number }>,
+    updatedBy?: string,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(`뉴스 오더 일괄 업데이트 시작 - ${items.length}개`);
+
+    let updatedCount = 0;
+
+    for (const item of items) {
+      try {
+        await this.뉴스를_업데이트한다(item.id, {
+          order: item.order,
+          updatedBy,
+        });
+        updatedCount++;
+      } catch (error) {
+        this.logger.error(`뉴스 오더 업데이트 실패 - ID: ${item.id}`, error);
+      }
+    }
+
+    this.logger.log(
+      `뉴스 오더 일괄 업데이트 완료 - ${updatedCount}/${items.length}개 성공`,
+    );
+
+    return {
+      success: updatedCount === items.length,
+      updatedCount,
+    };
+  }
+
+  /**
    * 공개된 뉴스를 조회한다
    */
   async 공개된_뉴스를_조회한다(): Promise<News[]> {

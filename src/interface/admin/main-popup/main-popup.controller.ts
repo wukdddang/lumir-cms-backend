@@ -34,6 +34,7 @@ import {
 } from '@interface/common/dto/main-popup/main-popup-response.dto';
 import { UpdateMainPopupBatchOrderDto } from '@interface/common/dto/main-popup/update-main-popup-batch-order.dto';
 import { CreateMainPopupDto } from '@interface/common/dto/main-popup/create-main-popup.dto';
+import { UpdateCategoryEntityDto, UpdateCategoryOrderDto } from '@interface/common/dto/main-popup/update-main-popup.dto';
 
 @ApiTags('A-5. 관리자 - 메인 팝업')
 @ApiBearerAuth('Bearer')
@@ -512,8 +513,7 @@ export class MainPopupController {
   async 메인_팝업_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body()
-    updateDto: { name?: string; description?: string; isActive?: boolean },
+    @Body() updateDto: UpdateCategoryEntityDto,
   ): Promise<MainPopupCategoryResponseDto> {
     return await this.mainPopupBusinessService.메인_팝업_카테고리를_수정한다(
       id,
@@ -544,7 +544,7 @@ export class MainPopupController {
   async 메인_팝업_카테고리_오더를_변경한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateDto: { order: number },
+    @Body() updateDto: UpdateCategoryOrderDto,
   ): Promise<MainPopupCategoryResponseDto> {
     const result =
       await this.mainPopupBusinessService.메인_팝업_카테고리_오더를_변경한다(

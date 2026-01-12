@@ -12,6 +12,7 @@ import { MainPopupInterfaceModule } from './interface/admin/main-popup/main-popu
 import { ShareholdersMeetingAdminModule } from './interface/admin/shareholders-meeting/shareholders-meeting.module';
 import { AdminLumirStoryModule } from './interface/admin/lumir-story/lumir-story.module';
 import { AdminVideoGalleryModule } from './interface/admin/video-gallery/video-gallery.module';
+import { AdminNewsModule } from './interface/admin/news/news.module';
 import { HealthModule } from './interface/common/health/health.module';
 import { AuthContextModule } from '@context/auth-context';
 import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
@@ -52,6 +53,7 @@ import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
     ShareholdersMeetingAdminModule,
     AdminLumirStoryModule,
     AdminVideoGalleryModule,
+    AdminNewsModule,
   ],
   providers: [
     // 전역 JWT 인증 가드 설정

@@ -34,6 +34,7 @@ import {
 } from '@interface/common/dto/ir/ir-response.dto';
 import { UpdateIRBatchOrderDto } from '@interface/common/dto/ir/update-ir-batch-order.dto';
 import { CreateIRDto } from '@interface/common/dto/ir/create-ir.dto';
+import { UpdateCategoryEntityDto, UpdateCategoryOrderDto } from '@interface/common/dto/ir/update-ir.dto';
 
 @ApiTags('A-4. 관리자 - IR')
 @ApiBearerAuth('Bearer')
@@ -504,8 +505,7 @@ export class IRController {
   async IR_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body()
-    updateDto: { name?: string; description?: string; isActive?: boolean },
+    @Body() updateDto: UpdateCategoryEntityDto,
   ): Promise<IRCategoryResponseDto> {
     return await this.irBusinessService.IR_카테고리를_수정한다(id, {
       ...updateDto,
@@ -533,7 +533,7 @@ export class IRController {
   async IR_카테고리_오더를_변경한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateDto: { order: number },
+    @Body() updateDto: UpdateCategoryOrderDto,
   ): Promise<IRCategoryResponseDto> {
     const result = await this.irBusinessService.IR_카테고리_오더를_변경한다(id, {
       order: updateDto.order,

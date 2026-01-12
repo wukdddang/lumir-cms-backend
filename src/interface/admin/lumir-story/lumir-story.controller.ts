@@ -39,7 +39,7 @@ import {
   LumirStoryCategoryResponseDto,
 } from '@interface/common/dto/lumir-story/lumir-story-response.dto';
 
-@ApiTags('A-8. 관리자 - 루미르스토리')
+@ApiTags('A-7. 관리자 - 루미르스토리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/lumir-stories')
 export class LumirStoryController {
@@ -97,12 +97,13 @@ export class LumirStoryController {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
-    const result = await this.lumirStoryBusinessService.루미르스토리_목록을_조회한다(
-      isPublicFilter,
-      orderBy || 'order',
-      pageNum,
-      limitNum,
-    );
+    const result =
+      await this.lumirStoryBusinessService.루미르스토리_목록을_조회한다(
+        isPublicFilter,
+        orderBy || 'order',
+        pageNum,
+        limitNum,
+      );
 
     return result;
   }
@@ -462,9 +463,8 @@ export class LumirStoryController {
   async 루미르스토리를_삭제한다(
     @Param('id') id: string,
   ): Promise<{ success: boolean }> {
-    const result = await this.lumirStoryBusinessService.루미르스토리를_삭제한다(
-      id,
-    );
+    const result =
+      await this.lumirStoryBusinessService.루미르스토리를_삭제한다(id);
     return { success: result };
   }
 

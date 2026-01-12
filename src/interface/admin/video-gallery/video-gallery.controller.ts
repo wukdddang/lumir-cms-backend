@@ -39,7 +39,7 @@ import {
   VideoGalleryCategoryResponseDto,
 } from '@interface/common/dto/video-gallery/video-gallery-response.dto';
 
-@ApiTags('A-9. 관리자 - 비디오갤러리')
+@ApiTags('A-8. 관리자 - 비디오갤러리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/video-galleries')
 export class VideoGalleryController {
@@ -97,12 +97,13 @@ export class VideoGalleryController {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
-    const result = await this.videoGalleryBusinessService.비디오갤러리_목록을_조회한다(
-      isPublicFilter,
-      orderBy || 'order',
-      pageNum,
-      limitNum,
-    );
+    const result =
+      await this.videoGalleryBusinessService.비디오갤러리_목록을_조회한다(
+        isPublicFilter,
+        orderBy || 'order',
+        pageNum,
+        limitNum,
+      );
 
     return result;
   }
@@ -120,7 +121,9 @@ export class VideoGalleryController {
     description: '비디오갤러리 전체 목록 조회 성공',
     type: [VideoGalleryResponseDto],
   })
-  async 비디오갤러리_전체_목록을_조회한다(): Promise<VideoGalleryResponseDto[]> {
+  async 비디오갤러리_전체_목록을_조회한다(): Promise<
+    VideoGalleryResponseDto[]
+  > {
     return await this.videoGalleryBusinessService.비디오갤러리_전체_목록을_조회한다();
   }
 
@@ -184,7 +187,8 @@ export class VideoGalleryController {
         youtubeUrls: {
           type: 'string',
           description: 'YouTube 비디오 URL 배열 (JSON 문자열)',
-          example: '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
+          example:
+            '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
         },
         files: {
           type: 'array',
@@ -302,12 +306,14 @@ export class VideoGalleryController {
         youtubeUrls: {
           type: 'string',
           description: 'YouTube 비디오 URL 배열 (JSON 문자열)',
-          example: '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
+          example:
+            '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
         },
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
-          description: '비디오 파일 목록 (최대 10개) - 전송한 것으로 완전히 교체됩니다',
+          description:
+            '비디오 파일 목록 (최대 10개) - 전송한 것으로 완전히 교체됩니다',
         },
       },
       required: ['title'],
@@ -406,7 +412,9 @@ export class VideoGalleryController {
   async 비디오갤러리_상세_조회한다(
     @Param('id') id: string,
   ): Promise<VideoGalleryResponseDto> {
-    return await this.videoGalleryBusinessService.비디오갤러리_상세_조회한다(id);
+    return await this.videoGalleryBusinessService.비디오갤러리_상세_조회한다(
+      id,
+    );
   }
 
   /**
@@ -493,9 +501,8 @@ export class VideoGalleryController {
   async 비디오갤러리를_삭제한다(
     @Param('id') id: string,
   ): Promise<{ success: boolean }> {
-    const result = await this.videoGalleryBusinessService.비디오갤러리를_삭제한다(
-      id,
-    );
+    const result =
+      await this.videoGalleryBusinessService.비디오갤러리를_삭제한다(id);
     return { success: result };
   }
 
@@ -594,7 +601,9 @@ export class VideoGalleryController {
     @Param('id') id: string,
   ): Promise<{ success: boolean }> {
     const result =
-      await this.videoGalleryBusinessService.비디오갤러리_카테고리를_삭제한다(id);
+      await this.videoGalleryBusinessService.비디오갤러리_카테고리를_삭제한다(
+        id,
+      );
     return { success: result };
   }
 }

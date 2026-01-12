@@ -28,6 +28,7 @@ import { ElectronicDisclosureBusinessService } from '@business/electronic-disclo
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
 import {
   CreateElectronicDisclosureCategoryDto,
+  UpdateCategoryEntityDto,
   UpdateElectronicDisclosureCategoryOrderDto,
 } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure.dto';
 import { UpdateElectronicDisclosureBatchOrderDto } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure-batch-order.dto';
@@ -516,8 +517,7 @@ export class ElectronicDisclosureController {
   async 전자공시_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body()
-    updateDto: { name?: string; description?: string; isActive?: boolean },
+    @Body() updateDto: UpdateCategoryEntityDto,
   ): Promise<ElectronicDisclosureCategoryResponseDto> {
     return await this.electronicDisclosureBusinessService.전자공시_카테고리를_수정한다(
       id,

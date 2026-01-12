@@ -26,8 +26,9 @@ import { CurrentUser } from '@interface/common/decorators/current-user.decorator
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { ShareholdersMeetingBusinessService } from '@business/shareholders-meeting-business/shareholders-meeting-business.service';
 import { ShareholdersMeeting } from '@domain/core/shareholders-meeting/shareholders-meeting.entity';
+import { UpdateCategoryEntityDto, UpdateCategoryOrderDto } from '@interface/common/dto/shareholders-meeting/update-shareholders-meeting.dto';
 
-@ApiTags('A-5. 관리자 - 주주총회')
+@ApiTags('A-6. 관리자 - 주주총회')
 @ApiBearerAuth('Bearer')
 @Controller('admin/shareholders-meetings')
 export class ShareholdersMeetingController {
@@ -639,8 +640,7 @@ export class ShareholdersMeetingController {
   async 주주총회_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body()
-    updateDto: { name?: string; description?: string; isActive?: boolean },
+    @Body() updateDto: UpdateCategoryEntityDto,
   ): Promise<any> {
     return await this.shareholdersMeetingBusinessService.주주총회_카테고리를_수정한다(
       id,
@@ -670,7 +670,7 @@ export class ShareholdersMeetingController {
   async 주주총회_카테고리_오더를_변경한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateDto: { order: number },
+    @Body() updateDto: UpdateCategoryOrderDto,
   ): Promise<any> {
     const result =
       await this.shareholdersMeetingBusinessService.주주총회_카테고리_오더를_변경한다(
