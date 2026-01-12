@@ -163,10 +163,11 @@ export class VideoGalleryController {
   @ApiBody({
     description:
       '⚠️ **중요**: 제목은 필수입니다.\n\n' +
-      '**비디오 소스**:\n' +
-      '- `youtubeUrl`: YouTube 비디오 URL을 입력하거나\n' +
-      '- `files`: 직접 비디오 파일을 업로드할 수 있습니다\n' +
-      '- 둘 다 입력 가능하며, 둘 중 하나만 입력해도 됩니다',
+      '**비디오 소스 (여러 개 가능)**:\n' +
+      '- `youtubeUrls`: YouTube 비디오 URL 배열 (여러 개 가능)\n' +
+      '- `files`: 직접 비디오 파일 업로드 (여러 개 가능, 최대 10개)\n' +
+      '- 둘 다 입력 가능하며, 모든 URL은 하나의 배열로 통합되어 저장됩니다\n' +
+      '- 파일은 S3에 업로드되고 URL로 변환되어 저장됩니다',
     schema: {
       type: 'object',
       properties: {
@@ -180,15 +181,15 @@ export class VideoGalleryController {
           description: '설명 (선택)',
           example: '루미르 회사 소개 동영상입니다.',
         },
-        youtubeUrl: {
+        youtubeUrls: {
           type: 'string',
-          description: 'YouTube 비디오 URL (선택)',
-          example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          description: 'YouTube 비디오 URL 배열 (JSON 문자열)',
+          example: '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
         },
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
-          description: '첨부파일 목록 (최대 10개, 비디오 파일만 가능)',
+          description: '비디오 파일 목록 (최대 10개)',
         },
       },
       required: ['title'],
@@ -208,16 +209,32 @@ export class VideoGalleryController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<VideoGalleryResponseDto> {
-    const { title, description, youtubeUrl } = body;
+    const { title, description, youtubeUrls } = body;
 
     if (!title) {
       throw new BadRequestException('title 필드는 필수입니다.');
     }
 
+    // youtubeUrls가 JSON 문자열로 전달될 수 있으므로 파싱
+    let parsedYoutubeUrls: string[] = [];
+    if (youtubeUrls) {
+      if (typeof youtubeUrls === 'string') {
+        try {
+          parsedYoutubeUrls = JSON.parse(youtubeUrls);
+        } catch (error) {
+          throw new BadRequestException(
+            'youtubeUrls 파싱 실패: 올바른 JSON 배열 형식이 아닙니다.',
+          );
+        }
+      } else if (Array.isArray(youtubeUrls)) {
+        parsedYoutubeUrls = youtubeUrls;
+      }
+    }
+
     return await this.videoGalleryBusinessService.비디오갤러리를_생성한다(
       title,
       description || null,
-      youtubeUrl || null,
+      parsedYoutubeUrls,
       user.id,
       files,
     );
@@ -261,14 +278,14 @@ export class VideoGalleryController {
   @ApiBody({
     description:
       '⚠️ **중요**: 제목은 필수입니다.\n\n' +
-      '**비디오 소스**:\n' +
-      '- `youtubeUrl`: YouTube 비디오 URL을 입력하거나\n' +
-      '- `files`: 직접 비디오 파일을 업로드할 수 있습니다\n' +
-      '- 둘 다 입력 가능하며, 둘 중 하나만 입력해도 됩니다\n\n' +
-      '**파일 관리 방식**:\n' +
-      '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
-      '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
-      '- 기존 파일을 유지하려면 반드시 해당 파일을 다시 전송해야 합니다',
+      '**비디오 소스 (여러 개 가능)**:\n' +
+      '- `youtubeUrls`: YouTube 비디오 URL 배열 (여러 개 가능)\n' +
+      '- `files`: 직접 비디오 파일 업로드 (여러 개 가능, 최대 10개)\n' +
+      '- 둘 다 입력 가능하며, 모든 URL은 하나의 배열로 통합되어 저장됩니다\n' +
+      '- 파일은 S3에 업로드되고 URL로 변환되어 저장됩니다\n\n' +
+      '**비디오 관리 방식 (완전 교체)**:\n' +
+      '- 수정 시 기존 비디오는 전부 삭제되고 새로 입력한 것으로 교체됩니다\n' +
+      '- 기존 비디오를 유지하려면 해당 URL을 다시 전송해야 합니다',
     schema: {
       type: 'object',
       properties: {
@@ -282,16 +299,15 @@ export class VideoGalleryController {
           description: '설명 (선택)',
           example: '루미르 회사 소개 동영상입니다.',
         },
-        youtubeUrl: {
+        youtubeUrls: {
           type: 'string',
-          description: 'YouTube 비디오 URL (선택)',
-          example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          description: 'YouTube 비디오 URL 배열 (JSON 문자열)',
+          example: '["https://www.youtube.com/watch?v=abc123", "https://www.youtube.com/watch?v=def456"]',
         },
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
-          description:
-            '첨부파일 목록 (최대 10개, 비디오 파일만 가능) - 전송한 파일들로 완전히 교체됩니다',
+          description: '비디오 파일 목록 (최대 10개) - 전송한 것으로 완전히 교체됩니다',
         },
       },
       required: ['title'],
@@ -312,17 +328,33 @@ export class VideoGalleryController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<any> {
-    const { title, description, youtubeUrl } = body;
+    const { title, description, youtubeUrls } = body;
 
     if (!title) {
       throw new BadRequestException('title 필드는 필수입니다.');
+    }
+
+    // youtubeUrls가 JSON 문자열로 전달될 수 있으므로 파싱
+    let parsedYoutubeUrls: string[] = [];
+    if (youtubeUrls) {
+      if (typeof youtubeUrls === 'string') {
+        try {
+          parsedYoutubeUrls = JSON.parse(youtubeUrls);
+        } catch (error) {
+          throw new BadRequestException(
+            'youtubeUrls 파싱 실패: 올바른 JSON 배열 형식이 아닙니다.',
+          );
+        }
+      } else if (Array.isArray(youtubeUrls)) {
+        parsedYoutubeUrls = youtubeUrls;
+      }
     }
 
     return await this.videoGalleryBusinessService.비디오갤러리를_수정한다(
       id,
       title,
       description || null,
-      youtubeUrl || null,
+      parsedYoutubeUrls,
       user.id,
       files,
     );

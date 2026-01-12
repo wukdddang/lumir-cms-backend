@@ -2,18 +2,22 @@ import { VideoGallery } from '@domain/sub/video-gallery/video-gallery.entity';
 import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
+ * 비디오 소스 DTO
+ */
+export interface VideoSourceDto {
+  url: string;
+  type: 'upload' | 'youtube';
+  title?: string;
+  thumbnailUrl?: string;
+}
+
+/**
  * 비디오갤러리 생성 DTO
  */
 export interface CreateVideoGalleryDto {
   title: string;
   description?: string | null;
-  youtubeUrl?: string | null;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+  videoSources?: VideoSourceDto[];
   createdBy?: string;
 }
 
@@ -23,16 +27,10 @@ export interface CreateVideoGalleryDto {
 export interface UpdateVideoGalleryDto {
   title?: string;
   description?: string | null;
-  youtubeUrl?: string | null;
   isPublic?: boolean;
   status?: ContentStatus;
   order?: number;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+  videoSources?: VideoSourceDto[];
   updatedBy?: string;
 }
 
@@ -56,12 +54,7 @@ export interface UpdateVideoGalleryOrderDto {
  * 비디오갤러리 파일 수정 DTO
  */
 export interface UpdateVideoGalleryFileDto {
-  attachments: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+  videoSources: VideoSourceDto[];
   updatedBy?: string;
 }
 

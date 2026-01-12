@@ -2,23 +2,35 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
- * 비디오갤러리 첨부파일 DTO
+ * 비디오 소스 DTO
  */
-export class VideoGalleryAttachmentDto {
-  @ApiProperty({ description: '파일명', example: 'video_sample.mp4' })
-  fileName: string;
+export class VideoSourceDto {
+  @ApiProperty({
+    description: '비디오 URL (S3 업로드 URL 또는 YouTube URL)',
+    example: 'https://s3.amazonaws.com/video.mp4',
+  })
+  url: string;
 
   @ApiProperty({
-    description: '파일 URL',
-    example: 'https://s3.amazonaws.com/...',
+    description: '비디오 타입',
+    enum: ['upload', 'youtube'],
+    example: 'upload',
   })
-  fileUrl: string;
+  type: 'upload' | 'youtube';
 
-  @ApiProperty({ description: '파일 크기 (bytes)', example: 10240000 })
-  fileSize: number;
+  @ApiProperty({
+    description: '비디오 제목 (선택)',
+    required: false,
+    example: '회사 소개 영상',
+  })
+  title?: string;
 
-  @ApiProperty({ description: 'MIME 타입', example: 'video/mp4' })
-  mimeType: string;
+  @ApiProperty({
+    description: '썸네일 URL (선택)',
+    required: false,
+    example: 'https://s3.amazonaws.com/thumbnail.jpg',
+  })
+  thumbnailUrl?: string;
 }
 
 /**
@@ -39,14 +51,6 @@ export class VideoGalleryResponseDto {
   })
   description: string | null;
 
-  @ApiProperty({
-    description: 'YouTube 비디오 URL',
-    required: false,
-    nullable: true,
-    example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-  })
-  youtubeUrl: string | null;
-
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
 
@@ -58,12 +62,12 @@ export class VideoGalleryResponseDto {
   status: ContentStatus;
 
   @ApiProperty({
-    description: '첨부파일 목록',
-    type: [VideoGalleryAttachmentDto],
+    description: '비디오 소스 목록 (업로드 파일 + YouTube URL)',
+    type: [VideoSourceDto],
     required: false,
     nullable: true,
   })
-  attachments: VideoGalleryAttachmentDto[] | null;
+  videoSources: VideoSourceDto[] | null;
 
   @ApiProperty({ description: '정렬 순서', example: 1 })
   order: number;

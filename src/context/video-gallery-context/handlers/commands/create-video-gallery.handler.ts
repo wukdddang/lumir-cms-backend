@@ -39,11 +39,10 @@ export class CreateVideoGalleryHandler
     const saved = await this.videoGalleryService.비디오갤러리를_생성한다({
       title: data.title,
       description: data.description || null,
-      youtubeUrl: data.youtubeUrl || null,
       isPublic: false, // 기본값: 비공개
       status: ContentStatus.DRAFT, // 기본값: DRAFT
       order: nextOrder, // 자동 계산
-      attachments: data.attachments || null,
+      videoSources: data.videoSources || null,
       createdBy: data.createdBy,
       updatedBy: data.createdBy, // 생성 시점이므로 createdBy와 동일
     });

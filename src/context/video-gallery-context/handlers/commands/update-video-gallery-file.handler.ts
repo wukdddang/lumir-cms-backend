@@ -44,7 +44,7 @@ export class UpdateVideoGalleryFileHandler
     }
 
     // 파일 업데이트
-    videoGallery.attachments = data.attachments;
+    videoGallery.videoSources = data.videoSources;
     if (data.updatedBy) {
       videoGallery.updatedBy = data.updatedBy;
     }

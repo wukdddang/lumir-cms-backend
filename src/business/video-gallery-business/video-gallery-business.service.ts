@@ -88,49 +88,60 @@ export class VideoGalleryBusinessService {
   }
 
   /**
-   * 비디오갤러리를 생성한다 (파일 업로드 포함)
+   * 비디오갤러리를 생성한다 (파일 업로드 + YouTube URL)
    */
   async 비디오갤러리를_생성한다(
     title: string,
     description?: string | null,
-    youtubeUrl?: string | null,
+    youtubeUrls?: string[],
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<VideoGalleryDetailResult> {
     this.logger.log(`비디오갤러리 생성 시작 - 제목: ${title}`);
 
-    // 파일 업로드 처리
-    let attachments:
-      | Array<{
-          fileName: string;
-          fileUrl: string;
-          fileSize: number;
-          mimeType: string;
-        }>
-      | undefined = undefined;
+    const videoSources: Array<{
+      url: string;
+      type: 'upload' | 'youtube';
+      title?: string;
+      thumbnailUrl?: string;
+    }> = [];
 
+    // 1. 파일 업로드 처리 → S3 URL 생성
     if (files && files.length > 0) {
-      this.logger.log(`${files.length}개의 파일 업로드 시작`);
+      this.logger.log(`${files.length}개의 비디오 파일 업로드 시작`);
       const uploadedFiles = await this.storageService.uploadFiles(
         files,
         'video-galleries',
       );
-      attachments = uploadedFiles.map((file) => ({
-        fileName: file.fileName,
-        fileUrl: file.url,
-        fileSize: file.fileSize,
-        mimeType: file.mimeType,
-      }));
-      this.logger.log(`파일 업로드 완료: ${attachments.length}개`);
+
+      uploadedFiles.forEach((file) => {
+        videoSources.push({
+          url: file.url,
+          type: 'upload',
+          title: file.fileName,
+        });
+      });
+      this.logger.log(`파일 업로드 완료: ${uploadedFiles.length}개`);
+    }
+
+    // 2. YouTube URL 추가
+    if (youtubeUrls && youtubeUrls.length > 0) {
+      youtubeUrls.forEach((url) => {
+        if (url && url.trim()) {
+          videoSources.push({
+            url: url.trim(),
+            type: 'youtube',
+          });
+        }
+      });
+      this.logger.log(`YouTube URL 추가: ${youtubeUrls.length}개`);
     }
 
     // 생성 데이터 구성
     const createData = {
       title,
       description,
-      youtubeUrl,
-      attachments:
-        attachments && attachments.length > 0 ? attachments : undefined,
+      videoSources: videoSources.length > 0 ? videoSources : undefined,
       createdBy,
     };
 
@@ -138,7 +149,9 @@ export class VideoGalleryBusinessService {
       createData,
     );
 
-    this.logger.log(`비디오갤러리 생성 완료 - ID: ${result.id}`);
+    this.logger.log(
+      `비디오갤러리 생성 완료 - ID: ${result.id}, 총 비디오: ${videoSources.length}개`,
+    );
 
     // 상세 정보 조회
     return await this.videoGalleryContextService.비디오갤러리_상세_조회한다(
@@ -330,13 +343,13 @@ export class VideoGalleryBusinessService {
   }
 
   /**
-   * 비디오갤러리를 수정한다 (파일 포함)
+   * 비디오갤러리를 수정한다 (파일 업로드 + YouTube URL)
    */
   async 비디오갤러리를_수정한다(
     videoGalleryId: string,
     title: string,
     description?: string | null,
-    youtubeUrl?: string | null,
+    youtubeUrls?: string[],
     updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<VideoGallery> {
@@ -348,10 +361,14 @@ export class VideoGalleryBusinessService {
         videoGalleryId,
       );
 
-    // 2. 기존 파일 전부 삭제
-    const currentAttachments = videoGallery.attachments || [];
-    if (currentAttachments.length > 0) {
-      const filesToDelete = currentAttachments.map((att) => att.fileUrl);
+    // 2. 기존 업로드 파일 전부 삭제 (S3에서만 삭제, YouTube URL은 유지 안 함)
+    const currentVideoSources = videoGallery.videoSources || [];
+    const uploadedVideos = currentVideoSources.filter(
+      (source) => source.type === 'upload',
+    );
+
+    if (uploadedVideos.length > 0) {
+      const filesToDelete = uploadedVideos.map((video) => video.url);
       this.logger.log(
         `스토리지에서 기존 ${filesToDelete.length}개의 파일 삭제 시작`,
       );
@@ -359,39 +376,55 @@ export class VideoGalleryBusinessService {
       this.logger.log(`스토리지 파일 삭제 완료`);
     }
 
-    // 3. 새 파일 업로드 처리
-    let finalAttachments: Array<{
-      fileName: string;
-      fileUrl: string;
-      fileSize: number;
-      mimeType: string;
+    // 3. 새로운 비디오 소스 배열 구성
+    const newVideoSources: Array<{
+      url: string;
+      type: 'upload' | 'youtube';
+      title?: string;
+      thumbnailUrl?: string;
     }> = [];
 
+    // 3-1. 새 파일 업로드 처리 → S3 URL 생성
     if (files && files.length > 0) {
-      this.logger.log(`${files.length}개의 파일 업로드 시작`);
+      this.logger.log(`${files.length}개의 비디오 파일 업로드 시작`);
       const uploadedFiles = await this.storageService.uploadFiles(
         files,
         'video-galleries',
       );
-      finalAttachments = uploadedFiles.map((file) => ({
-        fileName: file.fileName,
-        fileUrl: file.url,
-        fileSize: file.fileSize,
-        mimeType: file.mimeType,
-      }));
-      this.logger.log(`파일 업로드 완료: ${finalAttachments.length}개`);
+
+      uploadedFiles.forEach((file) => {
+        newVideoSources.push({
+          url: file.url,
+          type: 'upload',
+          title: file.fileName,
+        });
+      });
+      this.logger.log(`파일 업로드 완료: ${uploadedFiles.length}개`);
     }
 
-    // 4. 파일 정보 업데이트
+    // 3-2. YouTube URL 추가
+    if (youtubeUrls && youtubeUrls.length > 0) {
+      youtubeUrls.forEach((url) => {
+        if (url && url.trim()) {
+          newVideoSources.push({
+            url: url.trim(),
+            type: 'youtube',
+          });
+        }
+      });
+      this.logger.log(`YouTube URL 추가: ${youtubeUrls.length}개`);
+    }
+
+    // 4. 비디오 소스 업데이트
     await this.videoGalleryContextService.비디오갤러리_파일을_수정한다(
       videoGalleryId,
       {
-        attachments: finalAttachments,
+        videoSources: newVideoSources,
         updatedBy,
       },
     );
     this.logger.log(
-      `비디오갤러리 파일 업데이트 완료 - 최종 파일 수: ${finalAttachments.length}개`,
+      `비디오갤러리 비디오 소스 업데이트 완료 - 총 비디오: ${newVideoSources.length}개`,
     );
 
     // 5. 내용 수정
@@ -400,7 +433,6 @@ export class VideoGalleryBusinessService {
       {
         title,
         description,
-        youtubeUrl,
         updatedBy,
       },
     );
