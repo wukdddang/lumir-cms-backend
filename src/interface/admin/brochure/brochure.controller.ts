@@ -582,12 +582,12 @@ export class BrochureController {
   async 브로슈어_카테고리_오더를_변경한다(
     @Param('id') id: string,
     @Body() updateDto: UpdateBrochureCategoryOrderDto,
-  ): Promise<{ success: boolean }> {
-    await this.brochureBusinessService.브로슈어_카테고리_오더를_변경한다(
+  ): Promise<BrochureCategoryResponseDto> {
+    const result = await this.brochureBusinessService.브로슈어_카테고리_오더를_변경한다(
       id,
       updateDto,
     );
-    return { success: true };
+    return result;
   }
 
   /**

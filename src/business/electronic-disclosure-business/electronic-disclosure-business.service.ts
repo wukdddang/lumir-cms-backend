@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ElectronicDisclosureContextService } from '@context/electronic-disclosure-context/electronic-disclosure-context.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
-import { S3Service } from '@libs/storage/s3.service';
+import { STORAGE_SERVICE } from '@libs/storage/storage.module';
+import type { IStorageService } from '@libs/storage/interfaces/storage.interface';
 
 /**
  * 전자공시 비즈니스 서비스
@@ -14,7 +15,8 @@ export class ElectronicDisclosureBusinessService {
 
   constructor(
     private readonly electronicDisclosureContextService: ElectronicDisclosureContextService,
-    private readonly s3Service: S3Service,
+    @Inject(STORAGE_SERVICE)
+    private readonly storageService: IStorageService,
   ) {}
 
   /**
@@ -103,7 +105,7 @@ export class ElectronicDisclosureBusinessService {
     let attachments = data.attachments;
     if (files && files.length > 0) {
       this.logger.log(`${files.length}개의 파일 업로드 시작`);
-      const uploadedFiles = await this.s3Service.uploadFiles(
+      const uploadedFiles = await this.storageService.uploadFiles(
         files,
         'electronic-disclosures',
       );
@@ -152,10 +154,10 @@ export class ElectronicDisclosureBusinessService {
       return disclosure;
     }
 
-    // S3에서 파일 삭제
-    this.logger.log(`S3에서 ${fileUrls.length}개의 파일 삭제 시작`);
-    await this.s3Service.deleteFiles(fileUrls);
-    this.logger.log(`S3 파일 삭제 완료`);
+    // 스토리지에서 파일 삭제
+    this.logger.log(`스토리지에서 ${fileUrls.length}개의 파일 삭제 시작`);
+    await this.storageService.deleteFiles(fileUrls);
+    this.logger.log(`스토리지 파일 삭제 완료`);
 
     // 삭제할 파일 제외한 첨부파일 목록 생성
     const remainingAttachments = disclosure.attachments.filter(

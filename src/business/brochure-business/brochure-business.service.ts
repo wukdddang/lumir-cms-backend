@@ -1,11 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { BrochureContextService } from '@context/brochure-context/brochure-context.service';
 import { CategoryService } from '@domain/common/category/category.service';
 import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { Category } from '@domain/common/category/category.entity';
-import { S3Service } from '@libs/storage/s3.service';
+import { STORAGE_SERVICE } from '@libs/storage/storage.module';
+import type { IStorageService } from '@libs/storage/interfaces/storage.interface';
 import { BrochureDetailResult } from '@context/brochure-context/interfaces/brochure-context.interface';
 import { BrochureListItemDto } from '@interface/common/dto/brochure/brochure-response.dto';
 
@@ -23,7 +24,8 @@ export class BrochureBusinessService {
   constructor(
     private readonly brochureContextService: BrochureContextService,
     private readonly categoryService: CategoryService,
-    private readonly s3Service: S3Service,
+    @Inject(STORAGE_SERVICE)
+    private readonly storageService: IStorageService,
   ) {}
 
   /**
@@ -127,7 +129,7 @@ export class BrochureBusinessService {
 
     if (files && files.length > 0) {
       this.logger.log(`${files.length}개의 파일 업로드 시작`);
-      const uploadedFiles = await this.s3Service.uploadFiles(
+      const uploadedFiles = await this.storageService.uploadFiles(
         files,
         'brochures',
       );
@@ -394,7 +396,7 @@ export class BrochureBusinessService {
     let attachments = data.attachments;
     if (files && files.length > 0) {
       this.logger.log(`${files.length}개의 파일 업로드 시작`);
-      const uploadedFiles = await this.s3Service.uploadFiles(
+      const uploadedFiles = await this.storageService.uploadFiles(
         files,
         'brochures',
       );
@@ -445,9 +447,9 @@ export class BrochureBusinessService {
     }
 
     // S3에서 파일 삭제
-    this.logger.log(`S3에서 ${fileUrls.length}개의 파일 삭제 시작`);
-    await this.s3Service.deleteFiles(fileUrls);
-    this.logger.log(`S3 파일 삭제 완료`);
+    this.logger.log(`스토리지에서 ${fileUrls.length}개의 파일 삭제 시작`);
+    await this.storageService.deleteFiles(fileUrls);
+    this.logger.log(`스토리지 파일 삭제 완료`);
 
     // 삭제할 파일 제외한 첨부파일 목록 생성
     const remainingAttachments = brochure.attachments.filter(

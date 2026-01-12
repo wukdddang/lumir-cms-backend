@@ -16,7 +16,7 @@ export class UserInfoDto {
   })
   externalId: string;
 
-  @ApiProperty({ description: '이메일', example: 'admin@example.com' })
+  @ApiProperty({ description: '이메일', example: 'admin@lumir.space' })
   email: string;
 
   @ApiProperty({ description: '이름', example: '홍길동' })

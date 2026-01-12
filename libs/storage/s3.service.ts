@@ -7,17 +7,15 @@ import {
   PutObjectCommandInput,
 } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
+import { IStorageService, UploadedFile } from './interfaces/storage.interface';
 
-export interface UploadedFile {
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-  url: string;
-  order: number;
-}
-
+/**
+ * AWS S3 Storage Service
+ * 
+ * 프로덕션 환경에서 사용하는 AWS S3 저장소입니다.
+ */
 @Injectable()
-export class S3Service {
+export class S3Service implements IStorageService {
   private readonly logger = new Logger(S3Service.name);
   private readonly s3Client: S3Client;
   private readonly bucketName: string;
@@ -44,6 +42,8 @@ export class S3Service {
     if (!this.bucketName) {
       this.logger.warn('AWS_S3_BUCKET이 설정되지 않았습니다.');
     }
+
+    this.logger.log(`AWS S3 스토리지 초기화 - Bucket: ${this.bucketName}`);
   }
 
   /**

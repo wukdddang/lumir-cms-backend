@@ -65,3 +65,7 @@ scripts/backup/dumps/*.sql
 # Automated backup directories (루트 디렉토리의 백업 파일만 무시)
 /backup/
 !/backup/.gitkeep
+
+# Local file uploads (로컬 개발 환경)
+/uploads/
+!/uploads/.gitkeep
