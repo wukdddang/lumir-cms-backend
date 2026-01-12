@@ -27,14 +27,12 @@ import type { AuthenticatedUser } from '@interface/common/decorators/current-use
 import { ElectronicDisclosureBusinessService } from '@business/electronic-disclosure-business/electronic-disclosure-business.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
 import { CreateElectronicDisclosureDto } from '@interface/common/dto/electronic-disclosure/create-electronic-disclosure.dto';
-import {
-  UpdateElectronicDisclosureDto,
-  UpdateElectronicDisclosureOrderDto,
-} from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure.dto';
+import { UpdateElectronicDisclosureDto } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure.dto';
 import {
   CreateElectronicDisclosureCategoryDto,
   UpdateElectronicDisclosureCategoryOrderDto,
 } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure.dto';
+import { UpdateElectronicDisclosureBatchOrderDto } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure-batch-order.dto';
 import {
   ElectronicDisclosureListResponseDto,
   ElectronicDisclosureResponseDto,
@@ -322,30 +320,39 @@ export class ElectronicDisclosureController {
   }
 
   /**
-   * 전자공시 오더를 수정한다
+   * 전자공시 오더를 일괄 수정한다
    */
-  @Patch(':id/order')
+  @Put('batch-order')
   @ApiOperation({
-    summary: '전자공시 오더 수정',
-    description: '전자공시의 정렬 순서를 수정합니다.',
+    summary: '전자공시 오더 일괄 수정',
+    description:
+      '여러 전자공시의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 전자공시 목록을 전달하면 됩니다.',
   })
   @ApiResponse({
     status: 200,
-    description: '전자공시 오더 수정 성공',
-    type: ElectronicDisclosureResponseDto,
+    description: '전자공시 오더 일괄 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        updatedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (수정할 전자공시가 없음)',
   })
   @ApiResponse({
     status: 404,
-    description: '전자공시를 찾을 수 없음',
+    description: '일부 전자공시를 찾을 수 없음',
   })
-  async 전자공시_오더를_수정한다(
+  async 전자공시_오더를_일괄_수정한다(
+    @Body() updateDto: UpdateElectronicDisclosureBatchOrderDto,
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() updateDto: UpdateElectronicDisclosureOrderDto,
-  ): Promise<ElectronicDisclosureResponseDto> {
-    return await this.electronicDisclosureBusinessService.전자공시_오더를_수정한다(
-      id,
-      updateDto.order,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return await this.electronicDisclosureBusinessService.전자공시_오더를_일괄_수정한다(
+      updateDto.electronicDisclosures,
       user.id,
     );
   }

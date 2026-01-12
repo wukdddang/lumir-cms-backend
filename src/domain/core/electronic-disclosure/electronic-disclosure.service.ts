@@ -1,6 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { ElectronicDisclosure } from './electronic-disclosure.entity';
 import { ElectronicDisclosureTranslation } from './electronic-disclosure-translation.entity';
 import { ContentStatus } from '../content-status.types';
@@ -242,5 +247,66 @@ export class ElectronicDisclosureService {
     this.logger.log(`전자공시 번역 업데이트 - ID: ${translationId}`);
 
     await this.translationRepository.update(translationId, data);
+  }
+
+  /**
+   * 전자공시 오더를 일괄 업데이트한다
+   */
+  async 전자공시_오더를_일괄_업데이트한다(
+    items: Array<{ id: string; order: number }>,
+    updatedBy?: string,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(
+      `전자공시 일괄 순서 수정 시작 - 수정할 전자공시 수: ${items.length}`,
+    );
+
+    if (items.length === 0) {
+      throw new BadRequestException('수정할 전자공시가 없습니다.');
+    }
+
+    // 전자공시 ID 목록 추출
+    const disclosureIds = items.map((item) => item.id);
+
+    // 전자공시 조회
+    const existingDisclosures = await this.electronicDisclosureRepository.find({
+      where: { id: In(disclosureIds) },
+    });
+
+    if (existingDisclosures.length !== items.length) {
+      const foundIds = existingDisclosures.map((d) => d.id);
+      const missingIds = disclosureIds.filter((id) => !foundIds.includes(id));
+      throw new NotFoundException(
+        `일부 전자공시를 찾을 수 없습니다. 누락된 ID: ${missingIds.join(', ')}`,
+      );
+    }
+
+    // 순서 업데이트를 위한 맵 생성
+    const orderMap = new Map<string, number>();
+    items.forEach((item) => {
+      orderMap.set(item.id, item.order);
+    });
+
+    // 각 전자공시의 순서 업데이트
+    const updatePromises = existingDisclosures.map((disclosure) => {
+      const newOrder = orderMap.get(disclosure.id);
+      if (newOrder !== undefined) {
+        disclosure.order = newOrder;
+        if (updatedBy) {
+          disclosure.updatedBy = updatedBy;
+        }
+      }
+      return this.electronicDisclosureRepository.save(disclosure);
+    });
+
+    await Promise.all(updatePromises);
+
+    this.logger.log(
+      `전자공시 일괄 순서 수정 완료 - 수정된 전자공시 수: ${existingDisclosures.length}`,
+    );
+
+    return {
+      success: true,
+      updatedCount: existingDisclosures.length,
+    };
   }
 }

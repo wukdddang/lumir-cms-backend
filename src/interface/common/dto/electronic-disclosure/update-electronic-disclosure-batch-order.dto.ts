@@ -37,5 +37,5 @@ export class UpdateElectronicDisclosureBatchOrderDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ElectronicDisclosureOrderItemDto)
-  disclosures: ElectronicDisclosureOrderItemDto[];
+  electronicDisclosures: ElectronicDisclosureOrderItemDto[];
 }

@@ -260,19 +260,27 @@ export class ElectronicDisclosureContextService {
   }
 
   /**
-   * 전자공시 오더를 수정한다
+   * 전자공시 오더를 일괄 수정한다
    */
-  async 전자공시_오더를_수정한다(
-    id: string,
-    order: number,
+  async 전자공시_오더를_일괄_수정한다(
+    items: Array<{ id: string; order: number }>,
     updatedBy?: string,
-  ): Promise<ElectronicDisclosure> {
-    this.logger.log(`전자공시 오더 수정 - ID: ${id}, 오더: ${order}`);
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(
+      `전자공시 일괄 오더 수정 시작 - 수정할 전자공시 수: ${items.length}`,
+    );
 
-    return await this.electronicDisclosureService.전자공시를_업데이트한다(id, {
-      order,
-      updatedBy,
-    });
+    const result =
+      await this.electronicDisclosureService.전자공시_오더를_일괄_업데이트한다(
+        items,
+        updatedBy,
+      );
+
+    this.logger.log(
+      `전자공시 일괄 오더 수정 완료 - 수정된 전자공시 수: ${result.updatedCount}`,
+    );
+
+    return result;
   }
 
   /**
