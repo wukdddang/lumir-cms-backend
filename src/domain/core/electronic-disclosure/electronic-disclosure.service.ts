@@ -205,6 +205,7 @@ export class ElectronicDisclosureService {
       languageId: string;
       title: string;
       description?: string;
+      isSynced?: boolean;
     }>,
     createdBy?: string,
   ): Promise<void> {
@@ -218,6 +219,7 @@ export class ElectronicDisclosureService {
         languageId: translation.languageId,
         title: translation.title,
         description: translation.description || null,
+        isSynced: translation.isSynced ?? false,
         createdBy,
       });
       await this.translationRepository.save(newTranslation);

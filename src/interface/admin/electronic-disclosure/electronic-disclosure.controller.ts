@@ -26,9 +26,7 @@ import { CurrentUser } from '@interface/common/decorators/current-user.decorator
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { ElectronicDisclosureBusinessService } from '@business/electronic-disclosure-business/electronic-disclosure-business.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
-import {
-  CreateElectronicDisclosureDto,
-} from '@interface/common/dto/electronic-disclosure/create-electronic-disclosure.dto';
+import { CreateElectronicDisclosureDto } from '@interface/common/dto/electronic-disclosure/create-electronic-disclosure.dto';
 import {
   UpdateElectronicDisclosureDto,
   UpdateElectronicDisclosureOrderDto,
@@ -114,6 +112,29 @@ export class ElectronicDisclosureController {
   }
 
   /**
+   * 전자공시 카테고리 목록을 조회한다
+   */
+  @Get('categories')
+  @ApiOperation({
+    summary: '전자공시 카테고리 목록 조회',
+    description: '전자공시 카테고리 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '전자공시 카테고리 목록 조회 성공',
+    type: ElectronicDisclosureCategoryListResponseDto,
+  })
+  async 전자공시_카테고리_목록을_조회한다(): Promise<ElectronicDisclosureCategoryListResponseDto> {
+    const items =
+      await this.electronicDisclosureBusinessService.전자공시_카테고리_목록을_조회한다();
+
+    return {
+      items,
+      total: items.length,
+    };
+  }
+
+  /**
    * 전자공시 전체 목록을 조회한다
    */
   @Get('all')
@@ -132,6 +153,8 @@ export class ElectronicDisclosureController {
 
   /**
    * 전자공시 상세를 조회한다
+   *
+   * 주의: 이 라우트는 categories 라우트보다 뒤에 와야 합니다.
    */
   @Get(':id')
   @ApiOperation({
@@ -216,7 +239,8 @@ export class ElectronicDisclosureController {
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
-          description: '첨부파일 목록 (최대 10개, PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능)',
+          description:
+            '첨부파일 목록 (최대 10개, PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능)',
         },
       },
       required: ['translations'],
@@ -288,10 +312,13 @@ export class ElectronicDisclosureController {
     @Param('id') id: string,
     @Body() updateDto: UpdateElectronicDisclosureDto,
   ): Promise<ElectronicDisclosureResponseDto> {
-    return await this.electronicDisclosureBusinessService.전자공시를_수정한다(id, {
-      ...updateDto,
-      updatedBy: user.id,
-    });
+    return await this.electronicDisclosureBusinessService.전자공시를_수정한다(
+      id,
+      {
+        ...updateDto,
+        updatedBy: user.id,
+      },
+    );
   }
 
   /**
@@ -386,7 +413,8 @@ export class ElectronicDisclosureController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: '전자공시 파일 수정',
-    description: '전자공시의 첨부파일을 수정합니다. 파일은 multipart/form-data로 전송합니다.',
+    description:
+      '전자공시의 첨부파일을 수정합니다. 파일은 multipart/form-data로 전송합니다.',
   })
   @ApiBody({
     schema: {
@@ -493,29 +521,6 @@ export class ElectronicDisclosureController {
   }
 
   /**
-   * 전자공시 카테고리 목록을 조회한다
-   */
-  @Get('categories')
-  @ApiOperation({
-    summary: '전자공시 카테고리 목록 조회',
-    description: '전자공시 카테고리 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '전자공시 카테고리 목록 조회 성공',
-    type: ElectronicDisclosureCategoryListResponseDto,
-  })
-  async 전자공시_카테고리_목록을_조회한다(): Promise<ElectronicDisclosureCategoryListResponseDto> {
-    const items =
-      await this.electronicDisclosureBusinessService.전자공시_카테고리_목록을_조회한다();
-
-    return {
-      items,
-      total: items.length,
-    };
-  }
-
-  /**
    * 전자공시 카테고리를 생성한다
    */
   @Post('categories')
@@ -556,7 +561,8 @@ export class ElectronicDisclosureController {
   async 전자공시_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateDto: { name?: string; description?: string; isActive?: boolean },
+    @Body()
+    updateDto: { name?: string; description?: string; isActive?: boolean },
   ): Promise<ElectronicDisclosureCategoryResponseDto> {
     return await this.electronicDisclosureBusinessService.전자공시_카테고리를_수정한다(
       id,

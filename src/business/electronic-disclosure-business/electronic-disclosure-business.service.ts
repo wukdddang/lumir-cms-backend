@@ -322,7 +322,9 @@ export class ElectronicDisclosureBusinessService {
     // ElectronicDisclosure 엔티티를 ElectronicDisclosureListItemDto로 변환
     const items: ElectronicDisclosureListItemDto[] = result.items.map(
       (disclosure) => {
-        const koreanTranslation = disclosure.translations[0]; // 이미 한국어만 필터링되어 있음
+        const koreanTranslation = disclosure.translations?.find(
+          (t) => t.language?.code === 'ko'
+        ) || disclosure.translations?.[0];
 
         return {
           id: disclosure.id,

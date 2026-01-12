@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ElectronicDisclosureService } from '@domain/core/electronic-disclosure/electronic-disclosure.service';
+import { LanguageService } from '@domain/common/language/language.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
 
 /**
@@ -13,6 +14,7 @@ export class ElectronicDisclosureContextService {
 
   constructor(
     private readonly electronicDisclosureService: ElectronicDisclosureService,
+    private readonly languageService: LanguageService,
   ) {}
 
   /**
@@ -74,6 +76,10 @@ export class ElectronicDisclosureContextService {
 
   /**
    * 전자공시를 생성한다
+   * 
+   * 브로슈어와 동일한 다국어 전략 적용:
+   * 1. 전달받은 언어: isSynced = false (사용자 입력)
+   * 2. 나머지 활성 언어: isSynced = true (자동 동기화)
    */
   async 전자공시를_생성한다(
     translations: Array<{
@@ -89,28 +95,77 @@ export class ElectronicDisclosureContextService {
       mimeType: string;
     }>,
   ): Promise<ElectronicDisclosure> {
-    this.logger.log('전자공시 생성 시작');
+    this.logger.log(`전자공시 생성 시작 - 번역 수: ${translations.length}`);
 
-    // 다음 순서 계산
+    // 1. 언어 ID 검증
+    const languageIds = translations.map((t) => t.languageId);
+    const languages = await Promise.all(
+      languageIds.map((id) => this.languageService.ID로_언어를_조회한다(id)),
+    );
+
+    // 2. 중복 언어 체크
+    const uniqueLanguageIds = new Set(languageIds);
+    if (uniqueLanguageIds.size !== languageIds.length) {
+      throw new BadRequestException('중복된 언어 ID가 있습니다.');
+    }
+
+    // 3. 모든 활성 언어 조회 (자동 동기화용)
+    const allLanguages = await this.languageService.모든_언어를_조회한다(false);
+
+    // 4. 다음 순서 계산
     const nextOrder = await this.electronicDisclosureService.다음_순서를_계산한다();
 
-    // 전자공시 생성
+    // 5. 전자공시 생성 (기본값: 비공개, DRAFT 상태)
     const disclosure = await this.electronicDisclosureService.전자공시를_생성한다({
-      isPublic: false, // 기본값: 비공개
-      status: 'draft' as any, // 기본값: DRAFT
+      isPublic: false,
+      status: 'draft' as any,
       order: nextOrder,
       attachments: attachments || null,
       createdBy,
     });
 
-    // 번역 저장
+    // 6. 전달받은 언어들에 대한 번역 생성 (isSynced: false, 개별 설정됨)
     await this.electronicDisclosureService.전자공시_번역을_생성한다(
       disclosure.id,
-      translations,
+      translations.map((t) => ({
+        languageId: t.languageId,
+        title: t.title,
+        description: t.description,
+        isSynced: false, // 개별 설정
+      })),
       createdBy,
     );
 
-    // 번역 포함하여 재조회
+    // 7. 기준 번역 선정 (한국어 우선, 없으면 첫 번째)
+    const koreanLang = languages.find((l) => l.code === 'ko');
+    const baseTranslation =
+      translations.find((t) => t.languageId === koreanLang?.id) ||
+      translations[0];
+
+    // 8. 전달되지 않은 나머지 활성 언어들에 대한 번역 생성 (isSynced: true, 자동 동기화)
+    const remainingLanguages = allLanguages.filter(
+      (lang) => !languageIds.includes(lang.id),
+    );
+
+    if (remainingLanguages.length > 0) {
+      await this.electronicDisclosureService.전자공시_번역을_생성한다(
+        disclosure.id,
+        remainingLanguages.map((lang) => ({
+          languageId: lang.id,
+          title: baseTranslation.title,
+          description: baseTranslation.description,
+          isSynced: true, // 자동 동기화
+        })),
+        createdBy,
+      );
+    }
+
+    const totalTranslations = translations.length + remainingLanguages.length;
+    this.logger.log(
+      `전자공시 생성 완료 - ID: ${disclosure.id}, 전체 번역 수: ${totalTranslations} (개별: ${translations.length}, 자동: ${remainingLanguages.length})`,
+    );
+
+    // 9. 번역 포함하여 재조회
     return await this.electronicDisclosureService.ID로_전자공시를_조회한다(
       disclosure.id,
     );
@@ -164,18 +219,38 @@ export class ElectronicDisclosureContextService {
             },
           );
         } else {
-          // 새 번역 생성
-          await this.electronicDisclosureService.전자공시_번역을_생성한다(
-            id,
-            [
-              {
-                languageId: translation.languageId,
-                title: translation.title,
-                description: translation.description,
-              },
-            ],
-            data.updatedBy,
+          // 해당 언어의 번역이 이미 있는지 확인
+          const existingTranslations =
+            await this.electronicDisclosureService.전자공시_번역을_조회한다(id);
+          const existingTranslation = existingTranslations.find(
+            (t) => t.languageId === translation.languageId,
           );
+
+          if (existingTranslation) {
+            // 이미 존재하면 업데이트
+            await this.electronicDisclosureService.전자공시_번역을_업데이트한다(
+              existingTranslation.id,
+              {
+                title: translation.title,
+                description: translation.description ?? undefined,
+                updatedBy: data.updatedBy,
+              },
+            );
+          } else {
+            // 새 번역 생성
+            await this.electronicDisclosureService.전자공시_번역을_생성한다(
+              id,
+              [
+                {
+                  languageId: translation.languageId,
+                  title: translation.title,
+                  description: translation.description,
+                  isSynced: false,
+                },
+              ],
+              data.updatedBy,
+            );
+          }
         }
       }
     }

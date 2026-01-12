@@ -138,28 +138,25 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         .expect(400);
     });
 
-    it('translation의 title이 누락된 경우 400 에러가 발생해야 한다', async () => {
-      // Given
+    it('translation의 title이 누락된 경우 에러가 발생해야 한다', async () => {
+      // Given - title 없이 생성 시도
       const createDto = {
-        isPublic: false,
-        status: 'draft',
         translations: [
           {
             languageId,
             description: '설명만 있음',
-            // title 없음 - validation에서 걸러야 함
+            // title 없음
           },
         ],
       };
 
-      // When & Then
+      // When
       const response = await testSuite
         .request()
         .post('/api/admin/brochures')
-        .send(createDto);
+        .field('translations', JSON.stringify(createDto.translations));
       
-      // DTO Validation (title required)이 작동하면 400
-      // 작동하지 않으면 DB 제약 조건으로 500 발생
+      // Then - title 필드가 없으면 DTO validation 또는 DB에서 에러
       expect([400, 500]).toContain(response.status);
     });
   });
