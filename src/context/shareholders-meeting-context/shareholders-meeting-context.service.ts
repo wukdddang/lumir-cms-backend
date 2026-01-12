@@ -78,7 +78,7 @@ export class ShareholdersMeetingContextService {
 
   /**
    * 주주총회를 생성한다
-   * 
+   *
    * ElectronicDisclosure, IR과 동일한 다국어 전략 적용:
    * 1. 전달받은 언어: isSynced = false (사용자 입력)
    * 2. 나머지 활성 언어: isSynced = true (자동 동기화)
@@ -131,7 +131,8 @@ export class ShareholdersMeetingContextService {
     const allLanguages = await this.languageService.모든_언어를_조회한다(false);
 
     // 4. 다음 순서 계산
-    const nextOrder = await this.shareholdersMeetingService.다음_순서를_계산한다();
+    const nextOrder =
+      await this.shareholdersMeetingService.다음_순서를_계산한다();
 
     // 5. 주주총회 생성 (기본값: 비공개, DRAFT 상태)
     const meeting = await this.shareholdersMeetingService.주주총회를_생성한다({
@@ -191,23 +192,23 @@ export class ShareholdersMeetingContextService {
 
       for (const voteResultData of voteResults) {
         // 의결 결과 생성
-        const voteResult = await this.shareholdersMeetingService.의결_결과를_생성한다(
-          meeting.id,
-          {
-            agendaNumber: voteResultData.agendaNumber,
-            totalVote: voteResultData.totalVote,
-            yesVote: voteResultData.yesVote,
-            noVote: voteResultData.noVote,
-            approvalRating: voteResultData.approvalRating,
-            result: voteResultData.result,
-            createdBy,
-          },
-        );
+        const voteResult =
+          await this.shareholdersMeetingService.의결_결과를_생성한다(
+            meeting.id,
+            {
+              agendaNumber: voteResultData.agendaNumber,
+              totalVote: voteResultData.totalVote,
+              yesVote: voteResultData.yesVote,
+              noVote: voteResultData.noVote,
+              approvalRating: voteResultData.approvalRating,
+              result: voteResultData.result,
+              createdBy,
+            },
+          );
 
         // 의결 결과 번역 생성 (전달받은 언어)
-        const voteResultTranslationLanguageIds = voteResultData.translations.map(
-          (t) => t.languageId,
-        );
+        const voteResultTranslationLanguageIds =
+          voteResultData.translations.map((t) => t.languageId);
 
         await this.shareholdersMeetingService.의결_결과_번역을_생성한다(
           voteResult.id,
@@ -242,9 +243,7 @@ export class ShareholdersMeetingContextService {
         }
       }
 
-      this.logger.log(
-        `의결 결과 생성 완료 - 안건 수: ${voteResults.length}`,
-      );
+      this.logger.log(`의결 결과 생성 완료 - 안건 수: ${voteResults.length}`);
     }
 
     // 10. 번역 포함하여 재조회
@@ -358,7 +357,9 @@ export class ShareholdersMeetingContextService {
 
     // 의결 결과(안건) 업데이트 (제공된 경우)
     if (data.voteResults && data.voteResults.length > 0) {
-      this.logger.log(`의결 결과 업데이트 시작 - 안건 수: ${data.voteResults.length}`);
+      this.logger.log(
+        `의결 결과 업데이트 시작 - 안건 수: ${data.voteResults.length}`,
+      );
 
       // 기존 의결 결과 조회
       const existingVoteResults =
@@ -466,9 +467,8 @@ export class ShareholdersMeetingContextService {
           );
 
           // 나머지 언어에 대한 자동 동기화 번역 생성
-          const allLanguages = await this.languageService.모든_언어를_조회한다(
-            false,
-          );
+          const allLanguages =
+            await this.languageService.모든_언어를_조회한다(false);
           const providedLanguageIds = voteResultData.translations.map(
             (t) => t.languageId,
           );
