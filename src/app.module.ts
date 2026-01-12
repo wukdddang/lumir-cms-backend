@@ -10,6 +10,8 @@ import { ElectronicDisclosureInterfaceModule } from './interface/admin/electroni
 import { IRInterfaceModule } from './interface/admin/ir/ir.module';
 import { MainPopupInterfaceModule } from './interface/admin/main-popup/main-popup.module';
 import { ShareholdersMeetingAdminModule } from './interface/admin/shareholders-meeting/shareholders-meeting.module';
+import { AdminLumirStoryModule } from './interface/admin/lumir-story/lumir-story.module';
+import { AdminVideoGalleryModule } from './interface/admin/video-gallery/video-gallery.module';
 import { HealthModule } from './interface/common/health/health.module';
 import { AuthContextModule } from '@context/auth-context';
 import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
@@ -48,6 +50,8 @@ import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
     IRInterfaceModule,
     MainPopupInterfaceModule,
     ShareholdersMeetingAdminModule,
+    AdminLumirStoryModule,
+    AdminVideoGalleryModule,
   ],
   providers: [
     // 전역 JWT 인증 가드 설정

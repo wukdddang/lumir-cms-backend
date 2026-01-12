@@ -43,6 +43,13 @@ export class VideoGallery extends BaseEntity<VideoGallery> {
   status: ContentStatus;
 
   @Column({
+    type: 'text',
+    nullable: true,
+    comment: 'YouTube 비디오 URL',
+  })
+  youtubeUrl: string | null;
+
+  @Column({
     type: 'jsonb',
     nullable: true,
     comment: '첨부파일 목록 (AWS S3 URLs) - 비디오 파일',
