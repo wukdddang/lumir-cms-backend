@@ -139,6 +139,7 @@ erDiagram
         uuid id PK "description"
         boolean isPublic
         varchar status "draft|approved|under_review|rejected|opened"
+        jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
         timestamp updatedAt

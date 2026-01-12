@@ -1,10 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BrochureService } from '@domain/core/brochure/brochure.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { UpdateBrochureDto } from '../../interfaces/brochure-context.interface';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 
 /**
  * 브로슈어 수정 커맨드
@@ -24,8 +25,7 @@ export class UpdateBrochureHandler implements ICommandHandler<UpdateBrochureComm
   private readonly logger = new Logger(UpdateBrochureHandler.name);
 
   constructor(
-    @InjectRepository(Brochure)
-    private readonly brochureRepository: Repository<Brochure>,
+    private readonly brochureService: BrochureService,
     @InjectRepository(BrochureTranslation)
     private readonly brochureTranslationRepository: Repository<BrochureTranslation>,
   ) {}
@@ -35,34 +35,28 @@ export class UpdateBrochureHandler implements ICommandHandler<UpdateBrochureComm
 
     this.logger.log(`브로슈어 수정 시작 - ID: ${id}`);
 
-    // 브로슈어 조회
-    const brochure = await this.brochureRepository.findOne({
-      where: { id },
-      relations: ['translations'],
-    });
-
-    if (!brochure) {
-      throw new NotFoundException(`브로슈어를 찾을 수 없습니다. ID: ${id}`);
-    }
-
     // 브로슈어 업데이트
+    const updateData: Partial<Brochure> = {};
     if (data.isPublic !== undefined) {
-      brochure.isPublic = data.isPublic;
+      updateData.isPublic = data.isPublic;
     }
     if (data.status !== undefined) {
-      brochure.status = data.status;
+      updateData.status = data.status;
     }
     if (data.order !== undefined) {
-      brochure.order = data.order;
+      updateData.order = data.order;
     }
     if (data.attachments !== undefined) {
-      brochure.attachments = data.attachments;
+      updateData.attachments = data.attachments;
     }
     if (data.updatedBy) {
-      brochure.updatedBy = data.updatedBy;
+      updateData.updatedBy = data.updatedBy;
     }
 
-    const updated = await this.brochureRepository.save(brochure);
+    const updated = await this.brochureService.브로슈어를_업데이트한다(
+      id,
+      updateData,
+    );
 
     // 번역 업데이트
     if (data.translations && data.translations.length > 0) {

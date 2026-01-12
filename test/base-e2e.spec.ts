@@ -3,6 +3,42 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
+import { AuthContextService } from '../src/context/auth-context/auth-context.service';
+
+/**
+ * 테스트용 Mock Auth Context Service
+ * 모든 토큰을 유효한 것으로 처리합니다
+ */
+class MockAuthContextService {
+  async 토큰을_검증한다(accessToken: string) {
+    return {
+      user: {
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User',
+        employeeNumber: 'TEST001',
+        roles: ['admin'],
+        status: 'ACTIVE',
+      },
+      accessToken,
+    };
+  }
+
+  async 로그인한다(email: string, password: string) {
+    return {
+      user: {
+        id: 'test-user-id',
+        email,
+        name: 'Test User',
+        employeeNumber: 'TEST001',
+        roles: ['admin'],
+        status: 'ACTIVE',
+      },
+      accessToken: 'test-access-token',
+      refreshToken: 'test-refresh-token',
+    };
+  }
+}
 
 /**
  * E2E 테스트 베이스 클래스
@@ -11,18 +47,35 @@ import request from 'supertest';
 export class BaseE2ETest {
   public app: INestApplication;
   protected dataSource: DataSource;
+  private testAccessToken = 'test-access-token';
 
   /**
    * supertest request 반환
+   * 인증 헤더가 자동으로 포함됩니다
    * 사용법: testSuite.request().get('/api/endpoint')
    */
   request() {
     return {
-      get: (url: string) => request(this.app.getHttpServer()).get(url),
-      post: (url: string) => request(this.app.getHttpServer()).post(url),
-      put: (url: string) => request(this.app.getHttpServer()).put(url),
-      patch: (url: string) => request(this.app.getHttpServer()).patch(url),
-      delete: (url: string) => request(this.app.getHttpServer()).delete(url),
+      get: (url: string) =>
+        request(this.app.getHttpServer())
+          .get(url)
+          .set('Authorization', `Bearer ${this.testAccessToken}`),
+      post: (url: string) =>
+        request(this.app.getHttpServer())
+          .post(url)
+          .set('Authorization', `Bearer ${this.testAccessToken}`),
+      put: (url: string) =>
+        request(this.app.getHttpServer())
+          .put(url)
+          .set('Authorization', `Bearer ${this.testAccessToken}`),
+      patch: (url: string) =>
+        request(this.app.getHttpServer())
+          .patch(url)
+          .set('Authorization', `Bearer ${this.testAccessToken}`),
+      delete: (url: string) =>
+        request(this.app.getHttpServer())
+          .delete(url)
+          .set('Authorization', `Bearer ${this.testAccessToken}`),
     };
   }
 
@@ -39,7 +92,10 @@ export class BaseE2ETest {
   async initializeApp(): Promise<void> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(AuthContextService)
+      .useClass(MockAuthContextService)
+      .compile();
 
     this.app = moduleFixture.createNestApplication();
 

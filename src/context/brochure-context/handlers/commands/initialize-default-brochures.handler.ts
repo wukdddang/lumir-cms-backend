@@ -2,9 +2,10 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BrochureService } from '@domain/core/brochure/brochure.service';
+import { LanguageService } from '@domain/common/language/language.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { Language } from '@domain/common/language/language.entity';
 import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
@@ -22,12 +23,10 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
   private readonly logger = new Logger(InitializeDefaultBrochuresHandler.name);
 
   constructor(
-    @InjectRepository(Brochure)
-    private readonly brochureRepository: Repository<Brochure>,
+    private readonly brochureService: BrochureService,
+    private readonly languageService: LanguageService,
     @InjectRepository(BrochureTranslation)
     private readonly translationRepository: Repository<BrochureTranslation>,
-    @InjectRepository(Language)
-    private readonly languageRepository: Repository<Language>,
   ) {}
 
   async execute(
@@ -36,9 +35,7 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
     this.logger.log('기본 브로슈어 생성 시작');
 
     // 언어 조회
-    const languages = await this.languageRepository.find({
-      where: { isActive: true },
-    });
+    const languages = await this.languageService.모든_언어를_조회한다(false);
 
     if (languages.length === 0) {
       this.logger.warn('활성 언어가 없습니다. 언어를 먼저 등록해주세요.');
@@ -136,7 +133,7 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
 
     for (const brochureData of defaultBrochures) {
       // 브로슈어 생성
-      const brochure = this.brochureRepository.create({
+      const savedBrochure = await this.brochureService.브로슈어를_생성한다({
         isPublic: brochureData.isPublic,
         status: brochureData.status,
         order: brochureData.order,
@@ -145,8 +142,6 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
         createdBy: command.createdBy,
         updatedBy: command.createdBy, // 생성 시점이므로 createdBy와 동일하게 설정
       });
-
-      const savedBrochure = await this.brochureRepository.save(brochure);
 
       // 번역 생성
       for (const language of languages) {
@@ -166,17 +161,13 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
       }
 
       // 번역과 함께 다시 조회
-      const brochureWithTranslations = await this.brochureRepository.findOne({
-        where: { id: savedBrochure.id },
-        relations: ['translations', 'translations.language'],
-      });
+      const brochureWithTranslations =
+        await this.brochureService.ID로_브로슈어를_조회한다(savedBrochure.id);
 
-      if (brochureWithTranslations) {
-        createdBrochures.push(brochureWithTranslations);
-        this.logger.log(
-          `기본 브로슈어 추가 완료 - ${brochureData.translations.ko?.title || 'Unknown'}`,
-        );
-      }
+      createdBrochures.push(brochureWithTranslations);
+      this.logger.log(
+        `기본 브로슈어 추가 완료 - ${brochureData.translations.ko?.title || 'Unknown'}`,
+      );
     }
 
     this.logger.log(

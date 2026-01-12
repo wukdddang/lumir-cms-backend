@@ -114,6 +114,23 @@ export class BrochureController {
   }
 
   /**
+   * 브로슈어 전체 목록을 조회한다 (페이징 없음)
+   */
+  @Get('all')
+  @ApiOperation({
+    summary: '브로슈어 전체 목록 조회',
+    description: '모든 브로슈어를 조회합니다. (페이징 없음)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '브로슈어 전체 목록 조회 성공',
+    type: [BrochureResponseDto],
+  })
+  async 브로슈어_전체_목록을_조회한다(): Promise<BrochureResponseDto[]> {
+    return await this.brochureBusinessService.브로슈어_전체_목록을_조회한다();
+  }
+
+  /**
    * 브로슈어를 생성한다 (파일 업로드 포함)
    */
   @Post()

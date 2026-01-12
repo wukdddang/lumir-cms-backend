@@ -1,9 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BrochureService } from '@domain/core/brochure/brochure.service';
+import { LanguageService } from '@domain/common/language/language.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { Language } from '@domain/common/language/language.entity';
 import { ContentStatus } from '@domain/core/content-status.types';
 import {
   CreateBrochureDto,
@@ -26,12 +27,10 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
   private readonly logger = new Logger(CreateBrochureHandler.name);
 
   constructor(
-    @InjectRepository(Brochure)
-    private readonly brochureRepository: Repository<Brochure>,
+    private readonly brochureService: BrochureService,
+    private readonly languageService: LanguageService,
     @InjectRepository(BrochureTranslation)
     private readonly brochureTranslationRepository: Repository<BrochureTranslation>,
-    @InjectRepository(Language)
-    private readonly languageRepository: Repository<Language>,
   ) {}
 
   async execute(command: CreateBrochureCommand): Promise<CreateBrochureResult> {
@@ -43,17 +42,9 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
 
     // 모든 언어 ID 검증
     const languageIds = data.translations.map((t) => t.languageId);
-    const languages = await this.languageRepository.find({
-      where: languageIds.map((id) => ({ id })),
-    });
-
-    if (languages.length !== languageIds.length) {
-      const foundIds = languages.map((l) => l.id);
-      const missingIds = languageIds.filter((id) => !foundIds.includes(id));
-      throw new BadRequestException(
-        `존재하지 않는 언어 ID입니다: ${missingIds.join(', ')}`,
-      );
-    }
+    const languages = await Promise.all(
+      languageIds.map((id) => this.languageService.ID로_언어를_조회한다(id)),
+    );
 
     // 중복 언어 체크
     const uniqueLanguageIds = new Set(languageIds);
@@ -62,21 +53,13 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
     }
 
     // 모든 활성 언어 조회 (동기화용)
-    const allLanguages = await this.languageRepository.find({
-      where: { isActive: true },
-    });
+    const allLanguages = await this.languageService.모든_언어를_조회한다(false);
 
-    // 자동으로 order 계산 (최대 order + 1)
-    const maxOrderBrochures = await this.brochureRepository.find({
-      order: { order: 'DESC' },
-      select: ['order'],
-      take: 1,
-    });
-    const nextOrder =
-      maxOrderBrochures.length > 0 ? maxOrderBrochures[0].order + 1 : 0;
+    // 자동으로 order 계산
+    const nextOrder = await this.brochureService.다음_순서를_계산한다();
 
     // 브로슈어 생성 (기본값: 비공개, DRAFT 상태)
-    const brochure = this.brochureRepository.create({
+    const saved = await this.brochureService.브로슈어를_생성한다({
       isPublic: false, // 기본값: 비공개
       status: ContentStatus.DRAFT, // 기본값: DRAFT
       order: nextOrder, // 자동 계산
@@ -84,8 +67,6 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
       createdBy: data.createdBy,
       updatedBy: data.createdBy, // 생성 시점이므로 createdBy와 동일
     });
-
-    const saved = await this.brochureRepository.save(brochure);
 
     // 전달받은 언어들에 대한 번역 생성 (isSynced: false, 개별 설정됨)
     const customTranslations = data.translations.map((trans) =>

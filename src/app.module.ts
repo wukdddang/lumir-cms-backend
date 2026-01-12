@@ -6,6 +6,7 @@ import { DatabaseModule } from '@libs/database/database.module';
 import { AuthInterfaceModule } from './interface/admin/auth/auth.module';
 import { LanguageInterfaceModule } from './interface/admin/language/language.module';
 import { BrochureInterfaceModule } from './interface/admin/brochure/brochure.module';
+import { ElectronicDisclosureInterfaceModule } from './interface/admin/electronic-disclosure/electronic-disclosure.module';
 import { HealthModule } from './interface/common/health/health.module';
 import { AuthContextModule } from '@context/auth-context';
 import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
@@ -40,6 +41,7 @@ import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
     AuthInterfaceModule,
     LanguageInterfaceModule,
     BrochureInterfaceModule,
+    ElectronicDisclosureInterfaceModule,
   ],
   providers: [
     // 전역 JWT 인증 가드 설정

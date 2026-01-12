@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Brochure } from '@domain/core/brochure/brochure.entity';
+import { BrochureService } from '@domain/core/brochure/brochure.service';
+import { LanguageService } from '@domain/common/language/language.service';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { Language } from '@domain/common/language/language.entity';
 
 /**
  * 브로슈어 번역 동기화 핸들러
@@ -16,12 +16,10 @@ export class SyncBrochureTranslationsHandler {
   private readonly logger = new Logger(SyncBrochureTranslationsHandler.name);
 
   constructor(
-    @InjectRepository(Brochure)
-    private readonly brochureRepository: Repository<Brochure>,
+    private readonly brochureService: BrochureService,
+    private readonly languageService: LanguageService,
     @InjectRepository(BrochureTranslation)
     private readonly brochureTranslationRepository: Repository<BrochureTranslation>,
-    @InjectRepository(Language)
-    private readonly languageRepository: Repository<Language>,
   ) {}
 
   /**
@@ -32,9 +30,9 @@ export class SyncBrochureTranslationsHandler {
 
     try {
       // 한국어 조회
-      const koreanLanguage = await this.languageRepository.findOne({
-        where: { code: 'ko' as any },
-      });
+      const koreanLanguage = await this.languageService.코드로_언어를_조회한다(
+        'ko' as any,
+      );
 
       if (!koreanLanguage) {
         this.logger.warn(
@@ -44,7 +42,7 @@ export class SyncBrochureTranslationsHandler {
       }
 
       // 모든 브로슈어 조회
-      const brochures = await this.brochureRepository.find();
+      const brochures = await this.brochureService.모든_브로슈어를_조회한다();
 
       let totalSyncedCount = 0;
 

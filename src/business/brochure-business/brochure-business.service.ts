@@ -84,6 +84,24 @@ export class BrochureBusinessService {
   }
 
   /**
+   * 브로슈어 전체 목록을 조회한다 (페이징 없음)
+   */
+  async 브로슈어_전체_목록을_조회한다(): Promise<BrochureDetailResult[]> {
+    this.logger.log('브로슈어 전체 목록 조회 시작');
+
+    const result = await this.brochureContextService.브로슈어_목록을_조회한다(
+      undefined,
+      'order',
+      1,
+      1000, // 충분히 큰 숫자
+    );
+
+    this.logger.log(`브로슈어 전체 목록 조회 완료 - 총 ${result.items.length}개`);
+
+    return result.items;
+  }
+
+  /**
    * 브로슈어를 생성한다 (파일 업로드 포함)
    */
   async 브로슈어를_생성한다(

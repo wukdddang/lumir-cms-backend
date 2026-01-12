@@ -36,6 +36,18 @@ export class ElectronicDisclosure extends BaseEntity<ElectronicDisclosure> {
   })
   order: number;
 
+  @Column({
+    type: 'jsonb',
+    nullable: true,
+    comment: '첨부파일 목록 (AWS S3 URLs)',
+  })
+  attachments: Array<{
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }> | null;
+
   @OneToMany(
     () => ElectronicDisclosureTranslation,
     (translation) => translation.electronicDisclosure,
