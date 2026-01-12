@@ -1,0 +1,522 @@
+---
+alwaysApply: true
+---
+
+# 브로슈어 상태 흐름 다이어그램 (API 포함)
+
+## 📋 개요
+
+브로슈어는 콘텐츠 관리 시스템의 핵심 엔티티로, **상태(Status)**와 **공개 여부(isPublic)** 두 가지 차원에서 관리됩니다.
+
+## 🔄 상태(Status) 정의
+
+| 상태       | 값             | 설명                              |
+| ---------- | -------------- | --------------------------------- |
+| **초안**   | `draft`        | 작성 중인 상태, 아직 검토 요청 전 |
+| **검토중** | `under_review` | 검토 요청 후 승인 대기 중         |
+| **승인됨** | `approved`     | 검토 완료, 승인된 상태            |
+| **거부됨** | `rejected`     | 검토 결과 거부된 상태             |
+| **공개됨** | `opened`       | 최종 공개된 상태                  |
+
+## 📊 상태 전이 다이어그램 (API 포함)
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft: POST /api/admin/brochures<br/>(브로슈어 생성)
+
+    draft --> under_review: PATCH /api/admin/brochures/:id/status<br/>(검토 요청)
+    draft --> draft: PUT /api/admin/brochures/:id/translations<br/>PATCH /api/admin/brochures/:id/files<br/>PATCH /api/admin/brochures/:id/categories<br/>PATCH /api/admin/brochures/:id/public<br/>(수정/삭제 가능)
+
+    under_review --> approved: PATCH /api/admin/brochures/:id/status<br/>(승인)
+    under_review --> rejected: PATCH /api/admin/brochures/:id/status<br/>(거부)
+    under_review --> draft: PATCH /api/admin/brochures/:id/status<br/>(검토 취소)
+
+    approved --> opened: PATCH /api/admin/brochures/:id/status<br/>(공개 설정)
+    approved --> draft: PUT /api/admin/brochures/:id/translations<br/>(수정 시작)
+
+    rejected --> draft: PATCH /api/admin/brochures/:id/status<br/>(수정 시작)
+
+    opened --> draft: PUT /api/admin/brochures/:id/translations<br/>(수정 시작)
+    opened --> opened: PATCH /api/admin/brochures/:id/public<br/>(비공개 설정, isPublic=false)
+
+    note right of draft
+        상태: 초안
+        - 모든 내용 수정 가능
+        - 파일 첨부/수정/삭제
+        - 카테고리 변경
+        - 공개 여부 변경
+        - 삭제 가능
+        
+        API:
+        - PUT /api/admin/brochures/:id/translations
+        - PATCH /api/admin/brochures/:id/files
+        - DELETE /api/admin/brochures/:id/files
+        - PATCH /api/admin/brochures/:id/categories
+        - PATCH /api/admin/brochures/:id/public
+        - PUT /api/admin/brochures/batch-order
+        - DELETE /api/admin/brochures/:id
+    end note
+
+    note right of under_review
+        상태: 검토중
+        - 내용 수정 불가
+        - 삭제 불가
+        - 승인/거부 대기
+        
+        API:
+        - GET /api/admin/brochures/:id
+        - PATCH /api/admin/brochures/:id/status
+    end note
+
+    note right of approved
+        상태: 승인됨
+        - 공개 준비 완료
+        - 공개 설정 가능
+        - 수정 시 DRAFT로 전이
+        
+        API:
+        - GET /api/admin/brochures/:id
+        - PATCH /api/admin/brochures/:id/status
+        - PATCH /api/admin/brochures/:id/public
+        - DELETE /api/admin/brochures/:id
+    end note
+
+    note right of rejected
+        상태: 거부됨
+        - 수정 필요
+        - 재검토 가능
+        - 공개 불가
+        
+        API:
+        - GET /api/admin/brochures/:id
+        - PATCH /api/admin/brochures/:id/status
+        - DELETE /api/admin/brochures/:id
+    end note
+
+    note right of opened
+        상태: 공개됨
+        - 사용자에게 노출
+        (isPublic=true일 때만)
+        - 수정 시 DRAFT로 전이
+        - 비공개 처리 가능
+        
+        API:
+        - GET /api/admin/brochures/:id
+        - PATCH /api/admin/brochures/:id/public
+        - PUT /api/admin/brochures/:id/translations
+        - DELETE /api/admin/brochures/:id
+    end note
+```
+
+## 🌐 전체 API 엔드포인트 맵
+
+### 상태와 무관한 조회 API
+
+```mermaid
+graph LR
+    A[브로슈어 API] --> B[GET /api/admin/brochures]
+    A --> C[GET /api/admin/brochures/all]
+    A --> D[GET /api/admin/brochures/:id]
+    A --> E[GET /api/admin/brochures/categories]
+    
+    B --> B1[목록 조회<br/>페이징]
+    C --> C1[전체 목록 조회<br/>페이징 없음]
+    D --> D1[상세 조회]
+    E --> E1[카테고리 목록<br/>조회]
+```
+
+### 상태별 가능한 API 액션
+
+```mermaid
+graph TD
+    subgraph DRAFT["DRAFT (초안)"]
+        D1[POST /api/admin/brochures<br/>생성]
+        D2[PUT /api/admin/brochures/:id/translations<br/>번역 수정]
+        D3[PATCH /api/admin/brochures/:id/files<br/>파일 수정]
+        D4[DELETE /api/admin/brochures/:id/files<br/>파일 삭제]
+        D5[PATCH /api/admin/brochures/:id/categories<br/>카테고리 수정]
+        D6[PATCH /api/admin/brochures/:id/public<br/>공개 여부 수정]
+        D7[PUT /api/admin/brochures/batch-order<br/>정렬 순서 일괄 수정]
+        D8[DELETE /api/admin/brochures/:id<br/>삭제]
+        D9[PATCH /api/admin/brochures/:id/status<br/>→ UNDER_REVIEW 전이]
+    end
+    
+    subgraph UNDER_REVIEW["UNDER_REVIEW (검토중)"]
+        U1[GET /api/admin/brochures/:id<br/>조회만 가능]
+        U2[PATCH /api/admin/brochures/:id/status<br/>→ APPROVED 승인]
+        U3[PATCH /api/admin/brochures/:id/status<br/>→ REJECTED 거부]
+        U4[PATCH /api/admin/brochures/:id/status<br/>→ DRAFT 취소]
+    end
+    
+    subgraph APPROVED["APPROVED (승인됨)"]
+        A1[GET /api/admin/brochures/:id<br/>조회]
+        A2[PATCH /api/admin/brochures/:id/status<br/>→ OPENED 공개]
+        A3[PATCH /api/admin/brochures/:id/public<br/>공개 여부 수정]
+        A4[PUT /api/admin/brochures/:id/translations<br/>→ DRAFT로 전이 후 수정]
+        A5[DELETE /api/admin/brochures/:id<br/>삭제]
+    end
+    
+    subgraph REJECTED["REJECTED (거부됨)"]
+        R1[GET /api/admin/brochures/:id<br/>조회]
+        R2[PATCH /api/admin/brochures/:id/status<br/>→ DRAFT로 전이]
+        R3[DELETE /api/admin/brochures/:id<br/>삭제]
+    end
+    
+    subgraph OPENED["OPENED (공개됨)"]
+        O1[GET /api/admin/brochures/:id<br/>조회]
+        O2[PATCH /api/admin/brochures/:id/public<br/>비공개 설정]
+        O3[PUT /api/admin/brochures/:id/translations<br/>→ DRAFT로 전이 후 수정]
+        O4[DELETE /api/admin/brochures/:id<br/>삭제]
+    end
+
+    style DRAFT fill:#e3f2fd
+    style UNDER_REVIEW fill:#fff3e0
+    style APPROVED fill:#e8f5e9
+    style REJECTED fill:#ffebee
+    style OPENED fill:#f3e5f5
+```
+
+## 🔄 상태 전이 시퀀스 다이어그램
+
+### 시나리오 1: 정상적인 공개 프로세스
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    
+    Note over Admin,DB: 1. 브로슈어 생성
+    Admin->>API: POST /api/admin/brochures
+    API->>DB: INSERT (status: 'draft', isPublic: false)
+    DB-->>API: 생성 완료
+    API-->>Admin: 201 Created (DRAFT)
+    
+    Note over Admin,DB: 2. 파일 및 내용 수정
+    Admin->>API: PATCH /api/admin/brochures/:id/files
+    API->>DB: UPDATE files
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Admin->>API: PUT /api/admin/brochures/:id/translations
+    API->>DB: UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: 3. 검토 요청
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'under_review'}
+    API->>DB: UPDATE status = 'under_review'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (UNDER_REVIEW)
+    
+    Note over Admin,DB: 4. 승인
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'approved'}
+    API->>DB: UPDATE status = 'approved'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (APPROVED)
+    
+    Note over Admin,DB: 5. 공개 설정
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'opened'}
+    API->>DB: UPDATE status = 'opened'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (OPENED)
+    
+    Note over Admin,DB: 6. 공개 여부 활성화
+    Admin->>API: PATCH /api/admin/brochures/:id/public<br/>{isPublic: true}
+    API->>DB: UPDATE isPublic = true
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: ✅ 사용자에게 노출됨
+```
+
+### 시나리오 2: 거부 후 재검토
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    
+    Note over Admin,DB: 1-3. 생성 → 검토 요청 (생략)
+    
+    Note over Admin,DB: 4. 거부
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'rejected'}
+    API->>DB: UPDATE status = 'rejected'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (REJECTED)
+    
+    Note over Admin,DB: 5. 수정 시작
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'draft'}
+    API->>DB: UPDATE status = 'draft'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (DRAFT)
+    
+    Note over Admin,DB: 6. 내용 수정
+    Admin->>API: PUT /api/admin/brochures/:id/translations
+    API->>DB: UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: 7. 재검토 요청
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>{status: 'under_review'}
+    API->>DB: UPDATE status = 'under_review'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (UNDER_REVIEW)
+    
+    Note over Admin,DB: 8-10. 승인 → 공개 (생략)
+```
+
+### 시나리오 3: 공개된 콘텐츠 수정
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    participant User as 사용자
+    
+    Note over Admin,User: ✅ 현재 공개 중 (OPENED, isPublic: true)
+    User->>API: GET /api/public/brochures
+    API->>DB: SELECT WHERE status='opened' AND isPublic=true
+    DB-->>API: 브로슈어 목록
+    API-->>User: 200 OK (노출됨)
+    
+    Note over Admin,User: 수정 필요 발생
+    Admin->>API: PUT /api/admin/brochures/:id/translations
+    API->>DB: UPDATE status = 'draft' (자동 전이)<br/>UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK (DRAFT)
+    
+    Note over Admin,User: ❌ 사용자에게 노출 중단
+    User->>API: GET /api/public/brochures
+    API->>DB: SELECT WHERE status='opened' AND isPublic=true
+    DB-->>API: 해당 브로슈어 제외
+    API-->>User: 200 OK (노출 안 됨)
+    
+    Note over Admin,User: 수정 → 검토 → 승인 → 재공개
+    Admin->>API: PATCH /api/admin/brochures/:id/status<br/>(under_review → approved → opened)
+    API->>DB: UPDATE status
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (OPENED)
+    
+    Note over Admin,User: ✅ 사용자에게 다시 노출됨
+```
+
+## 🎯 API 엔드포인트 상세 명세
+
+### 1. 브로슈어 생성
+
+```
+POST /api/admin/brochures
+Content-Type: multipart/form-data
+
+Body:
+- translations: JSON string (배열)
+  예: '[{"languageId":"uuid","title":"제목","description":"설명"}]'
+- files: 파일 배열 (최대 10개, PDF/JPG/PNG/WEBP)
+
+Response: 201 Created
+- status: 'draft' (기본값)
+- isPublic: false (기본값)
+```
+
+### 2. 상태 변경 (구현 필요)
+
+```
+PATCH /api/admin/brochures/:id/status
+
+Body:
+{
+  "status": "under_review" | "approved" | "rejected" | "opened" | "draft"
+}
+
+Response: 200 OK
+- 변경된 브로슈어 정보
+```
+
+### 3. 공개 여부 변경
+
+```
+PATCH /api/admin/brochures/:id/public
+
+Body:
+{
+  "isPublic": true | false
+}
+
+Response: 200 OK
+- 변경된 브로슈어 정보
+```
+
+### 4. 번역 수정
+
+```
+PUT /api/admin/brochures/:id/translations
+
+Body:
+{
+  "translations": [
+    {
+      "languageId": "uuid",
+      "title": "제목",
+      "description": "설명"
+    }
+  ]
+}
+
+Response: 200 OK
+- status가 'opened'였다면 자동으로 'draft'로 전이
+```
+
+### 5. 파일 수정
+
+```
+PATCH /api/admin/brochures/:id/files
+Content-Type: multipart/form-data
+
+Body:
+- files: 파일 배열 (최대 10개)
+
+Response: 200 OK
+```
+
+### 6. 파일 삭제
+
+```
+DELETE /api/admin/brochures/:id/files
+
+Body:
+{
+  "fileUrls": ["url1", "url2"]
+}
+
+Response: 200 OK
+```
+
+### 7. 브로슈어 삭제 (Soft Delete)
+
+```
+DELETE /api/admin/brochures/:id
+
+Response: 200 OK
+{
+  "success": true
+}
+```
+
+### 8. 정렬 순서 일괄 수정
+
+```
+PUT /api/admin/brochures/batch-order
+
+Body:
+{
+  "brochures": [
+    { "id": "uuid1", "order": 1 },
+    { "id": "uuid2", "order": 2 }
+  ]
+}
+
+Response: 200 OK
+{
+  "success": true,
+  "updatedCount": 2
+}
+```
+
+### 9. 카테고리 수정
+
+```
+PATCH /api/admin/brochures/:id/categories
+
+Body:
+{
+  "categoryId": "uuid"
+}
+
+Response: 200 OK
+```
+
+## 🔓 공개 조건 플로우
+
+```mermaid
+flowchart TD
+    Start([브로슈어 API 요청])
+    Start --> CheckAPI{API 타입?}
+    
+    CheckAPI -->|관리자 API| AdminAPI[전체 조회 가능]
+    CheckAPI -->|공개 API| PublicAPI[필터링 필요]
+    
+    PublicAPI --> CheckDeleted{deletedAt이<br/>null인가?}
+    
+    CheckDeleted -->|No| NotVisible1[❌ 노출 안 됨]
+    CheckDeleted -->|Yes| CheckStatus{status가<br/>'opened'인가?}
+    
+    CheckStatus -->|No| NotVisible2[❌ 노출 안 됨]
+    CheckStatus -->|Yes| CheckPublic{isPublic이<br/>true인가?}
+    
+    CheckPublic -->|No| NotVisible3[❌ 노출 안 됨]
+    CheckPublic -->|Yes| Visible[✅ 사용자에게<br/>노출됨]
+    
+    style NotVisible1 fill:#ffcccc
+    style NotVisible2 fill:#ffcccc
+    style NotVisible3 fill:#ffcccc
+    style Visible fill:#ccffcc
+    style AdminAPI fill:#e3f2fd
+```
+
+## 📋 상태 전이 규칙 요약
+
+### 허용되는 전이
+
+| 현재 상태      | 다음 상태      | API 엔드포인트                                | 조건         |
+| -------------- | -------------- | --------------------------------------------- | ------------ |
+| `draft`        | `under_review` | `PATCH /api/admin/brochures/:id/status`       | 검토 요청    |
+| `under_review` | `approved`     | `PATCH /api/admin/brochures/:id/status`       | 승인         |
+| `under_review` | `rejected`     | `PATCH /api/admin/brochures/:id/status`       | 거부         |
+| `under_review` | `draft`        | `PATCH /api/admin/brochures/:id/status`       | 검토 취소    |
+| `approved`     | `opened`       | `PATCH /api/admin/brochures/:id/status`       | 공개 설정    |
+| `approved`     | `draft`        | `PUT /api/admin/brochures/:id/translations`   | 수정 시작    |
+| `rejected`     | `draft`        | `PATCH /api/admin/brochures/:id/status`       | 수정 시작    |
+| `opened`       | `draft`        | `PUT /api/admin/brochures/:id/translations`   | 수정 시작    |
+| `opened`       | `opened`       | `PATCH /api/admin/brochures/:id/public`       | 비공개 설정  |
+
+### 금지되는 전이
+
+- ❌ `draft` → `approved` (검토 없이 승인 불가)
+- ❌ `draft` → `opened` (검토 및 승인 없이 공개 불가)
+- ❌ `rejected` → `approved` (거부 후 바로 승인 불가)
+- ❌ `rejected` → `opened` (거부된 콘텐츠 공개 불가)
+- ❌ `under_review` → `opened` (검토 중 공개 불가)
+
+## 🔧 구현 필요 사항
+
+### 현재 구현된 기능
+
+- ✅ 브로슈어 생성 (기본값: `status: 'draft'`)
+- ✅ 브로슈어 목록 조회
+- ✅ 브로슈어 상세 조회
+- ✅ 공개 여부 수정 (`isPublic`)
+- ✅ 파일 수정/삭제
+- ✅ 카테고리 수정
+- ✅ 정렬 순서 수정
+- ✅ 삭제 (Soft Delete)
+
+### 구현 필요 기능
+
+- ⚠️ **상태 변경 API** (`PATCH /api/admin/brochures/:id/status`)
+  - 상태 전이 검증 로직
+  - 허용되지 않는 상태 전이 방지
+  - 상태별 액션 제한 검증
+
+- ⚠️ **자동 상태 전이**
+  - `opened` 상태에서 내용 수정 시 자동으로 `draft`로 전이
+  - 트랜잭션 처리 필요
+
+## 📚 참고 사항
+
+- 상태 변경은 **원자적(Atomic)**으로 처리되어야 함
+- 상태 전이 시 **이력 로깅** 고려 (선택사항)
+- **Optimistic Locking** (`version` 필드)을 활용하여 동시 수정 방지
+- 상태별 **권한 체크** 필요 (예: 승인 권한이 있는 사용자만 상태 변경 가능)

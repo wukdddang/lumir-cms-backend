@@ -375,25 +375,44 @@ export class BrochureBusinessService {
   }
 
   /**
-   * 브로슈어 파일을 수정한다 (파일 업로드 포함)
+   * 브로슈어를 수정한다 (번역 및 파일 포함)
    */
-  async 브로슈어_파일을_수정한다(
-    id: string,
-    data: {
-      attachments?: Array<{
-        fileName: string;
-        fileUrl: string;
-        fileSize: number;
-        mimeType: string;
-      }>;
-      updatedBy?: string;
-    },
+  async 브로슈어를_수정한다(
+    brochureId: string,
+    translations: Array<{
+      languageId: string;
+      title: string;
+      description?: string;
+    }>,
+    updatedBy?: string,
     files?: Express.Multer.File[],
-  ): Promise<Brochure> {
-    this.logger.log(`브로슈어 파일 수정 시작 - ID: ${id}`);
+    deleteFileUrls?: string[],
+  ): Promise<BrochureTranslation[]> {
+    this.logger.log(
+      `브로슈어 수정 시작 - 브로슈어 ID: ${brochureId}, 번역 수: ${translations.length}`,
+    );
 
-    // 파일 업로드 처리
-    let attachments = data.attachments;
+    // 1. 기존 브로슈어 조회
+    const brochure =
+      await this.brochureContextService.브로슈어_상세_조회한다(brochureId);
+
+    // 2. 파일 삭제 처리
+    let remainingAttachments = brochure.attachments || [];
+    if (deleteFileUrls && deleteFileUrls.length > 0) {
+      this.logger.log(`스토리지에서 ${deleteFileUrls.length}개의 파일 삭제 시작`);
+      await this.storageService.deleteFiles(deleteFileUrls);
+      this.logger.log(`스토리지 파일 삭제 완료`);
+
+      // 삭제할 파일 제외한 첨부파일 목록 생성
+      remainingAttachments = remainingAttachments.filter(
+        (attachment) => !deleteFileUrls.includes(attachment.fileUrl),
+      );
+      this.logger.log(
+        `남은 첨부파일: ${remainingAttachments.length}개 (${deleteFileUrls.length}개 삭제됨)`,
+      );
+    }
+
+    // 3. 새 파일 업로드 처리
     if (files && files.length > 0) {
       this.logger.log(`${files.length}개의 파일 업로드 시작`);
       const uploadedFiles = await this.storageService.uploadFiles(
@@ -408,88 +427,23 @@ export class BrochureBusinessService {
       }));
 
       // 기존 첨부파일과 새 첨부파일 병합
-      attachments = [...(attachments || []), ...newAttachments];
+      remainingAttachments = [...remainingAttachments, ...newAttachments];
       this.logger.log(`파일 업로드 완료: ${newAttachments.length}개`);
     }
 
-    const result = await this.brochureContextService.브로슈어_파일을_수정한다(
-      id,
-      {
-        attachments: attachments || [],
-        updatedBy: data.updatedBy,
-      },
-    );
-
-    this.logger.log(`브로슈어 파일 수정 완료 - ID: ${id}`);
-
-    return result;
-  }
-
-  /**
-   * 브로슈어 파일을 삭제한다
-   */
-  async 브로슈어_파일을_삭제한다(
-    id: string,
-    fileUrls: string[],
-    updatedBy?: string,
-  ): Promise<Brochure> {
-    this.logger.log(
-      `브로슈어 파일 삭제 시작 - ID: ${id}, 파일 수: ${fileUrls.length}`,
-    );
-
-    // 브로슈어 조회
-    const brochure =
-      await this.brochureContextService.브로슈어_상세_조회한다(id);
-
-    if (!brochure.attachments || brochure.attachments.length === 0) {
-      this.logger.warn(`삭제할 파일이 없습니다 - ID: ${id}`);
-      return brochure;
-    }
-
-    // S3에서 파일 삭제
-    this.logger.log(`스토리지에서 ${fileUrls.length}개의 파일 삭제 시작`);
-    await this.storageService.deleteFiles(fileUrls);
-    this.logger.log(`스토리지 파일 삭제 완료`);
-
-    // 삭제할 파일 제외한 첨부파일 목록 생성
-    const remainingAttachments = brochure.attachments.filter(
-      (attachment) => !fileUrls.includes(attachment.fileUrl),
-    );
-
-    this.logger.log(
-      `남은 첨부파일: ${remainingAttachments.length}개 (${brochure.attachments.length - remainingAttachments.length}개 삭제됨)`,
-    );
-
-    // 브로슈어 파일 정보 업데이트
-    const result = await this.brochureContextService.브로슈어_파일을_수정한다(
-      id,
-      {
+    // 4. 파일 정보 업데이트 (파일이 변경된 경우에만)
+    if (
+      (deleteFileUrls && deleteFileUrls.length > 0) ||
+      (files && files.length > 0)
+    ) {
+      await this.brochureContextService.브로슈어_파일을_수정한다(brochureId, {
         attachments: remainingAttachments,
         updatedBy,
-      },
-    );
+      });
+      this.logger.log(`브로슈어 파일 업데이트 완료`);
+    }
 
-    this.logger.log(`브로슈어 파일 삭제 완료 - ID: ${id}`);
-
-    return result;
-  }
-
-  /**
-   * 브로슈어 번역들을 수정한다
-   */
-  async 브로슈어_번역들을_수정한다(
-    brochureId: string,
-    translations: Array<{
-      languageId: string;
-      title: string;
-      description?: string;
-    }>,
-    updatedBy?: string,
-  ): Promise<BrochureTranslation[]> {
-    this.logger.log(
-      `브로슈어 번역 수정 시작 - 브로슈어 ID: ${brochureId}, 번역 수: ${translations.length}`,
-    );
-
+    // 5. 번역 수정
     const result = await this.brochureContextService.브로슈어_번역들을_수정한다(
       brochureId,
       {
@@ -499,7 +453,7 @@ export class BrochureBusinessService {
     );
 
     this.logger.log(
-      `브로슈어 번역 수정 완료 - 브로슈어 ID: ${brochureId}, 수정된 번역 수: ${result.length}`,
+      `브로슈어 수정 완료 - 브로슈어 ID: ${brochureId}, 수정된 번역 수: ${result.length}`,
     );
 
     return result;

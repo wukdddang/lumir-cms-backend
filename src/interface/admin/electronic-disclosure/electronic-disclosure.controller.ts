@@ -26,8 +26,6 @@ import { CurrentUser } from '@interface/common/decorators/current-user.decorator
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { ElectronicDisclosureBusinessService } from '@business/electronic-disclosure-business/electronic-disclosure-business.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
-import { CreateElectronicDisclosureDto } from '@interface/common/dto/electronic-disclosure/create-electronic-disclosure.dto';
-import { UpdateElectronicDisclosureDto } from '@interface/common/dto/electronic-disclosure/update-electronic-disclosure.dto';
 import {
   CreateElectronicDisclosureCategoryDto,
   UpdateElectronicDisclosureCategoryOrderDto,
@@ -289,12 +287,71 @@ export class ElectronicDisclosureController {
   }
 
   /**
-   * 전자공시를 수정한다
+   * 전자공시를 수정한다 (번역 및 파일 포함)
    */
   @Put(':id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      fileFilter: (req, file, callback) => {
+        // 허용된 MIME 타입: PDF, JPG, PNG, WEBP, XLSX, DOCX
+        const allowedMimeTypes = [
+          'application/pdf',
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/webp',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+
+        if (allowedMimeTypes.includes(file.mimetype)) {
+          callback(null, true);
+        } else {
+          callback(
+            new Error(
+              `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: '전자공시 수정',
-    description: '전자공시의 정보를 수정합니다.',
+    description: '전자공시의 번역 정보 및 파일을 수정합니다.',
+  })
+  @ApiBody({
+    description:
+      '⚠️ **중요**: translations 필드는 반드시 배열 형태의 JSON 문자열로 입력해야 합니다.\n\n' +
+      '**기존 파일 삭제**: deleteFileUrls에 삭제할 파일 URL 배열을 JSON 문자열로 전달\n' +
+      '**새 파일 추가**: files 필드에 새로운 파일들을 multipart로 전달',
+    schema: {
+      type: 'object',
+      properties: {
+        translations: {
+          type: 'string',
+          description:
+            '번역 목록 (JSON 배열 문자열) - 반드시 대괄호 []로 감싸야 합니다!',
+          example:
+            '[{"languageId":"31e6bbc6-2839-4477-9672-bb4b381e8914","title":"2024년 1분기 실적 공시","description":"2024년 1분기 실적 공시 자료입니다."}]',
+        },
+        deleteFileUrls: {
+          type: 'string',
+          description: '삭제할 파일 URL 목록 (JSON 배열 문자열) - 선택사항',
+          example:
+            '["https://bucket.s3.amazonaws.com/electronic-disclosures/file1.pdf"]',
+        },
+        files: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          description:
+            '추가할 첨부파일 목록 (최대 10개, PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능)',
+        },
+      },
+      required: ['translations'],
+    },
   })
   @ApiResponse({
     status: 200,
@@ -308,14 +365,43 @@ export class ElectronicDisclosureController {
   async 전자공시를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() updateDto: UpdateElectronicDisclosureDto,
+    @Body() body: any,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<ElectronicDisclosureResponseDto> {
+    // translations 파싱
+    let translations = body.translations;
+    if (typeof translations === 'string') {
+      try {
+        translations = JSON.parse(translations);
+      } catch (error) {
+        throw new BadRequestException(
+          'translations 파싱 실패: 올바른 JSON 형식이 아닙니다.',
+        );
+      }
+    }
+
+    // deleteFileUrls 파싱
+    let deleteFileUrls: string[] = [];
+    if (body.deleteFileUrls) {
+      if (typeof body.deleteFileUrls === 'string') {
+        try {
+          deleteFileUrls = JSON.parse(body.deleteFileUrls);
+        } catch (error) {
+          throw new BadRequestException(
+            'deleteFileUrls 파싱 실패: 올바른 JSON 형식이 아닙니다.',
+          );
+        }
+      } else {
+        deleteFileUrls = body.deleteFileUrls;
+      }
+    }
+
     return await this.electronicDisclosureBusinessService.전자공시를_수정한다(
       id,
-      {
-        ...updateDto,
-        updatedBy: user.id,
-      },
+      translations,
+      user.id,
+      files,
+      deleteFileUrls,
     );
   }
 
@@ -382,123 +468,6 @@ export class ElectronicDisclosureController {
     return await this.electronicDisclosureBusinessService.전자공시_공개를_수정한다(
       id,
       body.isPublic,
-      user.id,
-    );
-  }
-
-  /**
-   * 전자공시 파일을 수정한다 (파일 업로드 포함)
-   */
-  @Patch(':id/files')
-  @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      fileFilter: (req, file, callback) => {
-        // 허용된 MIME 타입: PDF, JPG, PNG, WEBP, XLSX, DOCX
-        const allowedMimeTypes = [
-          'application/pdf',
-          'image/jpeg',
-          'image/jpg',
-          'image/png',
-          'image/webp',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ];
-
-        if (allowedMimeTypes.includes(file.mimetype)) {
-          callback(null, true);
-        } else {
-          callback(
-            new Error(
-              `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
-            ),
-            false,
-          );
-        }
-      },
-    }),
-  )
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({
-    summary: '전자공시 파일 수정',
-    description:
-      '전자공시의 첨부파일을 수정합니다. 파일은 multipart/form-data로 전송합니다.',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        files: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-          description: '추가할 첨부파일 목록 (최대 10개)',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '전자공시 파일 수정 성공',
-    type: ElectronicDisclosure,
-  })
-  @ApiResponse({
-    status: 404,
-    description: '전자공시를 찾을 수 없음',
-  })
-  async 전자공시_파일을_수정한다(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() body: any,
-    @UploadedFiles() files: Express.Multer.File[],
-  ): Promise<ElectronicDisclosure> {
-    return await this.electronicDisclosureBusinessService.전자공시_파일을_수정한다(
-      id,
-      { updatedBy: user.id },
-      files,
-    );
-  }
-
-  /**
-   * 전자공시 파일을 삭제한다
-   */
-  @Delete(':id/files')
-  @ApiOperation({
-    summary: '전자공시 파일 삭제',
-    description: '전자공시의 첨부파일을 삭제합니다. S3에서도 함께 삭제됩니다.',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        fileUrls: {
-          type: 'array',
-          items: { type: 'string' },
-          description: '삭제할 파일 URL 목록',
-          example: [
-            'https://bucket.s3.amazonaws.com/electronic-disclosures/file1.pdf',
-            'https://bucket.s3.amazonaws.com/electronic-disclosures/file2.jpg',
-          ],
-        },
-      },
-      required: ['fileUrls'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '전자공시 파일 삭제 성공',
-    type: ElectronicDisclosure,
-  })
-  @ApiResponse({
-    status: 404,
-    description: '전자공시를 찾을 수 없음',
-  })
-  async 전자공시_파일을_삭제한다(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() body: { fileUrls: string[] },
-  ): Promise<ElectronicDisclosure> {
-    return await this.electronicDisclosureBusinessService.전자공시_파일을_삭제한다(
-      id,
-      body.fileUrls,
       user.id,
     );
   }

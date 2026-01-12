@@ -1,0 +1,742 @@
+---
+alwaysApply: true
+---
+
+# 전자공시 상태 흐름 다이어그램 (API 포함)
+
+## 📋 개요
+
+전자공시(Electronic Disclosure)는 콘텐츠 관리 시스템의 핵심 엔티티로, **상태(Status)**와 **공개 여부(isPublic)** 두 가지 차원에서 관리됩니다.
+
+## 🔄 상태(Status) 정의
+
+| 상태       | 값             | 설명                              |
+| ---------- | -------------- | --------------------------------- |
+| **초안**   | `draft`        | 작성 중인 상태, 아직 검토 요청 전 |
+| **검토중** | `under_review` | 검토 요청 후 승인 대기 중         |
+| **승인됨** | `approved`     | 검토 완료, 승인된 상태            |
+| **거부됨** | `rejected`     | 검토 결과 거부된 상태             |
+| **공개됨** | `opened`       | 최종 공개된 상태                  |
+
+## 📊 상태 전이 다이어그램 (API 포함)
+
+```mermaid
+stateDiagram-v2
+    [*] --> draft: POST /api/admin/electronic-disclosures<br/>(전자공시 생성)
+
+    draft --> under_review: PATCH /api/admin/electronic-disclosures/:id/status<br/>(검토 요청)
+    draft --> draft: PUT /api/admin/electronic-disclosures/:id<br/>PATCH /api/admin/electronic-disclosures/:id/files<br/>PATCH /api/admin/electronic-disclosures/:id/public<br/>(수정/삭제 가능)
+
+    under_review --> approved: PATCH /api/admin/electronic-disclosures/:id/status<br/>(승인)
+    under_review --> rejected: PATCH /api/admin/electronic-disclosures/:id/status<br/>(거부)
+    under_review --> draft: PATCH /api/admin/electronic-disclosures/:id/status<br/>(검토 취소)
+
+    approved --> opened: PATCH /api/admin/electronic-disclosures/:id/status<br/>(공개 설정)
+    approved --> draft: PUT /api/admin/electronic-disclosures/:id<br/>(수정 시작)
+
+    rejected --> draft: PATCH /api/admin/electronic-disclosures/:id/status<br/>(수정 시작)
+
+    opened --> draft: PUT /api/admin/electronic-disclosures/:id<br/>(수정 시작)
+    opened --> opened: PATCH /api/admin/electronic-disclosures/:id/public<br/>(비공개 설정, isPublic=false)
+
+    note right of draft
+        상태: 초안
+        - 모든 내용 수정 가능
+        - 파일 첨부/수정/삭제
+        - 공개 여부 변경
+        - 삭제 가능
+        
+        API:
+        - PUT /api/admin/electronic-disclosures/:id
+        - PATCH /api/admin/electronic-disclosures/:id/files
+        - DELETE /api/admin/electronic-disclosures/:id/files
+        - PATCH /api/admin/electronic-disclosures/:id/order
+        - PATCH /api/admin/electronic-disclosures/:id/public
+        - DELETE /api/admin/electronic-disclosures/:id
+    end note
+
+    note right of under_review
+        상태: 검토중
+        - 내용 수정 불가
+        - 삭제 불가
+        - 승인/거부 대기
+        
+        API:
+        - GET /api/admin/electronic-disclosures/:id
+        - PATCH /api/admin/electronic-disclosures/:id/status
+    end note
+
+    note right of approved
+        상태: 승인됨
+        - 공개 준비 완료
+        - 공개 설정 가능
+        - 수정 시 DRAFT로 전이
+        
+        API:
+        - GET /api/admin/electronic-disclosures/:id
+        - PATCH /api/admin/electronic-disclosures/:id/status
+        - PATCH /api/admin/electronic-disclosures/:id/public
+        - DELETE /api/admin/electronic-disclosures/:id
+    end note
+
+    note right of rejected
+        상태: 거부됨
+        - 수정 필요
+        - 재검토 가능
+        - 공개 불가
+        
+        API:
+        - GET /api/admin/electronic-disclosures/:id
+        - PATCH /api/admin/electronic-disclosures/:id/status
+        - DELETE /api/admin/electronic-disclosures/:id
+    end note
+
+    note right of opened
+        상태: 공개됨
+        - 사용자에게 노출
+        (isPublic=true일 때만)
+        - 수정 시 DRAFT로 전이
+        - 비공개 처리 가능
+        
+        API:
+        - GET /api/admin/electronic-disclosures/:id
+        - PATCH /api/admin/electronic-disclosures/:id/public
+        - PUT /api/admin/electronic-disclosures/:id
+        - DELETE /api/admin/electronic-disclosures/:id
+    end note
+```
+
+## 🌐 전체 API 엔드포인트 맵
+
+### 상태와 무관한 조회 API
+
+```mermaid
+graph LR
+    A[전자공시 API] --> B[GET /api/admin/electronic-disclosures]
+    A --> C[GET /api/admin/electronic-disclosures/all]
+    A --> D[GET /api/admin/electronic-disclosures/:id]
+    A --> E[GET /api/admin/electronic-disclosures/categories]
+    
+    B --> B1[목록 조회<br/>페이징]
+    C --> C1[전체 목록 조회<br/>페이징 없음]
+    D --> D1[상세 조회]
+    E --> E1[카테고리 목록<br/>조회]
+```
+
+### 상태별 가능한 API 액션
+
+```mermaid
+graph TD
+    subgraph DRAFT["DRAFT (초안)"]
+        D1[POST /api/admin/electronic-disclosures<br/>생성]
+        D2[PUT /api/admin/electronic-disclosures/:id<br/>전자공시 수정]
+        D3[PATCH /api/admin/electronic-disclosures/:id/files<br/>파일 수정]
+        D4[DELETE /api/admin/electronic-disclosures/:id/files<br/>파일 삭제]
+        D5[PATCH /api/admin/electronic-disclosures/:id/order<br/>정렬 순서 수정]
+        D6[PATCH /api/admin/electronic-disclosures/:id/public<br/>공개 여부 수정]
+        D7[DELETE /api/admin/electronic-disclosures/:id<br/>삭제]
+        D8[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ UNDER_REVIEW 전이]
+    end
+    
+    subgraph UNDER_REVIEW["UNDER_REVIEW (검토중)"]
+        U1[GET /api/admin/electronic-disclosures/:id<br/>조회만 가능]
+        U2[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ APPROVED 승인]
+        U3[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ REJECTED 거부]
+        U4[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ DRAFT 취소]
+    end
+    
+    subgraph APPROVED["APPROVED (승인됨)"]
+        A1[GET /api/admin/electronic-disclosures/:id<br/>조회]
+        A2[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ OPENED 공개]
+        A3[PATCH /api/admin/electronic-disclosures/:id/public<br/>공개 여부 수정]
+        A4[PUT /api/admin/electronic-disclosures/:id<br/>→ DRAFT로 전이 후 수정]
+        A5[DELETE /api/admin/electronic-disclosures/:id<br/>삭제]
+    end
+    
+    subgraph REJECTED["REJECTED (거부됨)"]
+        R1[GET /api/admin/electronic-disclosures/:id<br/>조회]
+        R2[PATCH /api/admin/electronic-disclosures/:id/status<br/>→ DRAFT로 전이]
+        R3[DELETE /api/admin/electronic-disclosures/:id<br/>삭제]
+    end
+    
+    subgraph OPENED["OPENED (공개됨)"]
+        O1[GET /api/admin/electronic-disclosures/:id<br/>조회]
+        O2[PATCH /api/admin/electronic-disclosures/:id/public<br/>비공개 설정]
+        O3[PUT /api/admin/electronic-disclosures/:id<br/>→ DRAFT로 전이 후 수정]
+        O4[DELETE /api/admin/electronic-disclosures/:id<br/>삭제]
+    end
+
+    style DRAFT fill:#e3f2fd
+    style UNDER_REVIEW fill:#fff3e0
+    style APPROVED fill:#e8f5e9
+    style REJECTED fill:#ffebee
+    style OPENED fill:#f3e5f5
+```
+
+## 🔄 상태 전이 시퀀스 다이어그램
+
+### 시나리오 1: 정상적인 공개 프로세스
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    
+    Note over Admin,DB: 1. 전자공시 생성
+    Admin->>API: POST /api/admin/electronic-disclosures
+    API->>DB: INSERT (status: 'draft', isPublic: false)
+    DB-->>API: 생성 완료
+    API-->>Admin: 201 Created (DRAFT)
+    
+    Note over Admin,DB: 2. 파일 및 내용 수정
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/files
+    API->>DB: UPDATE files
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Admin->>API: PUT /api/admin/electronic-disclosures/:id
+    API->>DB: UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: 3. 검토 요청
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'under_review'}
+    API->>DB: UPDATE status = 'under_review'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (UNDER_REVIEW)
+    
+    Note over Admin,DB: 4. 승인
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'approved'}
+    API->>DB: UPDATE status = 'approved'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (APPROVED)
+    
+    Note over Admin,DB: 5. 공개 설정
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'opened'}
+    API->>DB: UPDATE status = 'opened'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (OPENED)
+    
+    Note over Admin,DB: 6. 공개 여부 활성화
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/public<br/>{isPublic: true}
+    API->>DB: UPDATE isPublic = true
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: ✅ 사용자에게 노출됨
+```
+
+### 시나리오 2: 거부 후 재검토
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    
+    Note over Admin,DB: 1-3. 생성 → 검토 요청 (생략)
+    
+    Note over Admin,DB: 4. 거부
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'rejected'}
+    API->>DB: UPDATE status = 'rejected'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (REJECTED)
+    
+    Note over Admin,DB: 5. 수정 시작
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'draft'}
+    API->>DB: UPDATE status = 'draft'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (DRAFT)
+    
+    Note over Admin,DB: 6. 내용 수정
+    Admin->>API: PUT /api/admin/electronic-disclosures/:id
+    API->>DB: UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK
+    
+    Note over Admin,DB: 7. 재검토 요청
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>{status: 'under_review'}
+    API->>DB: UPDATE status = 'under_review'
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (UNDER_REVIEW)
+    
+    Note over Admin,DB: 8-10. 승인 → 공개 (생략)
+```
+
+### 시나리오 3: 공개된 콘텐츠 수정
+
+```mermaid
+sequenceDiagram
+    participant Admin as 관리자
+    participant API as API 서버
+    participant DB as 데이터베이스
+    participant User as 사용자
+    
+    Note over Admin,User: ✅ 현재 공개 중 (OPENED, isPublic: true)
+    User->>API: GET /api/public/electronic-disclosures
+    API->>DB: SELECT WHERE status='opened' AND isPublic=true
+    DB-->>API: 전자공시 목록
+    API-->>User: 200 OK (노출됨)
+    
+    Note over Admin,User: 수정 필요 발생
+    Admin->>API: PUT /api/admin/electronic-disclosures/:id
+    API->>DB: UPDATE status = 'draft' (자동 전이)<br/>UPDATE translations
+    DB-->>API: 수정 완료
+    API-->>Admin: 200 OK (DRAFT)
+    
+    Note over Admin,User: ❌ 사용자에게 노출 중단
+    User->>API: GET /api/public/electronic-disclosures
+    API->>DB: SELECT WHERE status='opened' AND isPublic=true
+    DB-->>API: 해당 전자공시 제외
+    API-->>User: 200 OK (노출 안 됨)
+    
+    Note over Admin,User: 수정 → 검토 → 승인 → 재공개
+    Admin->>API: PATCH /api/admin/electronic-disclosures/:id/status<br/>(under_review → approved → opened)
+    API->>DB: UPDATE status
+    DB-->>API: 상태 변경 완료
+    API-->>Admin: 200 OK (OPENED)
+    
+    Note over Admin,User: ✅ 사용자에게 다시 노출됨
+```
+
+## 🎯 API 엔드포인트 상세 명세
+
+### 1. 전자공시 생성
+
+```
+POST /api/admin/electronic-disclosures
+Content-Type: multipart/form-data
+
+Body:
+- translations: JSON string (배열)
+  예: '[{"languageId":"uuid","title":"제목","description":"설명"}]'
+- files: 파일 배열 (최대 10개, PDF/JPG/PNG/WEBP/XLSX/DOCX)
+
+Response: 201 Created
+- status: 'draft' (기본값)
+- isPublic: false (기본값)
+```
+
+### 2. 전자공시 수정
+
+```
+PUT /api/admin/electronic-disclosures/:id
+
+Body:
+{
+  "translations": [
+    {
+      "languageId": "uuid",
+      "title": "제목",
+      "description": "설명"
+    }
+  ],
+  "isPublic": true | false,
+  "categoryId": "uuid" (optional)
+}
+
+Response: 200 OK
+- status가 'opened'였다면 자동으로 'draft'로 전이
+```
+
+### 3. 상태 변경 (구현 필요)
+
+```
+PATCH /api/admin/electronic-disclosures/:id/status
+
+Body:
+{
+  "status": "under_review" | "approved" | "rejected" | "opened" | "draft"
+}
+
+Response: 200 OK
+- 변경된 전자공시 정보
+```
+
+### 4. 공개 여부 변경
+
+```
+PATCH /api/admin/electronic-disclosures/:id/public
+
+Body:
+{
+  "isPublic": true | false
+}
+
+Response: 200 OK
+- 변경된 전자공시 정보
+```
+
+### 5. 파일 수정
+
+```
+PATCH /api/admin/electronic-disclosures/:id/files
+Content-Type: multipart/form-data
+
+Body:
+- files: 파일 배열 (최대 10개)
+
+Response: 200 OK
+```
+
+### 6. 파일 삭제
+
+```
+DELETE /api/admin/electronic-disclosures/:id/files
+
+Body:
+{
+  "fileUrls": ["url1", "url2"]
+}
+
+Response: 200 OK
+```
+
+### 7. 전자공시 삭제 (Soft Delete)
+
+```
+DELETE /api/admin/electronic-disclosures/:id
+
+Response: 200 OK
+{
+  "success": true
+}
+```
+
+### 8. 정렬 순서 수정
+
+```
+PATCH /api/admin/electronic-disclosures/:id/order
+
+Body:
+{
+  "order": 10
+}
+
+Response: 200 OK
+```
+
+### 9. 전자공시 목록 조회
+
+```
+GET /api/admin/electronic-disclosures?isPublic=true&orderBy=order&page=1&limit=10
+
+Query Parameters:
+- isPublic: boolean (optional) - 공개 여부 필터
+- orderBy: 'order' | 'createdAt' (optional, default: 'order')
+- page: number (optional, default: 1)
+- limit: number (optional, default: 10)
+
+Response: 200 OK
+{
+  "items": [...],
+  "total": 100,
+  "page": 1,
+  "limit": 10
+}
+```
+
+### 10. 전자공시 전체 목록 조회
+
+```
+GET /api/admin/electronic-disclosures/all
+
+Response: 200 OK
+[...전자공시 목록...]
+```
+
+### 11. 전자공시 상세 조회
+
+```
+GET /api/admin/electronic-disclosures/:id
+
+Response: 200 OK
+{
+  "id": "uuid",
+  "status": "opened",
+  "isPublic": true,
+  "translations": [...],
+  "files": [...],
+  ...
+}
+```
+
+## 🔓 공개 조건 플로우
+
+```mermaid
+flowchart TD
+    Start([전자공시 API 요청])
+    Start --> CheckAPI{API 타입?}
+    
+    CheckAPI -->|관리자 API| AdminAPI[전체 조회 가능]
+    CheckAPI -->|공개 API| PublicAPI[필터링 필요]
+    
+    PublicAPI --> CheckDeleted{deletedAt이<br/>null인가?}
+    
+    CheckDeleted -->|No| NotVisible1[❌ 노출 안 됨]
+    CheckDeleted -->|Yes| CheckStatus{status가<br/>'opened'인가?}
+    
+    CheckStatus -->|No| NotVisible2[❌ 노출 안 됨]
+    CheckStatus -->|Yes| CheckPublic{isPublic이<br/>true인가?}
+    
+    CheckPublic -->|No| NotVisible3[❌ 노출 안 됨]
+    CheckPublic -->|Yes| Visible[✅ 사용자에게<br/>노출됨]
+    
+    style NotVisible1 fill:#ffcccc
+    style NotVisible2 fill:#ffcccc
+    style NotVisible3 fill:#ffcccc
+    style Visible fill:#ccffcc
+    style AdminAPI fill:#e3f2fd
+```
+
+## 📋 상태 전이 규칙 요약
+
+### 허용되는 전이
+
+| 현재 상태      | 다음 상태      | API 엔드포인트                                          | 조건         |
+| -------------- | -------------- | ------------------------------------------------------- | ------------ |
+| `draft`        | `under_review` | `PATCH /api/admin/electronic-disclosures/:id/status`    | 검토 요청    |
+| `under_review` | `approved`     | `PATCH /api/admin/electronic-disclosures/:id/status`    | 승인         |
+| `under_review` | `rejected`     | `PATCH /api/admin/electronic-disclosures/:id/status`    | 거부         |
+| `under_review` | `draft`        | `PATCH /api/admin/electronic-disclosures/:id/status`    | 검토 취소    |
+| `approved`     | `opened`       | `PATCH /api/admin/electronic-disclosures/:id/status`    | 공개 설정    |
+| `approved`     | `draft`        | `PUT /api/admin/electronic-disclosures/:id`             | 수정 시작    |
+| `rejected`     | `draft`        | `PATCH /api/admin/electronic-disclosures/:id/status`    | 수정 시작    |
+| `opened`       | `draft`        | `PUT /api/admin/electronic-disclosures/:id`             | 수정 시작    |
+| `opened`       | `opened`       | `PATCH /api/admin/electronic-disclosures/:id/public`    | 비공개 설정  |
+
+### 금지되는 전이
+
+- ❌ `draft` → `approved` (검토 없이 승인 불가)
+- ❌ `draft` → `opened` (검토 및 승인 없이 공개 불가)
+- ❌ `rejected` → `approved` (거부 후 바로 승인 불가)
+- ❌ `rejected` → `opened` (거부된 콘텐츠 공개 불가)
+- ❌ `under_review` → `opened` (검토 중 공개 불가)
+
+## 🎨 상태별 상세 설명
+
+### 1. 초안 (DRAFT)
+
+**설명**: 전자공시가 생성되거나 수정 중인 상태
+
+**가능한 액션**:
+
+- ✅ 전자공시 정보 수정 (제목, 설명, 번역 등)
+- ✅ 파일 첨부/수정/삭제
+- ✅ 정렬 순서 변경
+- ✅ 공개 여부 변경 (isPublic)
+- ✅ 삭제 (Soft Delete)
+- ✅ **검토 요청** → `UNDER_REVIEW`로 전이
+
+**제한 사항**:
+
+- ❌ 공개 상태여도 사용자에게 노출되지 않음 (status가 `opened`가 아니면)
+
+**API 엔드포인트**:
+
+- `POST /api/admin/electronic-disclosures` - 전자공시 생성 (기본값: `status: 'draft'`)
+- `PUT /api/admin/electronic-disclosures/:id` - 전자공시 수정
+- `PATCH /api/admin/electronic-disclosures/:id/files` - 파일 수정
+- `DELETE /api/admin/electronic-disclosures/:id/files` - 파일 삭제
+- `PATCH /api/admin/electronic-disclosures/:id/order` - 정렬 순서 수정
+- `PATCH /api/admin/electronic-disclosures/:id/public` - 공개 여부 수정
+- `DELETE /api/admin/electronic-disclosures/:id` - 삭제
+
+### 2. 검토중 (UNDER_REVIEW)
+
+**설명**: 검토 요청이 제출되어 승인 대기 중인 상태
+
+**가능한 액션**:
+
+- ✅ 전자공시 상세 조회
+- ✅ **승인** → `APPROVED`로 전이
+- ✅ **거부** → `REJECTED`로 전이
+- ✅ **검토 취소** → `DRAFT`로 전이 (선택사항)
+
+**제한 사항**:
+
+- ❌ 내용 수정 불가 (검토 중에는 변경 불가)
+- ❌ 삭제 불가 (검토 프로세스 진행 중)
+- ❌ 공개 여부 변경 불가
+
+**API 엔드포인트**:
+
+- `GET /api/admin/electronic-disclosures/:id` - 상세 조회
+- `PATCH /api/admin/electronic-disclosures/:id/status` - 상태 변경 (승인/거부) _(구현 필요)_
+
+### 3. 승인됨 (APPROVED)
+
+**설명**: 검토를 통과하여 승인된 상태
+
+**가능한 액션**:
+
+- ✅ 전자공시 상세 조회
+- ✅ **공개 설정** → `OPENED`로 전이
+- ✅ **재검토 요청** → `UNDER_REVIEW`로 전이 (수정 후)
+- ✅ 내용 수정 (수정 시 자동으로 `DRAFT`로 전이)
+- ✅ 삭제
+
+**제한 사항**:
+
+- ⚠️ 공개 여부가 `true`여도 `status`가 `opened`가 아니면 사용자에게 노출되지 않음
+
+**API 엔드포인트**:
+
+- `GET /api/admin/electronic-disclosures/:id` - 상세 조회
+- `PATCH /api/admin/electronic-disclosures/:id/public` - 공개 여부 변경
+- `PATCH /api/admin/electronic-disclosures/:id/status` - 상태 변경 (opened로) _(구현 필요)_
+- `DELETE /api/admin/electronic-disclosures/:id` - 삭제
+
+### 4. 거부됨 (REJECTED)
+
+**설명**: 검토 결과 거부된 상태
+
+**가능한 액션**:
+
+- ✅ 전자공시 상세 조회
+- ✅ **수정 후 재검토** → `DRAFT`로 전이 후 수정 → `UNDER_REVIEW`로 전이
+- ✅ 삭제
+
+**제한 사항**:
+
+- ❌ 공개 불가 (거부된 콘텐츠는 공개할 수 없음)
+- ❌ 승인 불가 (거부된 상태에서 바로 승인 불가)
+
+**API 엔드포인트**:
+
+- `GET /api/admin/electronic-disclosures/:id` - 상세 조회
+- `PATCH /api/admin/electronic-disclosures/:id/status` - 상태 변경 (draft로) _(구현 필요)_
+- `DELETE /api/admin/electronic-disclosures/:id` - 삭제
+
+### 5. 공개됨 (OPENED)
+
+**설명**: 최종 승인되어 공개된 상태
+
+**가능한 액션**:
+
+- ✅ 전자공시 상세 조회
+- ✅ **비공개 처리** → `isPublic: false`로 변경 (상태는 유지)
+- ✅ **내용 수정** → `DRAFT`로 전이 (공개된 콘텐츠 수정 시)
+- ✅ 삭제 (Soft Delete)
+
+**제한 사항**:
+
+- ⚠️ 공개된 콘텐츠 수정 시 자동으로 `DRAFT`로 전이되어 사용자에게 노출 중단
+- ⚠️ 삭제 시 Soft Delete로 처리 (데이터는 보존)
+
+**API 엔드포인트**:
+
+- `GET /api/admin/electronic-disclosures/:id` - 상세 조회
+- `PATCH /api/admin/electronic-disclosures/:id/public` - 공개 여부 변경
+- `PUT /api/admin/electronic-disclosures/:id` - 수정 (자동으로 DRAFT로 전이)
+- `DELETE /api/admin/electronic-disclosures/:id` - 삭제
+
+## 🔧 구현 필요 사항
+
+### 현재 구현된 기능
+
+- ✅ 전자공시 생성 (기본값: `status: 'draft'`)
+- ✅ 전자공시 목록 조회 (페이징)
+- ✅ 전자공시 전체 목록 조회
+- ✅ 전자공시 상세 조회
+- ✅ 전자공시 수정 (`PUT /api/admin/electronic-disclosures/:id`)
+- ✅ 공개 여부 수정 (`isPublic`)
+- ✅ 파일 수정/삭제
+- ✅ 정렬 순서 수정
+- ✅ 삭제 (Soft Delete)
+- ✅ 카테고리 관리 (생성, 수정, 삭제, 순서 변경)
+
+### 구현 필요 기능
+
+- ⚠️ **상태 변경 API** (`PATCH /api/admin/electronic-disclosures/:id/status`)
+  - `draft` → `under_review` (검토 요청)
+  - `under_review` → `approved` (승인)
+  - `under_review` → `rejected` (거부)
+  - `approved` → `opened` (공개)
+  - `rejected` → `draft` (수정 시작)
+  - `opened` → `draft` (수정 시작)
+
+- ⚠️ **상태 전이 검증 로직**
+  - 허용되지 않는 상태 전이 방지
+  - 상태별 액션 제한 검증
+
+- ⚠️ **자동 상태 전이**
+  - `opened` 상태에서 내용 수정 시 자동으로 `draft`로 전이
+  - 트랜잭션 처리 필요
+
+- ⚠️ **사용자 노출 필터링**
+  - 목록 조회 시 `status === 'opened' AND isPublic === true` 조건 필터링
+  - 공개 API와 관리자 API 분리 (선택사항)
+
+## 📌 비즈니스 규칙
+
+### 규칙 1: 공개 조건
+
+전자공시가 사용자에게 노출되려면:
+
+- `status`가 `opened`여야 함
+- `isPublic`이 `true`여야 함
+- `deletedAt`이 `null`이어야 함 (Soft Delete되지 않아야 함)
+
+### 규칙 2: 상태 전이 제한
+
+- 검토 없이 `draft`에서 `approved` 또는 `opened`로 전이 불가
+- `rejected` 상태에서 바로 `approved` 또는 `opened`로 전이 불가
+- `under_review` 상태에서는 내용 수정 불가
+
+### 규칙 3: 공개된 콘텐츠 수정
+
+- `opened` 상태의 전자공시를 수정하면 자동으로 `draft`로 전이
+- 수정 중에는 사용자에게 노출되지 않음
+- 수정 완료 후 재검토 → 승인 → 공개 프로세스 필요
+
+### 규칙 4: 삭제 정책
+
+- 모든 상태에서 삭제 가능 (Soft Delete)
+- 삭제된 전자공시는 관리자 API에서도 기본적으로 조회되지 않음
+- `deletedAt`이 설정되어 있으면 사용자에게 노출 불가
+
+## 🎯 권장 워크플로우
+
+### 관리자 워크플로우
+
+```
+1. 전자공시 생성 (DRAFT)
+   ↓
+2. 내용 작성 및 파일 첨부
+   ↓
+3. 검토 요청 (UNDER_REVIEW)
+   ↓
+4. 검토자 승인/거부
+   ├─ 승인 → APPROVED
+   └─ 거부 → REJECTED → 수정 → 재검토
+   ↓
+5. 공개 설정 (OPENED)
+   ↓
+6. 사용자에게 노출
+```
+
+### 수정 워크플로우
+
+```
+1. 공개된 전자공시 (OPENED)
+   ↓
+2. 수정 시작 (DRAFT로 전이)
+   ↓
+3. 내용 수정
+   ↓
+4. 검토 요청 (UNDER_REVIEW)
+   ↓
+5. 승인 (APPROVED)
+   ↓
+6. 재공개 (OPENED)
+```
+
+## 📚 참고 사항
+
+- 상태 변경은 **원자적(Atomic)**으로 처리되어야 함
+- 상태 전이 시 **이력 로깅** 고려 (선택사항)
+- **Optimistic Locking** (`version` 필드)을 활용하여 동시 수정 방지
+- 상태별 **권한 체크** 필요 (예: 승인 권한이 있는 사용자만 상태 변경 가능)
+- 전자공시는 주주총회, IR 자료 등 법적 요건이 있을 수 있으므로 상태 전이 이력 보관 권장

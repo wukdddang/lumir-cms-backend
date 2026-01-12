@@ -88,103 +88,6 @@ export class ElectronicDisclosureBusinessService {
     return disclosure;
   }
 
-  /**
-   * 전자공시 파일을 수정한다 (파일 업로드 포함)
-   */
-  async 전자공시_파일을_수정한다(
-    id: string,
-    data: {
-      attachments?: Array<{
-        fileName: string;
-        fileUrl: string;
-        fileSize: number;
-        mimeType: string;
-      }>;
-      updatedBy?: string;
-    },
-    files?: Express.Multer.File[],
-  ): Promise<ElectronicDisclosure> {
-    this.logger.log(`전자공시 파일 수정 시작 - ID: ${id}`);
-
-    // 파일 업로드 처리
-    let attachments = data.attachments;
-    if (files && files.length > 0) {
-      this.logger.log(`${files.length}개의 파일 업로드 시작`);
-      const uploadedFiles = await this.storageService.uploadFiles(
-        files,
-        'electronic-disclosures',
-      );
-      const newAttachments = uploadedFiles.map((file) => ({
-        fileName: file.fileName,
-        fileUrl: file.url,
-        fileSize: file.fileSize,
-        mimeType: file.mimeType,
-      }));
-
-      // 기존 첨부파일과 새 첨부파일 병합
-      attachments = [...(attachments || []), ...newAttachments];
-      this.logger.log(`파일 업로드 완료: ${newAttachments.length}개`);
-    }
-
-    const result =
-      await this.electronicDisclosureContextService.전자공시_파일을_수정한다(
-        id,
-        attachments || [],
-        data.updatedBy,
-      );
-
-    this.logger.log(`전자공시 파일 수정 완료 - ID: ${id}`);
-
-    return result;
-  }
-
-  /**
-   * 전자공시 파일을 삭제한다
-   */
-  async 전자공시_파일을_삭제한다(
-    id: string,
-    fileUrls: string[],
-    updatedBy?: string,
-  ): Promise<ElectronicDisclosure> {
-    this.logger.log(
-      `전자공시 파일 삭제 시작 - ID: ${id}, 파일 수: ${fileUrls.length}`,
-    );
-
-    // 전자공시 조회
-    const disclosure =
-      await this.electronicDisclosureContextService.전자공시_상세를_조회한다(id);
-
-    if (!disclosure.attachments || disclosure.attachments.length === 0) {
-      this.logger.warn(`삭제할 파일이 없습니다 - ID: ${id}`);
-      return disclosure;
-    }
-
-    // 스토리지에서 파일 삭제
-    this.logger.log(`스토리지에서 ${fileUrls.length}개의 파일 삭제 시작`);
-    await this.storageService.deleteFiles(fileUrls);
-    this.logger.log(`스토리지 파일 삭제 완료`);
-
-    // 삭제할 파일 제외한 첨부파일 목록 생성
-    const remainingAttachments = disclosure.attachments.filter(
-      (attachment) => !fileUrls.includes(attachment.fileUrl),
-    );
-
-    this.logger.log(
-      `남은 첨부파일: ${remainingAttachments.length}개 (${disclosure.attachments.length - remainingAttachments.length}개 삭제됨)`,
-    );
-
-    // 전자공시 파일 정보 업데이트
-    const result =
-      await this.electronicDisclosureContextService.전자공시_파일을_수정한다(
-        id,
-        remainingAttachments,
-        updatedBy,
-      );
-
-    this.logger.log(`전자공시 파일 삭제 완료 - ID: ${id}`);
-
-    return result;
-  }
 
   /**
    * 전자공시를 생성한다 (파일 업로드 포함)
@@ -239,28 +142,83 @@ export class ElectronicDisclosureBusinessService {
   }
 
   /**
-   * 전자공시를 수정한다
+   * 전자공시를 수정한다 (번역 및 파일 포함)
    */
   async 전자공시를_수정한다(
     id: string,
-    data: {
-      isPublic?: boolean;
-      status?: string;
-      order?: number;
-      translations?: Array<{
-        id?: string;
-        languageId: string;
-        title: string;
-        description?: string;
-      }>;
-      updatedBy?: string;
-    },
+    translations: Array<{
+      id?: string;
+      languageId: string;
+      title: string;
+      description?: string;
+    }>,
+    updatedBy?: string,
+    files?: Express.Multer.File[],
+    deleteFileUrls?: string[],
   ): Promise<ElectronicDisclosure> {
-    this.logger.log(`전자공시 수정 시작 - ID: ${id}`);
+    this.logger.log(
+      `전자공시 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`,
+    );
 
+    // 1. 기존 전자공시 조회
+    const disclosure =
+      await this.electronicDisclosureContextService.전자공시_상세를_조회한다(id);
+
+    // 2. 파일 삭제 처리
+    let remainingAttachments = disclosure.attachments || [];
+    if (deleteFileUrls && deleteFileUrls.length > 0) {
+      this.logger.log(`스토리지에서 ${deleteFileUrls.length}개의 파일 삭제 시작`);
+      await this.storageService.deleteFiles(deleteFileUrls);
+      this.logger.log(`스토리지 파일 삭제 완료`);
+
+      // 삭제할 파일 제외한 첨부파일 목록 생성
+      remainingAttachments = remainingAttachments.filter(
+        (attachment) => !deleteFileUrls.includes(attachment.fileUrl),
+      );
+      this.logger.log(
+        `남은 첨부파일: ${remainingAttachments.length}개 (${deleteFileUrls.length}개 삭제됨)`,
+      );
+    }
+
+    // 3. 새 파일 업로드 처리
+    if (files && files.length > 0) {
+      this.logger.log(`${files.length}개의 파일 업로드 시작`);
+      const uploadedFiles = await this.storageService.uploadFiles(
+        files,
+        'electronic-disclosures',
+      );
+      const newAttachments = uploadedFiles.map((file) => ({
+        fileName: file.fileName,
+        fileUrl: file.url,
+        fileSize: file.fileSize,
+        mimeType: file.mimeType,
+      }));
+
+      // 기존 첨부파일과 새 첨부파일 병합
+      remainingAttachments = [...remainingAttachments, ...newAttachments];
+      this.logger.log(`파일 업로드 완료: ${newAttachments.length}개`);
+    }
+
+    // 4. 파일 정보 업데이트 (파일이 변경된 경우에만)
+    if (
+      (deleteFileUrls && deleteFileUrls.length > 0) ||
+      (files && files.length > 0)
+    ) {
+      await this.electronicDisclosureContextService.전자공시_파일을_수정한다(
+        id,
+        remainingAttachments,
+        updatedBy,
+      );
+      this.logger.log(`전자공시 파일 업데이트 완료`);
+    }
+
+    // 5. 번역 수정
     const result = await this.electronicDisclosureContextService.전자공시를_수정한다(
       id,
-      data,
+      {
+        translations,
+        updatedBy,
+      },
     );
 
     this.logger.log(`전자공시 수정 완료 - ID: ${id}`);
