@@ -26,10 +26,16 @@ import {
   UpdateAnnouncementPublicDto,
   UpdateAnnouncementFixedDto,
   UpdateAnnouncementOrderDto,
+  CreateAnnouncementCategoryDto,
+  UpdateAnnouncementCategoryDto,
+  UpdateAnnouncementCategoryOrderDto,
 } from '@interface/common/dto/announcement/update-announcement.dto';
+import { UpdateAnnouncementBatchOrderDto } from '@interface/common/dto/announcement/update-announcement-batch-order.dto';
 import {
   AnnouncementResponseDto,
   AnnouncementListResponseDto,
+  AnnouncementCategoryResponseDto,
+  AnnouncementCategoryListResponseDto,
 } from '@interface/common/dto/announcement/announcement-response.dto';
 import { ContentStatus } from '@domain/core/content-status.types';
 
@@ -291,31 +297,39 @@ export class AnnouncementController {
   }
 
   /**
-   * 공지사항_오더를_수정한다
+   * 공지사항 오더를 일괄 수정한다
    */
-  @Patch(':id/order')
+  @Put('batch-order')
   @ApiOperation({
-    summary: '공지사항 순서 수정',
-    description: '공지사항의 순서를 수정합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
+    summary: '공지사항 오더 일괄 수정',
+    description:
+      '여러 공지사항의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 공지사항 목록을 전달하면 됩니다.',
   })
   @ApiResponse({
     status: 200,
-    description: '공지사항 순서 수정 성공',
-    type: AnnouncementResponseDto,
+    description: '공지사항 오더 일괄 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        updatedCount: { type: 'number', example: 5 },
+      },
+    },
   })
-  async 공지사항_오더를_수정한다(
-    @Param('id') id: string,
-    @Body() dto: UpdateAnnouncementOrderDto,
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (수정할 공지사항이 없음)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '일부 공지사항을 찾을 수 없음',
+  })
+  async 공지사항_오더를_일괄_수정한다(
+    @Body() updateDto: UpdateAnnouncementBatchOrderDto,
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<AnnouncementResponseDto> {
-    return await this.announcementBusinessService.공지사항_오더를_수정한다(
-      id,
-      dto.order,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return await this.announcementBusinessService.공지사항_오더를_일괄_수정한다(
+      updateDto.announcements,
       user.id,
     );
   }
@@ -342,6 +356,144 @@ export class AnnouncementController {
   }> {
     const result =
       await this.announcementBusinessService.공지사항을_삭제한다(id);
+    return { success: result };
+  }
+
+  /**
+   * 공지사항 카테고리 목록을 조회한다
+   */
+  @Get('categories')
+  @ApiOperation({
+    summary: '공지사항 카테고리 목록 조회',
+    description: '공지사항 카테고리 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 카테고리 목록 조회 성공',
+    type: AnnouncementCategoryListResponseDto,
+  })
+  async 공지사항_카테고리_목록을_조회한다(): Promise<AnnouncementCategoryListResponseDto> {
+    const categories =
+      await this.announcementBusinessService.공지사항_카테고리_목록을_조회한다();
+    return {
+      items: categories,
+      total: categories.length,
+    };
+  }
+
+  /**
+   * 공지사항 카테고리를 생성한다
+   */
+  @Post('categories')
+  @ApiOperation({
+    summary: '공지사항 카테고리 생성',
+    description: '새로운 공지사항 카테고리를 생성합니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '공지사항 카테고리 생성 성공',
+    type: AnnouncementCategoryResponseDto,
+  })
+  async 공지사항_카테고리를_생성한다(
+    @Body() createDto: CreateAnnouncementCategoryDto,
+  ): Promise<AnnouncementCategoryResponseDto> {
+    return await this.announcementBusinessService.공지사항_카테고리를_생성한다(
+      createDto,
+    );
+  }
+
+  /**
+   * 공지사항 카테고리를 수정한다
+   */
+  @Patch('categories/:id')
+  @ApiOperation({
+    summary: '공지사항 카테고리 수정',
+    description: '공지사항의 카테고리를 수정합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '카테고리 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 카테고리 수정 성공',
+    type: AnnouncementCategoryResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '카테고리를 찾을 수 없음',
+  })
+  async 공지사항_카테고리를_수정한다(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateAnnouncementCategoryDto,
+  ): Promise<AnnouncementCategoryResponseDto> {
+    return await this.announcementBusinessService.공지사항_카테고리를_수정한다(
+      id,
+      updateDto,
+    );
+  }
+
+  /**
+   * 공지사항 카테고리 오더를 변경한다
+   */
+  @Patch('categories/:id/order')
+  @ApiOperation({
+    summary: '공지사항 카테고리 오더 변경',
+    description: '공지사항 카테고리의 정렬 순서를 변경합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '카테고리 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 카테고리 오더 변경 성공',
+    type: AnnouncementCategoryResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '카테고리를 찾을 수 없음',
+  })
+  async 공지사항_카테고리_오더를_변경한다(
+    @Param('id') id: string,
+    @Body() updateDto: UpdateAnnouncementCategoryOrderDto,
+  ): Promise<AnnouncementCategoryResponseDto> {
+    const result =
+      await this.announcementBusinessService.공지사항_카테고리_오더를_변경한다(
+        id,
+        updateDto,
+      );
+    return result;
+  }
+
+  /**
+   * 공지사항 카테고리를 삭제한다
+   */
+  @Delete('categories/:id')
+  @ApiOperation({
+    summary: '공지사항 카테고리 삭제',
+    description: '공지사항 카테고리를 삭제합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '카테고리 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 카테고리 삭제 성공',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '카테고리를 찾을 수 없음',
+  })
+  async 공지사항_카테고리를_삭제한다(
+    @Param('id') id: string,
+  ): Promise<{ success: boolean }> {
+    const result =
+      await this.announcementBusinessService.공지사항_카테고리를_삭제한다(id);
     return { success: result };
   }
 }

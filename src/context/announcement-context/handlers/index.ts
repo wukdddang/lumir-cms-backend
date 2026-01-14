@@ -8,4 +8,5 @@ export * from './commands/update-announcement.handler';
 export * from './commands/update-announcement-public.handler';
 export * from './commands/update-announcement-fixed.handler';
 export * from './commands/update-announcement-order.handler';
+export * from './commands/update-announcement-batch-order.handler';
 export * from './commands/delete-announcement.handler';

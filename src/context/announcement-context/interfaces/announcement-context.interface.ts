@@ -76,6 +76,14 @@ export interface UpdateAnnouncementOrderDto {
 }
 
 /**
+ * 공지사항 오더 일괄 수정 DTO
+ */
+export interface UpdateAnnouncementBatchOrderDto {
+  announcements: Array<{ id: string; order: number }>;
+  updatedBy?: string;
+}
+
+/**
  * 공지사항 생성 결과
  */
 export interface CreateAnnouncementResult {

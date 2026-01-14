@@ -12,6 +12,7 @@ import {
   UpdateAnnouncementPublicHandler,
   UpdateAnnouncementFixedHandler,
   UpdateAnnouncementOrderHandler,
+  UpdateAnnouncementBatchOrderHandler,
   DeleteAnnouncementHandler,
 } from './handlers';
 
@@ -26,6 +27,7 @@ const CommandHandlers = [
   UpdateAnnouncementPublicHandler,
   UpdateAnnouncementFixedHandler,
   UpdateAnnouncementOrderHandler,
+  UpdateAnnouncementBatchOrderHandler,
   DeleteAnnouncementHandler,
 ];
 

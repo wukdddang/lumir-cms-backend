@@ -5,6 +5,7 @@ import { UpdateAnnouncementCommand } from './handlers/commands/update-announceme
 import { UpdateAnnouncementPublicCommand } from './handlers/commands/update-announcement-public.handler';
 import { UpdateAnnouncementFixedCommand } from './handlers/commands/update-announcement-fixed.handler';
 import { UpdateAnnouncementOrderCommand } from './handlers/commands/update-announcement-order.handler';
+import { UpdateAnnouncementBatchOrderCommand } from './handlers/commands/update-announcement-batch-order.handler';
 import { DeleteAnnouncementCommand } from './handlers/commands/delete-announcement.handler';
 import { GetAnnouncementListQuery } from './handlers/queries/get-announcement-list.handler';
 import { GetAnnouncementDetailQuery } from './handlers/queries/get-announcement-detail.handler';
@@ -15,6 +16,7 @@ import {
   UpdateAnnouncementPublicDto,
   UpdateAnnouncementFixedDto,
   UpdateAnnouncementOrderDto,
+  UpdateAnnouncementBatchOrderDto,
   AnnouncementListResult,
   AnnouncementDetailResult,
 } from './interfaces/announcement-context.interface';
@@ -84,6 +86,16 @@ export class AnnouncementContextService {
     data: UpdateAnnouncementOrderDto,
   ): Promise<Announcement> {
     const command = new UpdateAnnouncementOrderCommand(id, data);
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 공지사항_오더를_일괄_수정한다
+   */
+  async 공지사항_오더를_일괄_수정한다(
+    data: UpdateAnnouncementBatchOrderDto,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    const command = new UpdateAnnouncementBatchOrderCommand(data);
     return await this.commandBus.execute(command);
   }
 

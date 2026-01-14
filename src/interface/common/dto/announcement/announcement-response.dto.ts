@@ -184,3 +184,47 @@ export class AnnouncementListResponseDto {
   @ApiProperty({ description: '총 페이지 수', example: 2 })
   totalPages: number;
 }
+
+/**
+ * 공지사항 카테고리 응답 DTO
+ */
+export class AnnouncementCategoryResponseDto {
+  @ApiProperty({ description: '카테고리 ID' })
+  id: string;
+
+  @ApiProperty({ description: '카테고리 이름', example: '인사' })
+  name: string;
+
+  @ApiProperty({
+    description: '카테고리 설명',
+    example: '인사 관련 공지사항',
+    required: false,
+  })
+  description?: string | null;
+
+  @ApiProperty({ description: '활성화 여부', example: true })
+  isActive: boolean;
+
+  @ApiProperty({ description: '정렬 순서', example: 0 })
+  order: number;
+
+  @ApiProperty({ description: '생성일시' })
+  createdAt: Date;
+
+  @ApiProperty({ description: '수정일시' })
+  updatedAt: Date;
+}
+
+/**
+ * 공지사항 카테고리 목록 응답 DTO
+ */
+export class AnnouncementCategoryListResponseDto {
+  @ApiProperty({
+    description: '카테고리 목록',
+    type: [AnnouncementCategoryResponseDto],
+  })
+  items: AnnouncementCategoryResponseDto[];
+
+  @ApiProperty({ description: '총 개수', example: 3 })
+  total: number;
+}

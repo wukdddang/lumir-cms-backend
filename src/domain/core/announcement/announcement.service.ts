@@ -230,4 +230,46 @@ export class AnnouncementService {
 
     return await this.공지사항을_업데이트한다(id, { status, updatedBy });
   }
+
+  /**
+   * 공지사항 오더를 일괄 업데이트한다
+   */
+  async 공지사항_오더를_일괄_업데이트한다(
+    announcements: Array<{ id: string; order: number }>,
+    updatedBy?: string,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    this.logger.log(
+      `공지사항 오더 일괄 업데이트 시작 - 수정할 공지사항 수: ${announcements.length}`,
+    );
+
+    if (announcements.length === 0) {
+      this.logger.warn('수정할 공지사항이 없습니다.');
+      return { success: false, updatedCount: 0 };
+    }
+
+    let updatedCount = 0;
+
+    // 각 공지사항의 순서를 업데이트
+    for (const item of announcements) {
+      try {
+        await this.공지사항을_업데이트한다(item.id, {
+          order: item.order,
+          updatedBy,
+        });
+        updatedCount++;
+      } catch (error) {
+        this.logger.error(
+          `공지사항 오더 업데이트 실패 - ID: ${item.id}, 에러: ${error.message}`,
+        );
+        // 하나가 실패해도 나머지는 계속 처리
+      }
+    }
+
+    this.logger.log(`공지사항 오더 일괄 업데이트 완료 - 수정된 수: ${updatedCount}`);
+
+    return {
+      success: updatedCount > 0,
+      updatedCount,
+    };
+  }
 }
