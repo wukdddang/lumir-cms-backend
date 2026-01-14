@@ -73,7 +73,6 @@ erDiagram
     ShareholdersMeeting {
         uuid id PK "description"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         varchar location
         timestamp meetingDate "주주총회 일시"
         timestamp releasedAt "nullable"
@@ -138,7 +137,6 @@ erDiagram
     ElectronicDisclosure {
         uuid id PK "description"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -166,7 +164,6 @@ erDiagram
     IR {
         uuid id PK "description"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -194,7 +191,6 @@ erDiagram
     Brochure {
         uuid id PK "description"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -225,7 +221,6 @@ erDiagram
         text description "설명"
         text url "외부 링크 또는 상세 페이지 URL"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -245,7 +240,6 @@ erDiagram
         timestamp releasedAt "nullable"
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb permissionEmployeeIds "특정 직원 ID 목록"
         jsonb permissionRankCodes "직급 코드 목록"
         jsonb permissionPositionCodes "직책 코드 목록"
@@ -281,7 +275,6 @@ erDiagram
     
     MainPopup {
         uuid id PK "description"
-        varchar status "draft|approved|under_review|rejected|opened"
         boolean isPublic
         timestamp releasedAt "nullable"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
@@ -314,7 +307,6 @@ erDiagram
         text content
         text imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -330,7 +322,6 @@ erDiagram
         varchar title
         text description
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
         timestamp createdAt
@@ -702,19 +693,6 @@ enum CategoryEntityType {
 }
 ```
 
-### ContentStatus
-```typescript
-enum ContentStatus {
-  DRAFT = 'draft',           // 초안
-  APPROVED = 'approved',     // 승인됨
-  UNDER_REVIEW = 'under_review',  // 검토중
-  REJECTED = 'rejected',     // 거부됨
-  OPENED = 'opened'          // 공개됨
-}
-
-// ContentStatus를 사용하는 엔티티
-```
-
 ### EducationStatus (교육 상태)
 ```typescript
 enum EducationStatus {
@@ -846,6 +824,15 @@ enum WikiPermissionAction {
 
 ## 변경 이력
 
+### v5.19 (2026-01-14)
+- ✅ **ContentStatus 제거 및 콘텐츠 관리 단순화**
+  - 9개 콘텐츠 엔티티에서 `status` 필드 제거: Announcement, Brochure, ElectronicDisclosure, IR, News, LumirStory, MainPopup, ShareholdersMeeting, VideoGallery
+  - ContentStatus enum 완전 제거 (더 이상 사용하지 않음)
+  - 복잡한 승인 워크플로우 제거 → `isPublic` 필드만으로 간단히 관리
+  - 관리자 1명 환경에 최적화된 단순한 콘텐츠 관리 시스템
+  - 기본값 변경: 모든 콘텐츠 생성 시 `isPublic: true` (즉시 공개)
+  - 상태 흐름 다이어그램 9개 삭제
+
 ### v5.18 (2026-01-14)
 - ✅ **WikiFileSystem 파일 비공개 설정 추가**
   - 파일의 `isPublic` 필드 활성화
@@ -888,11 +875,9 @@ enum WikiPermissionAction {
   - 사용자가 선택 취소 시 레코드 완전 삭제 (UK 제약조건 문제 없음)
 
 ### v5.13 (2026-01-08)
-- ✅ **상태 관리 필드 추가**
-  - `ShareholdersMeeting.status` 필드 추가 (ContentStatus enum)
+- ✅ **상태 관리 필드 추가** (v5.19에서 ContentStatus 제거됨)
   - `EducationManagement.status` 필드 추가 (EducationStatus enum)
   - `EducationStatus` enum 정의 추가: scheduled, in_progress, completed, cancelled, postponed
-  - ContentStatus 타입 별칭 정리 및 문서화
 
 ### v5.12 (2026-01-08)
 - ✅ **WikiFileSystem Closure Table 도입**
@@ -937,4 +922,4 @@ enum WikiPermissionAction {
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.18
+**버전**: v5.19
