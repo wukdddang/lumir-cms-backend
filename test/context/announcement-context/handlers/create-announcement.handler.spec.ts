@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CreateAnnouncementHandler } from '@context/announcement-context/handlers/commands/create-announcement.handler';
 import { AnnouncementService } from '@domain/core/announcement/announcement.service';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 describe('CreateAnnouncementHandler', () => {
   let handler: CreateAnnouncementHandler;
@@ -41,7 +40,6 @@ describe('CreateAnnouncementHandler', () => {
           isPublic: true,
           isFixed: false,
           mustRead: false,
-          status: ContentStatus.DRAFT,
           createdBy: 'user-1',
         },
       };
@@ -50,7 +48,6 @@ describe('CreateAnnouncementHandler', () => {
         id: 'new-announcement-1',
         isPublic: true,
         isFixed: false,
-        status: ContentStatus.DRAFT,
         order: 0,
         createdAt: new Date(),
       };
@@ -68,7 +65,6 @@ describe('CreateAnnouncementHandler', () => {
           isPublic: command.data.isPublic,
           isFixed: command.data.isFixed,
           mustRead: command.data.mustRead,
-          status: command.data.status,
           createdBy: command.data.createdBy,
         }),
       );
@@ -100,7 +96,6 @@ describe('CreateAnnouncementHandler', () => {
         id: 'new-announcement-1',
         isPublic: true,
         isFixed: false,
-        status: ContentStatus.DRAFT,
         order: 0,
         createdAt: new Date(),
       } as any;
@@ -140,7 +135,6 @@ describe('CreateAnnouncementHandler', () => {
         id: 'new-announcement-1',
         isPublic: false,
         isFixed: false,
-        status: ContentStatus.DRAFT,
         order: 0,
         createdAt: new Date(),
       } as any;

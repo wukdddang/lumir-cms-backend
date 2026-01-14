@@ -1,5 +1,4 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
   const testSuite = new BaseE2ETest();
@@ -129,30 +128,6 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
       expect(response.body.id).toBe(announcementId);
       expect(new Date(response.body.releasedAt).toISOString()).toBe('2024-02-01T00:00:00.000Z');
       expect(new Date(response.body.expiredAt).toISOString()).toBe('2024-12-31T23:59:59.000Z');
-    });
-
-    it('공지사항의 상태를 수정해야 한다', async () => {
-      // Given
-      const createResponse = await testSuite
-        .request()
-        .post('/api/admin/announcements')
-        .send({ title: '테스트', content: '내용' });
-
-      const announcementId = createResponse.body.id;
-
-      // When
-      const response = await testSuite
-        .request()
-        .put(`/api/admin/announcements/${announcementId}`)
-        .send({ status: ContentStatus.OPENED })
-        .expect(200);
-
-      // Then
-      expect(response.body).toMatchObject({
-        id: announcementId,
-      });
-      // status는 응답에 포함될 수도, 안 될 수도 있음
-      // ContentStatus.OPENED가 설정되었는지 DB에서 확인 필요
     });
 
     it('공지사항의 권한 정보를 수정해야 한다', async () => {

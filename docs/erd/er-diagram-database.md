@@ -435,9 +435,9 @@ WHERE deleted_at IS NULL;
 ### Announcement
 
 ```sql
--- 공개 여부 + 상태별 조회
-CREATE INDEX idx_announcement_public_status 
-ON announcement(is_public, status, "order") 
+-- 공개 여부별 조회
+CREATE INDEX idx_announcement_public 
+ON announcement(is_public, "order") 
 WHERE deleted_at IS NULL;
 
 -- 고정 공지사항
@@ -819,7 +819,7 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ### v5.10 (2026-01-08)
 - ✅ **Survey-Announcement 통합**
   - `Survey.announcementId` FK 추가 (필수, 유니크)
-  - `Survey.status` 제거 (Announcement.status 사용)
+  - `Survey.status` 제거 (Announcement의 isPublic으로 제어)
   - `Survey.permissionEmployeeIds` 제거 (Announcement 권한 사용)
   - `AnnouncementResponse` 엔티티 제거 (Survey로 통합)
   - `Announcement.requiresResponse` 필드 제거

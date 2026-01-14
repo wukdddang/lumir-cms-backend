@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './announcement.entity';
 import { AnnouncementRead } from './announcement-read.entity';
-import { ContentStatus } from '../content-status.types';
 
 /**
  * 공지사항 서비스
@@ -37,7 +36,6 @@ export class AnnouncementService {
    * 모든 공지사항을 조회한다
    */
   async 모든_공지사항을_조회한다(options?: {
-    status?: ContentStatus;
     isFixed?: boolean;
     isPublic?: boolean;
   }): Promise<Announcement[]> {
@@ -46,22 +44,22 @@ export class AnnouncementService {
     const queryBuilder =
       this.announcementRepository.createQueryBuilder('announcement');
 
-    if (options?.status) {
-      queryBuilder.where('announcement.status = :status', {
-        status: options.status,
-      });
-    }
-
     if (options?.isFixed !== undefined) {
-      queryBuilder.andWhere('announcement.isFixed = :isFixed', {
+      queryBuilder.where('announcement.isFixed = :isFixed', {
         isFixed: options.isFixed,
       });
     }
 
     if (options?.isPublic !== undefined) {
-      queryBuilder.andWhere('announcement.isPublic = :isPublic', {
-        isPublic: options.isPublic,
-      });
+      if (options?.isFixed !== undefined) {
+        queryBuilder.andWhere('announcement.isPublic = :isPublic', {
+          isPublic: options.isPublic,
+        });
+      } else {
+        queryBuilder.where('announcement.isPublic = :isPublic', {
+          isPublic: options.isPublic,
+        });
+      }
     }
 
     return await queryBuilder
@@ -190,7 +188,6 @@ export class AnnouncementService {
     return await this.announcementRepository.find({
       where: {
         mustRead: true,
-        status: ContentStatus.OPENED,
         isPublic: true,
       },
       order: {
@@ -209,26 +206,12 @@ export class AnnouncementService {
     return await this.announcementRepository.find({
       where: {
         isFixed: true,
-        status: ContentStatus.OPENED,
       },
       order: {
         order: 'DESC',
         createdAt: 'DESC',
       },
     });
-  }
-
-  /**
-   * 공지사항 상태를 변경한다
-   */
-  async 공지사항_상태를_변경한다(
-    id: string,
-    status: ContentStatus,
-    updatedBy?: string,
-  ): Promise<Announcement> {
-    this.logger.log(`공지사항 상태 변경 - ID: ${id}, 상태: ${status}`);
-
-    return await this.공지사항을_업데이트한다(id, { status, updatedBy });
   }
 
   /**

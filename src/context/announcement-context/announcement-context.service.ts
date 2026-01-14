@@ -21,7 +21,6 @@ import {
   AnnouncementDetailResult,
 } from './interfaces/announcement-context.interface';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 공지사항 컨텍스트 서비스
@@ -113,7 +112,6 @@ export class AnnouncementContextService {
   async 공지사항_목록을_조회한다(params: {
     isPublic?: boolean;
     isFixed?: boolean;
-    status?: ContentStatus;
     orderBy?: 'order' | 'createdAt';
     page?: number;
     limit?: number;
@@ -121,7 +119,6 @@ export class AnnouncementContextService {
     const query = new GetAnnouncementListQuery(
       params.isPublic,
       params.isFixed,
-      params.status,
       params.orderBy || 'order',
       params.page || 1,
       params.limit || 10,

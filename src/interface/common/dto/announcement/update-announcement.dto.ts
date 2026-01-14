@@ -6,11 +6,9 @@ import {
   IsString,
   IsArray,
   IsDateString,
-  IsEnum,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContentStatus } from '@domain/core/content-status.types';
 import { AnnouncementAttachmentDto } from './create-announcement.dto';
 
 /**
@@ -75,16 +73,6 @@ export class UpdateAnnouncementDto {
   @IsOptional()
   @IsBoolean()
   mustRead?: boolean;
-
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    example: ContentStatus.OPENED,
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(ContentStatus)
-  status?: ContentStatus;
 
   @ApiProperty({
     description: '특정 직원 ID 목록 (SSO)',

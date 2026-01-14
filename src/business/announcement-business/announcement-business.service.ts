@@ -10,7 +10,6 @@ import { Announcement } from '@domain/core/announcement/announcement.entity';
 import { AnnouncementRead } from '@domain/core/announcement/announcement-read.entity';
 import { Survey } from '@domain/sub/survey/survey.entity';
 import { SurveyCompletion } from '@domain/sub/survey/survey-completion.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 import { Category } from '@domain/common/category/category.entity';
 import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
 import {
@@ -63,7 +62,6 @@ export class AnnouncementBusinessService {
   async 공지사항_목록을_조회한다(params: {
     isPublic?: boolean;
     isFixed?: boolean;
-    status?: ContentStatus;
     orderBy?: 'order' | 'createdAt';
     page?: number;
     limit?: number;

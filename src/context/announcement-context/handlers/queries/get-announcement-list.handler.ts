@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
 import { AnnouncementListResult } from '../../interfaces/announcement-context.interface';
 import { Logger } from '@nestjs/common';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 공지사항 목록 조회 쿼리
@@ -13,7 +12,6 @@ export class GetAnnouncementListQuery {
   constructor(
     public readonly isPublic?: boolean,
     public readonly isFixed?: boolean,
-    public readonly status?: ContentStatus,
     public readonly orderBy: 'order' | 'createdAt' = 'order',
     public readonly page: number = 1,
     public readonly limit: number = 10,
@@ -37,10 +35,10 @@ export class GetAnnouncementListHandler
   async execute(
     query: GetAnnouncementListQuery,
   ): Promise<AnnouncementListResult> {
-    const { isPublic, isFixed, status, orderBy, page, limit } = query;
+    const { isPublic, isFixed, orderBy, page, limit } = query;
 
     this.logger.debug(
-      `공지사항 목록 조회 - 공개: ${isPublic}, 고정: ${isFixed}, 상태: ${status}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `공지사항 목록 조회 - 공개: ${isPublic}, 고정: ${isFixed}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const queryBuilder =
@@ -55,14 +53,6 @@ export class GetAnnouncementListHandler
         queryBuilder.andWhere('announcement.isFixed = :isFixed', { isFixed });
       } else {
         queryBuilder.where('announcement.isFixed = :isFixed', { isFixed });
-      }
-    }
-
-    if (status) {
-      if (isPublic !== undefined || isFixed !== undefined) {
-        queryBuilder.andWhere('announcement.status = :status', { status });
-      } else {
-        queryBuilder.where('announcement.status = :status', { status });
       }
     }
 

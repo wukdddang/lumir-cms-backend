@@ -9,7 +9,6 @@ import { AnnouncementRead } from '@domain/core/announcement/announcement-read.en
 import { Survey } from '@domain/sub/survey/survey.entity';
 import { SurveyCompletion } from '@domain/sub/survey/survey-completion.entity';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 describe('AnnouncementBusinessService', () => {
   let service: AnnouncementBusinessService;
@@ -120,7 +119,6 @@ describe('AnnouncementBusinessService', () => {
       const params = {
         isPublic: true,
         isFixed: false,
-        status: ContentStatus.OPENED,
         orderBy: 'order' as const,
         page: 1,
         limit: 10,

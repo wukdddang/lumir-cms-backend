@@ -1,5 +1,4 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
   const testSuite = new BaseE2ETest();
@@ -205,19 +204,6 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
           (item: any) => item.isPublic === true && item.isFixed === true,
         ),
       ).toBe(true);
-    });
-
-    it('status 필터가 동작해야 한다', async () => {
-      // When
-      const response = await testSuite
-        .request()
-        .get(`/api/admin/announcements?status=${ContentStatus.OPENED}`)
-        .expect(200);
-
-      // Then
-      expect(response.body.items.every((item: any) => item.status === ContentStatus.OPENED)).toBe(
-        true,
-      );
     });
   });
 

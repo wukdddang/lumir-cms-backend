@@ -720,7 +720,6 @@ type BrochureStatus = ContentStatus;
 type LumirStoryStatus = ContentStatus;
 type VideoGalleryStatus = ContentStatus;
 type NewsStatus = ContentStatus;
-type AnnouncementStatus = ContentStatus;
 type MainPopupStatus = ContentStatus;
 ```
 
@@ -926,11 +925,11 @@ enum WikiPermissionAction {
 ### v5.10 (2026-01-08)
 - ✅ **Survey-Announcement 통합**
   - `Survey.announcementId` FK 추가 (필수, 유니크)
-  - `Survey.status` 제거 (Announcement.status 사용)
+  - `Survey.status` 제거 (Announcement의 isPublic으로 제어)
   - `Survey.permissionEmployeeIds` 제거 (Announcement 권한 사용)
   - `AnnouncementResponse` 엔티티 제거 (Survey로 통합)
   - `Announcement.requiresResponse` 필드 제거
-  - 설문조사는 공지사항에 종속되어 공지사항 상태/권한/마감일에 따라 제출 가능 여부 결정
+  - 설문조사는 공지사항에 종속되어 공지사항 권한/마감일에 따라 제출 가능 여부 결정
   - Survey의 CategoryMapping 관계 제거 (Announcement에서만 카테고리 관리)
 
 ### v5.9 (2026-01-08)

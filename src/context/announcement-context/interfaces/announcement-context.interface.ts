@@ -1,5 +1,4 @@
 import { Announcement } from '@domain/core/announcement/announcement.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 공지사항 생성 DTO
@@ -36,7 +35,6 @@ export interface UpdateAnnouncementDto {
   releasedAt?: Date | null;
   expiredAt?: Date | null;
   mustRead?: boolean;
-  status?: ContentStatus;
   permissionEmployeeIds?: string[] | null;
   permissionRankCodes?: string[] | null;
   permissionPositionCodes?: string[] | null;
@@ -90,7 +88,6 @@ export interface CreateAnnouncementResult {
   id: string;
   isPublic: boolean;
   isFixed: boolean;
-  status: ContentStatus;
   order: number;
   createdAt: Date;
 }

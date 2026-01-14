@@ -1,5 +1,4 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 describe('POST /api/admin/announcements (공지사항 생성)', () => {
   const testSuite = new BaseE2ETest();
@@ -39,7 +38,6 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
         isFixed: false,
         isPublic: true,
         mustRead: false,
-        status: ContentStatus.DRAFT, // 기본 상태는 DRAFT
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });

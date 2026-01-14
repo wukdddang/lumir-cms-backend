@@ -1,6 +1,5 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
-import { ContentStatus } from '../content-status.types';
 import { AnnouncementRead } from './announcement-read.entity';
 
 /**
@@ -11,7 +10,6 @@ import { AnnouncementRead } from './announcement-read.entity';
  * Lazy Creation 패턴: AnnouncementRead
  */
 @Entity('announcements')
-@Index('idx_announcement_status', ['status'])
 @Index('idx_announcement_is_public', ['isPublic'])
 @Index('idx_announcement_is_fixed', ['isFixed'])
 @Index('idx_announcement_must_read', ['mustRead'])
@@ -66,14 +64,6 @@ export class Announcement extends BaseEntity<Announcement> {
     comment: '필독 여부',
   })
   mustRead: boolean;
-
-  @Column({
-    type: 'enum',
-    enum: ContentStatus,
-    default: ContentStatus.DRAFT,
-    comment: '상태 (draft|approved|under_review|rejected|opened)',
-  })
-  status: ContentStatus;
 
   @Column({
     type: 'jsonb',

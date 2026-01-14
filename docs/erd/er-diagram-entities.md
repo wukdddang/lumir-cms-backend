@@ -380,7 +380,6 @@ erDiagram
         timestamp releasedAt "nullable"
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
-        varchar status
         jsonb permissionEmployeeIds "특정 직원"
         jsonb permissionRankCodes "직급"
         jsonb permissionPositionCodes "직책"
@@ -440,13 +439,10 @@ function canSubmitSurvey(
   // 1. 공지사항이 공개 상태여야 함
   if (!announcement.isPublic) return false;
   
-  // 2. 공지사항 상태가 'opened'여야 함
-  if (announcement.status !== 'opened') return false;
-  
-  // 3. 설문조사 마감일이 지나지 않았어야 함
+  // 2. 설문조사 마감일이 지나지 않았어야 함
   if (survey.endDate && new Date() > survey.endDate) return false;
   
-  // 4. 권한 확인
+  // 3. 권한 확인
   if (!canAccess(announcement, employee)) return false;
   
   return true;
@@ -569,7 +565,6 @@ erDiagram
     Announcement {
         uuid id PK
         varchar title
-        varchar status
         boolean isPublic
     }
     
@@ -667,7 +662,7 @@ erDiagram
 
 **특징**:
 - **공지사항 종속**: Survey는 Announcement에 종속 (announcementId FK 필수)
-- **상태 관리**: Announcement.status로 통일 (Survey.status 제거)
+- **상태 관리**: Announcement의 isPublic으로 제어 (Survey.status 제거)
 - **권한 관리**: Announcement의 권한 설정 사용 (Survey.permissionEmployeeIds 제거)
 - **타입별 응답 테이블**: 7개 테이블로 분리 (통계 쿼리 최적화)
 - **질문 타입**: short_answer, paragraph, multiple_choice, dropdown, checkboxes, file_upload, datetime, linear_scale, grid_scale
@@ -683,13 +678,10 @@ function canSubmitSurvey(
   // 1. 공지사항이 공개 상태여야 함
   if (!announcement.isPublic) return false;
   
-  // 2. 공지사항 상태가 'opened'여야 함
-  if (announcement.status !== 'opened') return false;
-  
-  // 3. 설문조사 마감일이 지나지 않았어야 함
+  // 2. 설문조사 마감일이 지나지 않았어야 함
   if (survey.endDate && new Date() > survey.endDate) return false;
   
-  // 4. 권한 확인 (Announcement의 권한 사용)
+  // 3. 권한 확인 (Announcement의 권한 사용)
   if (!canAccessAnnouncement(announcement, employee)) return false;
   
   return true;

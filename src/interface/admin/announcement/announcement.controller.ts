@@ -37,7 +37,6 @@ import {
   AnnouncementCategoryResponseDto,
   AnnouncementCategoryListResponseDto,
 } from '@interface/common/dto/announcement/announcement-response.dto';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 @ApiTags('A-9. 관리자 - 공지사항')
 @ApiBearerAuth('Bearer')
@@ -73,12 +72,6 @@ export class AnnouncementController {
     type: Boolean,
   })
   @ApiQuery({
-    name: 'status',
-    required: false,
-    description: '상태 필터',
-    enum: ContentStatus,
-  })
-  @ApiQuery({
     name: 'orderBy',
     required: false,
     description: '정렬 기준 (order: 정렬순서, createdAt: 생성일시)',
@@ -101,7 +94,6 @@ export class AnnouncementController {
   async 공지사항_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('isFixed') isFixed?: string,
-    @Query('status') status?: ContentStatus,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -117,7 +109,6 @@ export class AnnouncementController {
       await this.announcementBusinessService.공지사항_목록을_조회한다({
         isPublic: isPublicFilter,
         isFixed: isFixedFilter,
-        status,
         orderBy: orderBy || 'order',
         page: pageNum,
         limit: limitNum,

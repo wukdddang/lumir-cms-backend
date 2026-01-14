@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { AnnouncementContextService } from '@context/announcement-context/announcement-context.service';
-import { ContentStatus } from '@domain/core/content-status.types';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
 
 describe('AnnouncementContextService', () => {
@@ -257,7 +256,6 @@ describe('AnnouncementContextService', () => {
       const params = {
         isPublic: true,
         isFixed: false,
-        status: ContentStatus.OPENED,
         orderBy: 'order' as const,
         page: 1,
         limit: 10,

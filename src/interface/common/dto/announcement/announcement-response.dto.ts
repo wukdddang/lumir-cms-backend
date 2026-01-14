@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 공지사항 첨부파일 응답 DTO
@@ -62,13 +61,6 @@ export class AnnouncementResponseDto {
 
   @ApiProperty({ description: '필독 여부', example: false })
   mustRead: boolean;
-
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    example: ContentStatus.OPENED,
-  })
-  status: ContentStatus;
 
   @ApiProperty({
     description: '특정 직원 ID 목록 (SSO)',
@@ -147,13 +139,6 @@ export class AnnouncementListItemDto {
 
   @ApiProperty({ description: '필독 여부', example: false })
   mustRead: boolean;
-
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    example: ContentStatus.OPENED,
-  })
-  status: ContentStatus;
 
   @ApiProperty({ description: '정렬 순서', example: 1 })
   order: number;

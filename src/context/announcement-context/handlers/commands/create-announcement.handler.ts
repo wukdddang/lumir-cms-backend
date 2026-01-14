@@ -1,6 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AnnouncementService } from '@domain/core/announcement/announcement.service';
-import { ContentStatus } from '@domain/core/content-status.types';
 import {
   CreateAnnouncementDto,
   CreateAnnouncementResult,
@@ -32,7 +31,7 @@ export class CreateAnnouncementHandler
 
     this.logger.log(`공지사항 생성 시작 - 제목: ${data.title}`);
 
-    // 공지사항 생성 (기본값: 전사공개, DRAFT 상태, 일반 공지)
+    // 공지사항 생성 (기본값: 전사공개, 일반 공지)
     const saved = await this.announcementService.공지사항을_생성한다({
       title: data.title,
       content: data.content,
@@ -41,7 +40,6 @@ export class CreateAnnouncementHandler
       releasedAt: data.releasedAt ?? null,
       expiredAt: data.expiredAt ?? null,
       mustRead: data.mustRead ?? false, // 기본값: 필독 아님
-      status: ContentStatus.DRAFT, // 기본값: DRAFT
       permissionEmployeeIds: data.permissionEmployeeIds ?? null,
       permissionRankCodes: data.permissionRankCodes ?? null,
       permissionPositionCodes: data.permissionPositionCodes ?? null,
@@ -60,7 +58,6 @@ export class CreateAnnouncementHandler
       id: saved.id,
       isPublic: saved.isPublic,
       isFixed: saved.isFixed,
-      status: saved.status,
       order: saved.order,
       createdAt: saved.createdAt,
     };
