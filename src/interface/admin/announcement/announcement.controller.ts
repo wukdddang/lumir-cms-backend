@@ -150,216 +150,6 @@ export class AnnouncementController {
   }
 
   /**
-   * 공지사항을 조회한다
-   */
-  @Get(':id')
-  @ApiOperation({
-    summary: '공지사항 상세 조회',
-    description: '특정 공지사항의 상세 정보를 조회합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 조회 성공',
-    type: AnnouncementResponseDto,
-  })
-  async 공지사항을_조회한다(
-    @Param('id') id: string,
-  ): Promise<AnnouncementResponseDto> {
-    return await this.announcementBusinessService.공지사항을_조회한다(id);
-  }
-
-  /**
-   * 공지사항을 생성한다
-   */
-  @Post()
-  @ApiOperation({
-    summary: '공지사항 생성',
-    description: '새로운 공지사항을 생성합니다.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '공지사항 생성 성공',
-    type: AnnouncementResponseDto,
-  })
-  async 공지사항을_생성한다(
-    @Body() dto: CreateAnnouncementDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<AnnouncementResponseDto> {
-    // 날짜 변환
-    const data = {
-      ...dto,
-      releasedAt: dto.releasedAt ? new Date(dto.releasedAt) : null,
-      expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
-      createdBy: user.id,
-    };
-
-    return await this.announcementBusinessService.공지사항을_생성한다(data);
-  }
-
-  /**
-   * 공지사항을 수정한다
-   */
-  @Put(':id')
-  @ApiOperation({
-    summary: '공지사항 수정',
-    description: '공지사항을 수정합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 수정 성공',
-    type: AnnouncementResponseDto,
-  })
-  async 공지사항을_수정한다(
-    @Param('id') id: string,
-    @Body() dto: UpdateAnnouncementDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<AnnouncementResponseDto> {
-    // 날짜 변환
-    const data: any = { ...dto, updatedBy: user.id };
-    if (dto.releasedAt) {
-      data.releasedAt = new Date(dto.releasedAt);
-    }
-    if (dto.expiredAt) {
-      data.expiredAt = new Date(dto.expiredAt);
-    }
-
-    return await this.announcementBusinessService.공지사항을_수정한다(id, data);
-  }
-
-  /**
-   * 공지사항_공개를_수정한다
-   */
-  @Patch(':id/public')
-  @ApiOperation({
-    summary: '공지사항 공개 상태 수정',
-    description: '공지사항의 공개 상태를 수정합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 공개 상태 수정 성공',
-    type: AnnouncementResponseDto,
-  })
-  async 공지사항_공개를_수정한다(
-    @Param('id') id: string,
-    @Body() dto: UpdateAnnouncementPublicDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<AnnouncementResponseDto> {
-    return await this.announcementBusinessService.공지사항_공개를_수정한다(
-      id,
-      dto.isPublic,
-      user.id,
-    );
-  }
-
-  /**
-   * 공지사항_고정을_수정한다
-   */
-  @Patch(':id/fixed')
-  @ApiOperation({
-    summary: '공지사항 고정 상태 수정',
-    description: '공지사항의 고정 상태를 수정합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 고정 상태 수정 성공',
-    type: AnnouncementResponseDto,
-  })
-  async 공지사항_고정을_수정한다(
-    @Param('id') id: string,
-    @Body() dto: UpdateAnnouncementFixedDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<AnnouncementResponseDto> {
-    return await this.announcementBusinessService.공지사항_고정을_수정한다(
-      id,
-      dto.isFixed,
-      user.id,
-    );
-  }
-
-  /**
-   * 공지사항 오더를 일괄 수정한다
-   */
-  @Put('batch-order')
-  @ApiOperation({
-    summary: '공지사항 오더 일괄 수정',
-    description:
-      '여러 공지사항의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 공지사항 목록을 전달하면 됩니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 오더 일괄 수정 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        updatedCount: { type: 'number', example: 5 },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '잘못된 요청 (수정할 공지사항이 없음)',
-  })
-  @ApiResponse({
-    status: 404,
-    description: '일부 공지사항을 찾을 수 없음',
-  })
-  async 공지사항_오더를_일괄_수정한다(
-    @Body() updateDto: UpdateAnnouncementBatchOrderDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<{ success: boolean; updatedCount: number }> {
-    return await this.announcementBusinessService.공지사항_오더를_일괄_수정한다(
-      updateDto.announcements,
-      user.id,
-    );
-  }
-
-  /**
-   * 공지사항을 삭제한다
-   */
-  @Delete(':id')
-  @ApiOperation({
-    summary: '공지사항 삭제',
-    description: '공지사항을 삭제합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '공지사항 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '공지사항 삭제 성공',
-  })
-  async 공지사항을_삭제한다(@Param('id') id: string): Promise<{
-    success: boolean;
-  }> {
-    const result =
-      await this.announcementBusinessService.공지사항을_삭제한다(id);
-    return { success: result };
-  }
-
-  /**
    * 공지사항 카테고리 목록을 조회한다
    */
   @Get('categories')
@@ -494,6 +284,216 @@ export class AnnouncementController {
   ): Promise<{ success: boolean }> {
     const result =
       await this.announcementBusinessService.공지사항_카테고리를_삭제한다(id);
+    return { success: result };
+  }
+
+  /**
+   * 공지사항을 조회한다
+   */
+  @Get(':id')
+  @ApiOperation({
+    summary: '공지사항 상세 조회',
+    description: '특정 공지사항의 상세 정보를 조회합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '공지사항 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 조회 성공',
+    type: AnnouncementResponseDto,
+  })
+  async 공지사항을_조회한다(
+    @Param('id') id: string,
+  ): Promise<AnnouncementResponseDto> {
+    return await this.announcementBusinessService.공지사항을_조회한다(id);
+  }
+
+  /**
+   * 공지사항을 생성한다
+   */
+  @Post()
+  @ApiOperation({
+    summary: '공지사항 생성',
+    description: '새로운 공지사항을 생성합니다.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: '공지사항 생성 성공',
+    type: AnnouncementResponseDto,
+  })
+  async 공지사항을_생성한다(
+    @Body() dto: CreateAnnouncementDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AnnouncementResponseDto> {
+    // 날짜 변환
+    const data = {
+      ...dto,
+      releasedAt: dto.releasedAt ? new Date(dto.releasedAt) : null,
+      expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
+      createdBy: user.id,
+    };
+
+    return await this.announcementBusinessService.공지사항을_생성한다(data);
+  }
+
+  /**
+   * 공지사항 오더를 일괄 수정한다
+   */
+  @Put('batch-order')
+  @ApiOperation({
+    summary: '공지사항 오더 일괄 수정',
+    description:
+      '여러 공지사항의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 공지사항 목록을 전달하면 됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 오더 일괄 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        updatedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (수정할 공지사항이 없음)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '일부 공지사항을 찾을 수 없음',
+  })
+  async 공지사항_오더를_일괄_수정한다(
+    @Body() updateDto: UpdateAnnouncementBatchOrderDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return await this.announcementBusinessService.공지사항_오더를_일괄_수정한다(
+      updateDto.announcements,
+      user.id,
+    );
+  }
+
+  /**
+   * 공지사항을 수정한다
+   */
+  @Put(':id')
+  @ApiOperation({
+    summary: '공지사항 수정',
+    description: '공지사항을 수정합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '공지사항 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 수정 성공',
+    type: AnnouncementResponseDto,
+  })
+  async 공지사항을_수정한다(
+    @Param('id') id: string,
+    @Body() dto: UpdateAnnouncementDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AnnouncementResponseDto> {
+    // 날짜 변환
+    const data: any = { ...dto, updatedBy: user.id };
+    if (dto.releasedAt) {
+      data.releasedAt = new Date(dto.releasedAt);
+    }
+    if (dto.expiredAt) {
+      data.expiredAt = new Date(dto.expiredAt);
+    }
+
+    return await this.announcementBusinessService.공지사항을_수정한다(id, data);
+  }
+
+  /**
+   * 공지사항_공개를_수정한다
+   */
+  @Patch(':id/public')
+  @ApiOperation({
+    summary: '공지사항 공개 상태 수정',
+    description: '공지사항의 공개 상태를 수정합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '공지사항 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 공개 상태 수정 성공',
+    type: AnnouncementResponseDto,
+  })
+  async 공지사항_공개를_수정한다(
+    @Param('id') id: string,
+    @Body() dto: UpdateAnnouncementPublicDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AnnouncementResponseDto> {
+    return await this.announcementBusinessService.공지사항_공개를_수정한다(
+      id,
+      dto.isPublic,
+      user.id,
+    );
+  }
+
+  /**
+   * 공지사항_고정을_수정한다
+   */
+  @Patch(':id/fixed')
+  @ApiOperation({
+    summary: '공지사항 고정 상태 수정',
+    description: '공지사항의 고정 상태를 수정합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '공지사항 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 고정 상태 수정 성공',
+    type: AnnouncementResponseDto,
+  })
+  async 공지사항_고정을_수정한다(
+    @Param('id') id: string,
+    @Body() dto: UpdateAnnouncementFixedDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<AnnouncementResponseDto> {
+    return await this.announcementBusinessService.공지사항_고정을_수정한다(
+      id,
+      dto.isFixed,
+      user.id,
+    );
+  }
+
+  /**
+   * 공지사항을 삭제한다
+   */
+  @Delete(':id')
+  @ApiOperation({
+    summary: '공지사항 삭제',
+    description: '공지사항을 삭제합니다.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: '공지사항 ID',
+    type: String,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '공지사항 삭제 성공',
+  })
+  async 공지사항을_삭제한다(@Param('id') id: string): Promise<{
+    success: boolean;
+  }> {
+    const result =
+      await this.announcementBusinessService.공지사항을_삭제한다(id);
     return { success: result };
   }
 

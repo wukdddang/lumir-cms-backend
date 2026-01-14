@@ -244,32 +244,80 @@ export class AnnouncementService {
 
     if (announcements.length === 0) {
       this.logger.warn('수정할 공지사항이 없습니다.');
-      return { success: false, updatedCount: 0 };
+      throw new Error('수정할 공지사항이 최소 1개 이상 필요합니다.');
     }
+
+    // 트랜잭션 내에서 처리
+    const queryRunner = this.announcementRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
     let updatedCount = 0;
+    const errors: Array<{ id: string; error: string }> = [];
 
-    // 각 공지사항의 순서를 업데이트
-    for (const item of announcements) {
-      try {
-        await this.공지사항을_업데이트한다(item.id, {
-          order: item.order,
-          updatedBy,
-        });
-        updatedCount++;
-      } catch (error) {
-        this.logger.error(
-          `공지사항 오더 업데이트 실패 - ID: ${item.id}, 에러: ${error.message}`,
+    try {
+      // 먼저 모든 ID가 존재하는지 확인
+      const ids = announcements.map((item) => item.id);
+      const existingAnnouncements = await queryRunner.manager.find(Announcement, {
+        where: ids.map((id) => ({ id })),
+      });
+
+      const existingIds = new Set(existingAnnouncements.map((a) => a.id));
+      const missingIds = ids.filter((id) => !existingIds.has(id));
+
+      if (missingIds.length > 0) {
+        throw new NotFoundException(
+          `다음 공지사항을 찾을 수 없습니다: ${missingIds.join(', ')}`,
         );
-        // 하나가 실패해도 나머지는 계속 처리
       }
+
+      // 각 공지사항의 순서를 업데이트
+      for (const item of announcements) {
+        try {
+          await queryRunner.manager.update(
+            Announcement,
+            { id: item.id },
+            {
+              order: item.order,
+              updatedBy,
+              updatedAt: new Date(),
+            },
+          );
+          updatedCount++;
+          this.logger.debug(`공지사항 오더 업데이트 성공 - ID: ${item.id}, Order: ${item.order}`);
+        } catch (error) {
+          this.logger.error(
+            `공지사항 오더 업데이트 실패 - ID: ${item.id}, 에러: ${error.message}`,
+          );
+          errors.push({ id: item.id, error: error.message });
+          // 트랜잭션이므로 하나라도 실패하면 롤백됨
+          throw error;
+        }
+      }
+
+      // 모두 성공하면 커밋
+      await queryRunner.commitTransaction();
+
+      this.logger.log(
+        `공지사항 오더 일괄 업데이트 완료 - 수정된 수: ${updatedCount}`,
+      );
+
+      return {
+        success: true,
+        updatedCount,
+      };
+    } catch (error) {
+      // 에러 발생 시 롤백
+      await queryRunner.rollbackTransaction();
+      
+      this.logger.error(
+        `공지사항 오더 일괄 업데이트 실패 - 롤백됨: ${error.message}`,
+      );
+      
+      throw error;
+    } finally {
+      // QueryRunner 해제
+      await queryRunner.release();
     }
-
-    this.logger.log(`공지사항 오더 일괄 업데이트 완료 - 수정된 수: ${updatedCount}`);
-
-    return {
-      success: updatedCount > 0,
-      updatedCount,
-    };
   }
 }
