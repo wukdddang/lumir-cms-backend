@@ -777,9 +777,12 @@ erDiagram
         varchar type "folder|file"
         uuid parentId "nullable - self-reference"
         int depth "계층 깊이 (0=루트)"
-        text fileUrl "nullable - AWS S3 URL"
+        varchar title "nullable - 문서 제목"
+        text content "nullable - 문서 본문"
+        text fileUrl "nullable - 단일 파일 URL"
         bigint fileSize "nullable"
         varchar mimeType "nullable"
+        jsonb attachments "nullable - 첨부파일 목록"
         boolean isPublic
         jsonb permissionRankCodes "직급"
         jsonb permissionPositionCodes "직책"
@@ -804,6 +807,9 @@ erDiagram
 - **Closure Table**: 모든 조상-자손 관계를 미리 저장하여 조회 성능 극대화
 - **빈번한 이동 최적화**: 폴더/파일 이동 시에도 효율적인 업데이트
 - **파일 타입**: folder (폴더) / file (파일)
+- **파일 유형**:
+  - **문서형**: title + content + attachments (텍스트 위주, 첨부파일 선택)
+  - **첨부파일형**: fileUrl + fileSize + mimeType (파일만 업로드)
 - **AWS S3**: 모든 파일은 S3에 업로드 후 URL 참조
 - **세밀한 권한**: 직급, 직책, 부서별 공개 설정 (Announcement와 동일한 패턴)
 
@@ -1028,5 +1034,5 @@ FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_move();
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.13
+**최종 업데이트**: 2026년 1월 14일  
+**버전**: v5.16

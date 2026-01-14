@@ -529,9 +529,12 @@ erDiagram
         varchar type "folder|file"
         uuid parentId "nullable, self-reference"
         int depth "계층 깊이 (0=루트)"
-        text fileUrl "nullable - AWS S3 URL"
+        varchar title "nullable - 문서 제목 (file일 때만 사용)"
+        text content "nullable - 문서 본문 (file일 때만 사용)"
+        text fileUrl "nullable - 단일 파일 URL (file일 때만 사용)"
         bigint fileSize "nullable - 파일 크기(bytes)"
         varchar mimeType "nullable - MIME 타입"
+        jsonb attachments "nullable - 첨부파일 목록 (file일 때만 사용)"
         boolean isPublic
         jsonb permissionRankCodes "직급 코드 목록"
         jsonb permissionPositionCodes "직책 코드 목록"
@@ -852,6 +855,14 @@ enum WikiPermissionAction {
 
 ## 변경 이력
 
+### v5.16 (2026-01-14)
+- ✅ **WikiFileSystem 문서 기능 추가**
+  - `title` 필드 추가 (문서 제목)
+  - `content` 필드 추가 (문서 본문)
+  - `attachments` 필드 추가 (첨부파일 목록 JSONB)
+  - file 타입에서 문서 작성 및 첨부파일 업로드 동시 지원
+  - folder 타입은 기존대로 name만 사용
+
 ### v5.15 (2026-01-09)
 - ✅ **파일 업로드 방식 변경**
   - Form-data 업로드: 클라이언트가 `multipart/form-data`로 파일 전송
@@ -920,5 +931,5 @@ enum WikiPermissionAction {
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.14
+**최종 업데이트**: 2026년 1월 14일  
+**버전**: v5.16

@@ -676,18 +676,30 @@ ALTER TABLE survey_completion ADD CONSTRAINT chk_completion_valid
 ### WikiFileSystem (위키)
 
 ```sql
--- file 타입은 fileUrl 필수
-ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_url
+-- folder 타입은 모든 파일 관련 필드가 NULL
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_folder_fields
   CHECK (
-    (type = 'file' AND file_url IS NOT NULL) OR
-    (type = 'folder' AND file_url IS NULL)
+    (type = 'folder' AND title IS NULL AND content IS NULL AND file_url IS NULL AND attachments IS NULL) OR
+    (type = 'file')
   );
 
--- file 타입은 fileSize 양수
-ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_size
+-- file 타입은 title, content, fileUrl, attachments 중 최소 하나 필요
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_has_content
   CHECK (
     (type = 'folder') OR
-    (type = 'file' AND file_size > 0)
+    (type = 'file' AND (
+      title IS NOT NULL OR
+      content IS NOT NULL OR
+      file_url IS NOT NULL OR
+      attachments IS NOT NULL
+    ))
+  );
+
+-- fileUrl이 있으면 fileSize 양수
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_size
+  CHECK (
+    (file_url IS NULL) OR
+    (file_url IS NOT NULL AND file_size > 0)
   );
 
 -- depth는 0 이상
@@ -752,6 +764,14 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ---
 
 ## 변경 이력
+
+### v5.16 (2026-01-14)
+- ✅ **WikiFileSystem 문서 기능 추가**
+  - `title` 필드 추가 (문서 제목)
+  - `content` 필드 추가 (문서 본문)
+  - `attachments` 필드 추가 (첨부파일 목록 JSONB)
+  - CHECK 제약조건 업데이트: folder는 모든 파일 필드 NULL, file은 최소 하나 필요
+  - 문서형과 첨부파일형을 모두 지원
 
 ### v5.12 (2026-01-08)
 - ✅ **WikiFileSystem Closure Table 도입**
@@ -845,5 +865,5 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 8일  
-**버전**: v5.13
+**최종 업데이트**: 2026년 1월 14일  
+**버전**: v5.16
