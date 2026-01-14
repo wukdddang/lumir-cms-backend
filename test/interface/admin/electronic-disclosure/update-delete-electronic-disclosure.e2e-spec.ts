@@ -75,11 +75,10 @@ describe('UPDATE & DELETE /api/admin/electronic-disclosures (전자공시 수정
   });
 
   describe('전자공시 수정', () => {
-    it('전자공시의 공개 여부와 상태를 수정해야 한다', async () => {
+    it('전자공시의 공개 여부를 수정해야 한다', async () => {
       // Given
       const updateDto = {
         isPublic: true,
-        status: 'under_review',
       };
 
       // When
@@ -93,7 +92,6 @@ describe('UPDATE & DELETE /api/admin/electronic-disclosures (전자공시 수정
       expect(response.body).toMatchObject({
         id: disclosureId,
         isPublic: true,
-        status: 'under_review',
       });
     });
 

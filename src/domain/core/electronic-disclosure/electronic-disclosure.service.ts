@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { ElectronicDisclosure } from './electronic-disclosure.entity';
 import { ElectronicDisclosureTranslation } from './electronic-disclosure-translation.entity';
-import { ContentStatus } from '../content-status.types';
 
 /**
  * 전자공시 서비스
@@ -44,7 +43,6 @@ export class ElectronicDisclosureService {
    * 모든 전자공시를 조회한다
    */
   async 모든_전자공시를_조회한다(options?: {
-    status?: ContentStatus;
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
   }): Promise<ElectronicDisclosure[]> {
@@ -54,14 +52,8 @@ export class ElectronicDisclosureService {
       'disclosure',
     );
 
-    if (options?.status) {
-      queryBuilder.where('disclosure.status = :status', {
-        status: options.status,
-      });
-    }
-
     if (options?.isPublic !== undefined) {
-      queryBuilder.andWhere('disclosure.isPublic = :isPublic', {
+      queryBuilder.where('disclosure.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
     }
@@ -128,19 +120,6 @@ export class ElectronicDisclosureService {
   }
 
   /**
-   * 전자공시 상태를 변경한다
-   */
-  async 전자공시_상태를_변경한다(
-    id: string,
-    status: ContentStatus,
-    updatedBy?: string,
-  ): Promise<ElectronicDisclosure> {
-    this.logger.log(`전자공시 상태 변경 - ID: ${id}, 상태: ${status}`);
-
-    return await this.전자공시를_업데이트한다(id, { status, updatedBy });
-  }
-
-  /**
    * 전자공시 공개 여부를 변경한다
    */
   async 전자공시_공개_여부를_변경한다(
@@ -192,7 +171,6 @@ export class ElectronicDisclosureService {
     return await this.electronicDisclosureRepository.find({
       where: {
         isPublic: true,
-        status: ContentStatus.OPENED,
       },
       order: {
         order: 'ASC',

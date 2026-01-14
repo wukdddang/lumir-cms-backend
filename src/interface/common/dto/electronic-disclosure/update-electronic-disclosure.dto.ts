@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsEnum,
   IsBoolean,
   IsNumber,
   IsArray,
@@ -9,7 +8,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContentStatus } from '@domain/core/content-status.types';
 import { ElectronicDisclosureAttachmentDto } from './create-electronic-disclosure.dto';
 
 /**
@@ -43,15 +41,6 @@ export class UpdateElectronicDisclosureDto {
   @IsOptional()
   @IsBoolean()
   isPublic?: boolean;
-
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(ContentStatus)
-  status?: ContentStatus;
 
   @ApiProperty({ description: '정렬 순서', example: 1, required: false })
   @IsOptional()

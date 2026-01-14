@@ -53,8 +53,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
       // Then
       expect(response.body).toMatchObject({
         id: expect.any(String),
-        isPublic: false, // 기본값
-        status: 'draft', // 기본값
+        isPublic: true, // 기본값
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });

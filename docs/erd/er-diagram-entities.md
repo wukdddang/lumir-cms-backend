@@ -232,10 +232,9 @@ erDiagram
     ElectronicDisclosure {
         uuid id PK
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         int order
     }
-    
+
     ElectronicDisclosureTranslation {
         uuid id PK
         uuid electronicDisclosureId UK "FK"
@@ -243,19 +242,18 @@ erDiagram
         varchar title
         text description "간단한 설명"
     }
-    
+
     Language {
         uuid id PK
         varchar code
     }
-    
+
     ElectronicDisclosure ||--o{ ElectronicDisclosureTranslation : "translates"
     ElectronicDisclosureTranslation }o--|| Language : "in"
 ```
 
 **특징**:
 - **다국어 지원**: ElectronicDisclosureTranslation
-- **상태 관리**: ContentStatus enum 사용
 
 ---
 

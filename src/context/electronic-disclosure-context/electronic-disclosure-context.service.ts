@@ -115,10 +115,9 @@ export class ElectronicDisclosureContextService {
     // 4. 다음 순서 계산
     const nextOrder = await this.electronicDisclosureService.다음_순서를_계산한다();
 
-    // 5. 전자공시 생성 (기본값: 비공개, DRAFT 상태)
+    // 5. 전자공시 생성 (기본값: 공개)
     const disclosure = await this.electronicDisclosureService.전자공시를_생성한다({
-      isPublic: false,
-      status: 'draft' as any,
+      isPublic: true,
       order: nextOrder,
       attachments: attachments || null,
       createdBy,
@@ -178,7 +177,6 @@ export class ElectronicDisclosureContextService {
     id: string,
     data: {
       isPublic?: boolean;
-      status?: string;
       order?: number;
       translations?: Array<{
         id?: string;
@@ -194,7 +192,6 @@ export class ElectronicDisclosureContextService {
     // 전자공시 업데이트
     const updateData: any = {};
     if (data.isPublic !== undefined) updateData.isPublic = data.isPublic;
-    if (data.status) updateData.status = data.status;
     if (data.order !== undefined) updateData.order = data.order;
     if (data.updatedBy) updateData.updatedBy = data.updatedBy;
 

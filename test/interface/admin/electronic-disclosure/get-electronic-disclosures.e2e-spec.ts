@@ -51,8 +51,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       expect(response.body.length).toBe(3);
       expect(response.body[0]).toMatchObject({
         id: expect.any(String),
-        isPublic: false,
-        status: 'draft',
+        isPublic: true,
       });
     });
   });
@@ -138,8 +137,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       // Then
       expect(response.body).toMatchObject({
         id: disclosureIds[0],
-        isPublic: false,
-        status: 'draft',
+        isPublic: true,
       });
       // 한국어 + 자동 생성된 언어(들)
       expect(response.body.translations.length).toBeGreaterThanOrEqual(1);

@@ -282,7 +282,6 @@ export class ElectronicDisclosureBusinessService {
         return {
           id: disclosure.id,
           isPublic: disclosure.isPublic,
-          status: disclosure.status,
           order: disclosure.order,
           title: koreanTranslation?.title || '',
           description: koreanTranslation?.description || null,

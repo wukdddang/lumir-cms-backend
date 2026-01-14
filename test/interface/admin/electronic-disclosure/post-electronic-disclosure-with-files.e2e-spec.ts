@@ -24,8 +24,7 @@ describe('[E2E] PATCH /api/admin/electronic-disclosures/:id/files - 파일 업�
     // 테스트용 전자공시 데이터 직접 생성
     const dataSource = testHelper['dataSource'];
     const disclosure = dataSource.getRepository(ElectronicDisclosure).create({
-      isPublic: false,
-      status: 'draft' as any,
+      isPublic: true,
       order: 0,
       createdBy: 'test-user',
     });
