@@ -115,6 +115,8 @@ export class AnnouncementContextService {
     orderBy?: 'order' | 'createdAt';
     page?: number;
     limit?: number;
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<AnnouncementListResult> {
     const query = new GetAnnouncementListQuery(
       params.isPublic,
@@ -122,6 +124,8 @@ export class AnnouncementContextService {
       params.orderBy || 'order',
       params.page || 1,
       params.limit || 10,
+      params.startDate,
+      params.endDate,
     );
     return await this.queryBus.execute(query);
   }

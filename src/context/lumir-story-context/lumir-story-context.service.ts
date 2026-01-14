@@ -103,8 +103,10 @@ export class LumirStoryContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<LumirStoryListResult> {
-    const query = new GetLumirStoryListQuery(isPublic, orderBy, page, limit);
+    const query = new GetLumirStoryListQuery(isPublic, orderBy, page, limit, startDate, endDate);
     return await this.queryBus.execute(query);
   }
 

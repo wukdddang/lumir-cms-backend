@@ -14,6 +14,8 @@ export class GetLumirStoryListQuery {
     public readonly orderBy: 'order' | 'createdAt' = 'order',
     public readonly page: number = 1,
     public readonly limit: number = 10,
+    public readonly startDate?: Date,
+    public readonly endDate?: Date,
   ) {}
 }
 
@@ -32,7 +34,7 @@ export class GetLumirStoryListHandler
   ) {}
 
   async execute(query: GetLumirStoryListQuery): Promise<LumirStoryListResult> {
-    const { isPublic, orderBy, page, limit } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
 
     this.logger.debug(
       `루미르스토리 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
@@ -41,8 +43,29 @@ export class GetLumirStoryListHandler
     const queryBuilder =
       this.lumirStoryRepository.createQueryBuilder('lumirStory');
 
+    let hasWhere = false;
+
     if (isPublic !== undefined) {
       queryBuilder.where('lumirStory.isPublic = :isPublic', { isPublic });
+      hasWhere = true;
+    }
+
+    if (startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('lumirStory.createdAt >= :startDate', { startDate });
+      } else {
+        queryBuilder.where('lumirStory.createdAt >= :startDate', { startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('lumirStory.createdAt <= :endDate', { endDate });
+      } else {
+        queryBuilder.where('lumirStory.createdAt <= :endDate', { endDate });
+        hasWhere = true;
+      }
     }
 
     if (orderBy === 'order') {

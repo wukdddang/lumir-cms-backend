@@ -230,6 +230,8 @@ export class IRBusinessService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: IRListItemDto[];
     total: number;
@@ -246,6 +248,8 @@ export class IRBusinessService {
       orderBy,
       page,
       limit,
+      startDate,
+      endDate,
     );
 
     const totalPages = Math.ceil(result.total / limit);

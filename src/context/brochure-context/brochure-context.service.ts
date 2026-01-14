@@ -110,8 +110,10 @@ export class BrochureContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<BrochureListResult> {
-    const query = new GetBrochureListQuery(isPublic, orderBy, page, limit);
+    const query = new GetBrochureListQuery(isPublic, orderBy, page, limit, startDate, endDate);
     return await this.queryBus.execute(query);
   }
 

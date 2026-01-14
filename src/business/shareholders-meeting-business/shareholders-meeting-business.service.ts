@@ -288,6 +288,8 @@ export class ShareholdersMeetingBusinessService {
     orderBy: 'order' | 'meetingDate' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: any[];
     total: number;
@@ -305,6 +307,8 @@ export class ShareholdersMeetingBusinessService {
         orderBy,
         page,
         limit,
+        startDate,
+        endDate,
       );
 
     const totalPages = Math.ceil(result.total / limit);

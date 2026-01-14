@@ -65,6 +65,8 @@ export class AnnouncementBusinessService {
     orderBy?: 'order' | 'createdAt';
     page?: number;
     limit?: number;
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<{
     items: Announcement[];
     total: number;

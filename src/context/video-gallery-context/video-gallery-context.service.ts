@@ -103,8 +103,10 @@ export class VideoGalleryContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<VideoGalleryListResult> {
-    const query = new GetVideoGalleryListQuery(isPublic, orderBy, page, limit);
+    const query = new GetVideoGalleryListQuery(isPublic, orderBy, page, limit, startDate, endDate);
     return await this.queryBus.execute(query);
   }
 

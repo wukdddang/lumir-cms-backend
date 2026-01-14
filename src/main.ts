@@ -58,7 +58,7 @@ async function bootstrap() {
     version: '1.0',
     path: 'admin/api-docs',
     tags: [
-      { name: '인증', description: 'SSO 로그인 및 인증 API' },
+      { name: '공통. 인증', description: 'SSO 로그인 및 인증 API' },
       { name: '공통. 관리자 - 언어', description: '언어 관리 API' },
       { name: '공통. 관리자 - 회사 관련', description: 'SSO 조직 정보 API' },
       { name: 'A-1. 관리자 - 브로슈어', description: '브로슈어 관리 API' },

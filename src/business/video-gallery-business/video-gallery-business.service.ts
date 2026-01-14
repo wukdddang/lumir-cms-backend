@@ -34,6 +34,8 @@ export class VideoGalleryBusinessService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: VideoGallery[];
     total: number;
@@ -50,6 +52,8 @@ export class VideoGalleryBusinessService {
       orderBy,
       page,
       limit,
+      startDate,
+      endDate,
     );
 
     const totalPages = Math.ceil(result.total / limit);

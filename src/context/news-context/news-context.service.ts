@@ -98,8 +98,10 @@ export class NewsContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<NewsListResult> {
-    const query = new GetNewsListQuery(isPublic, orderBy, page, limit);
+    const query = new GetNewsListQuery(isPublic, orderBy, page, limit, startDate, endDate);
     return await this.queryBus.execute(query);
   }
 

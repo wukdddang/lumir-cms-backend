@@ -43,6 +43,8 @@ export class MainPopupService {
   async 모든_메인_팝업을_조회한다(options?: {
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<MainPopup[]> {
     this.logger.debug(`메인 팝업 목록 조회`);
 
@@ -51,10 +53,31 @@ export class MainPopupService {
       .leftJoinAndSelect('popup.translations', 'translations')
       .leftJoinAndSelect('translations.language', 'language');
 
+    let hasWhere = false;
+
     if (options?.isPublic !== undefined) {
       queryBuilder.where('popup.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
+      hasWhere = true;
+    }
+
+    if (options?.startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('popup.createdAt >= :startDate', { startDate: options.startDate });
+      } else {
+        queryBuilder.where('popup.createdAt >= :startDate', { startDate: options.startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (options?.endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('popup.createdAt <= :endDate', { endDate: options.endDate });
+      } else {
+        queryBuilder.where('popup.createdAt <= :endDate', { endDate: options.endDate });
+        hasWhere = true;
+      }
     }
 
     const orderBy = options?.orderBy || 'order';

@@ -251,6 +251,8 @@ export class ElectronicDisclosureBusinessService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: ElectronicDisclosureListItemDto[];
     total: number;
@@ -268,6 +270,8 @@ export class ElectronicDisclosureBusinessService {
         orderBy,
         page,
         limit,
+        startDate,
+        endDate,
       );
 
     const totalPages = Math.ceil(result.total / limit);

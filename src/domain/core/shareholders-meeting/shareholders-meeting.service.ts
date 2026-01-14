@@ -46,16 +46,39 @@ export class ShareholdersMeetingService {
   async 모든_주주총회를_조회한다(options?: {
     isPublic?: boolean;
     orderBy?: 'order' | 'meetingDate' | 'createdAt';
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<ShareholdersMeeting[]> {
     this.logger.debug(`주주총회 목록 조회`);
 
     const queryBuilder =
       this.shareholdersMeetingRepository.createQueryBuilder('meeting');
 
+    let hasWhere = false;
+
     if (options?.isPublic !== undefined) {
       queryBuilder.where('meeting.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
+      hasWhere = true;
+    }
+
+    if (options?.startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('meeting.createdAt >= :startDate', { startDate: options.startDate });
+      } else {
+        queryBuilder.where('meeting.createdAt >= :startDate', { startDate: options.startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (options?.endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('meeting.createdAt <= :endDate', { endDate: options.endDate });
+      } else {
+        queryBuilder.where('meeting.createdAt <= :endDate', { endDate: options.endDate });
+        hasWhere = true;
+      }
     }
 
     const orderBy = options?.orderBy || 'meetingDate';

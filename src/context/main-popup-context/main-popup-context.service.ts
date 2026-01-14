@@ -275,6 +275,8 @@ export class MainPopupContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: MainPopup[];
     total: number;
@@ -290,6 +292,8 @@ export class MainPopupContextService {
     const allPopups = await this.mainPopupService.모든_메인_팝업을_조회한다({
       isPublic,
       orderBy,
+      startDate,
+      endDate,
     });
 
     // 페이징 적용

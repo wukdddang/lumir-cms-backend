@@ -34,6 +34,8 @@ export class LumirStoryBusinessService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: LumirStory[];
     total: number;
@@ -50,6 +52,8 @@ export class LumirStoryBusinessService {
       orderBy,
       page,
       limit,
+      startDate,
+      endDate,
     );
 
     const totalPages = Math.ceil(result.total / limit);

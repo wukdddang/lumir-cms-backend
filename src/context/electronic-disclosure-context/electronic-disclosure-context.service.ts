@@ -288,6 +288,8 @@ export class ElectronicDisclosureContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: ElectronicDisclosure[];
     total: number;
@@ -304,6 +306,8 @@ export class ElectronicDisclosureContextService {
       await this.electronicDisclosureService.모든_전자공시를_조회한다({
         isPublic,
         orderBy,
+        startDate,
+        endDate,
       });
 
     // 페이징 적용

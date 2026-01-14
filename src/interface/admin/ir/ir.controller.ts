@@ -81,11 +81,27 @@ export class IRController {
     type: Number,
     example: 10,
   })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: '시작일 (YYYY-MM-DD 형식)',
+    type: String,
+    example: '2024-01-01',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: '종료일 (YYYY-MM-DD 형식)',
+    type: String,
+    example: '2024-12-31',
+  })
   async IR_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<IRListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
@@ -97,6 +113,8 @@ export class IRController {
       orderBy || 'order',
       pageNum,
       limitNum,
+      startDate ? new Date(startDate) : undefined,
+      endDate ? new Date(endDate) : undefined,
     );
 
     return result;

@@ -14,6 +14,8 @@ export class GetNewsListQuery {
     public readonly orderBy: 'order' | 'createdAt' = 'order',
     public readonly page: number = 1,
     public readonly limit: number = 10,
+    public readonly startDate?: Date,
+    public readonly endDate?: Date,
   ) {}
 }
 
@@ -30,7 +32,7 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
   ) {}
 
   async execute(query: GetNewsListQuery): Promise<NewsListResult> {
-    const { isPublic, orderBy, page, limit } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
 
     this.logger.debug(
       `뉴스 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
@@ -38,8 +40,29 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
 
     const queryBuilder = this.newsRepository.createQueryBuilder('news');
 
+    let hasWhere = false;
+
     if (isPublic !== undefined) {
       queryBuilder.where('news.isPublic = :isPublic', { isPublic });
+      hasWhere = true;
+    }
+
+    if (startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('news.createdAt >= :startDate', { startDate });
+      } else {
+        queryBuilder.where('news.createdAt >= :startDate', { startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('news.createdAt <= :endDate', { endDate });
+      } else {
+        queryBuilder.where('news.createdAt <= :endDate', { endDate });
+        hasWhere = true;
+      }
     }
 
     if (orderBy === 'order') {

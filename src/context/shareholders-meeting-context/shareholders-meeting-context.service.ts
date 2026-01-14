@@ -529,6 +529,8 @@ export class ShareholdersMeetingContextService {
     orderBy: 'order' | 'meetingDate' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: ShareholdersMeeting[];
     total: number;
@@ -545,6 +547,8 @@ export class ShareholdersMeetingContextService {
       await this.shareholdersMeetingService.모든_주주총회를_조회한다({
         isPublic,
         orderBy,
+        startDate,
+        endDate,
       });
 
     // 페이징 적용

@@ -45,6 +45,8 @@ export class ElectronicDisclosureService {
   async 모든_전자공시를_조회한다(options?: {
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
+    startDate?: Date;
+    endDate?: Date;
   }): Promise<ElectronicDisclosure[]> {
     this.logger.debug(`전자공시 목록 조회`);
 
@@ -52,10 +54,31 @@ export class ElectronicDisclosureService {
       'disclosure',
     );
 
+    let hasWhere = false;
+
     if (options?.isPublic !== undefined) {
       queryBuilder.where('disclosure.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
+      hasWhere = true;
+    }
+
+    if (options?.startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('disclosure.createdAt >= :startDate', { startDate: options.startDate });
+      } else {
+        queryBuilder.where('disclosure.createdAt >= :startDate', { startDate: options.startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (options?.endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('disclosure.createdAt <= :endDate', { endDate: options.endDate });
+      } else {
+        queryBuilder.where('disclosure.createdAt <= :endDate', { endDate: options.endDate });
+        hasWhere = true;
+      }
     }
 
     const orderBy = options?.orderBy || 'order';

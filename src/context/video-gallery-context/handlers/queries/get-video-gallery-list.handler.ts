@@ -14,6 +14,8 @@ export class GetVideoGalleryListQuery {
     public readonly orderBy: 'order' | 'createdAt' = 'order',
     public readonly page: number = 1,
     public readonly limit: number = 10,
+    public readonly startDate?: Date,
+    public readonly endDate?: Date,
   ) {}
 }
 
@@ -32,7 +34,7 @@ export class GetVideoGalleryListHandler
   ) {}
 
   async execute(query: GetVideoGalleryListQuery): Promise<VideoGalleryListResult> {
-    const { isPublic, orderBy, page, limit } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
 
     this.logger.debug(
       `비디오갤러리 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
@@ -41,8 +43,29 @@ export class GetVideoGalleryListHandler
     const queryBuilder =
       this.videoGalleryRepository.createQueryBuilder('videoGallery');
 
+    let hasWhere = false;
+
     if (isPublic !== undefined) {
       queryBuilder.where('videoGallery.isPublic = :isPublic', { isPublic });
+      hasWhere = true;
+    }
+
+    if (startDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('videoGallery.createdAt >= :startDate', { startDate });
+      } else {
+        queryBuilder.where('videoGallery.createdAt >= :startDate', { startDate });
+        hasWhere = true;
+      }
+    }
+
+    if (endDate) {
+      if (hasWhere) {
+        queryBuilder.andWhere('videoGallery.createdAt <= :endDate', { endDate });
+      } else {
+        queryBuilder.where('videoGallery.createdAt <= :endDate', { endDate });
+        hasWhere = true;
+      }
     }
 
     if (orderBy === 'order') {

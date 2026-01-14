@@ -14,6 +14,8 @@ export class GetBrochureListQuery {
     public readonly orderBy: 'order' | 'createdAt' = 'order',
     public readonly page: number = 1,
     public readonly limit: number = 10,
+    public readonly startDate?: Date,
+    public readonly endDate?: Date,
   ) {}
 }
 
@@ -30,7 +32,7 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
   ) {}
 
   async execute(query: GetBrochureListQuery): Promise<BrochureListResult> {
-    const { isPublic, orderBy, page, limit } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
 
     this.logger.debug(
       `브로슈어 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
@@ -55,6 +57,14 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
 
     if (isPublic !== undefined) {
       queryBuilder.andWhere('brochure.isPublic = :isPublic', { isPublic });
+    }
+
+    if (startDate) {
+      queryBuilder.andWhere('brochure.createdAt >= :startDate', { startDate });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere('brochure.createdAt <= :endDate', { endDate });
     }
 
     if (orderBy === 'order') {

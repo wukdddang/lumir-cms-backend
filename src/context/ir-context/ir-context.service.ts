@@ -277,6 +277,8 @@ export class IRContextService {
     orderBy: 'order' | 'createdAt' = 'order',
     page: number = 1,
     limit: number = 10,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<{
     items: IR[];
     total: number;
@@ -292,6 +294,8 @@ export class IRContextService {
     const allIRs = await this.irService.모든_IR을_조회한다({
       isPublic,
       orderBy,
+      startDate,
+      endDate,
     });
 
     // 페이징 적용
