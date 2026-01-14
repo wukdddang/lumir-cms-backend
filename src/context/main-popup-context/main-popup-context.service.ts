@@ -115,10 +115,9 @@ export class MainPopupContextService {
     // 4. 다음 순서 계산
     const nextOrder = await this.mainPopupService.다음_순서를_계산한다();
 
-    // 5. 메인 팝업 생성 (기본값: 비공개, DRAFT 상태)
+    // 5. 메인 팝업 생성 (기본값: 공개)
     const popup = await this.mainPopupService.메인_팝업을_생성한다({
-      isPublic: false,
-      status: 'draft' as any,
+      isPublic: true,
       order: nextOrder,
       attachments: attachments || null,
       createdBy,
@@ -176,7 +175,6 @@ export class MainPopupContextService {
     id: string,
     data: {
       isPublic?: boolean;
-      status?: string;
       order?: number;
       translations?: Array<{
         id?: string;
@@ -192,7 +190,6 @@ export class MainPopupContextService {
     // 메인 팝업 업데이트
     const updateData: any = {};
     if (data.isPublic !== undefined) updateData.isPublic = data.isPublic;
-    if (data.status) updateData.status = data.status;
     if (data.order !== undefined) updateData.order = data.order;
     if (data.updatedBy) updateData.updatedBy = data.updatedBy;
 

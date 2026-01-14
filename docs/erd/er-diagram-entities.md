@@ -454,7 +454,6 @@ function canSubmitSurvey(
 erDiagram
     MainPopup {
         uuid id PK
-        varchar status "draft|approved|under_review|rejected|opened"
         boolean isPublic
         timestamp releasedAt "nullable"
         jsonb attachments "nullable"

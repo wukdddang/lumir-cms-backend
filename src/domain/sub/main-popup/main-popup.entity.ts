@@ -1,6 +1,5 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
-import { ContentStatus } from '../../core/content-status.types';
 import { MainPopupTranslation } from './main-popup-translation.entity';
 
 /**
@@ -10,19 +9,10 @@ import { MainPopupTranslation } from './main-popup-translation.entity';
  * 다국어 지원: MainPopupTranslation
  */
 @Entity('main_popups')
-@Index('idx_main_popup_status', ['status'])
 @Index('idx_main_popup_is_public', ['isPublic'])
 @Index('idx_main_popup_released_at', ['releasedAt'])
 @Index('idx_main_popup_order', ['order'])
 export class MainPopup extends BaseEntity<MainPopup> {
-  @Column({
-    type: 'enum',
-    enum: ContentStatus,
-    default: ContentStatus.DRAFT,
-    comment: '상태 (draft|approved|under_review|rejected|opened)',
-  })
-  status: ContentStatus;
-
   @Column({
     type: 'boolean',
     default: true,

@@ -273,7 +273,6 @@ export class MainPopupBusinessService {
       return {
         id: popup.id,
         isPublic: popup.isPublic,
-        status: popup.status,
         order: popup.order,
         title: koreanTranslation?.title || '',
         description: koreanTranslation?.description || null,

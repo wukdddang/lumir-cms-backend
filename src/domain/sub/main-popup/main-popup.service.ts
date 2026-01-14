@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { MainPopup } from './main-popup.entity';
 import { MainPopupTranslation } from './main-popup-translation.entity';
-import { ContentStatus } from '../../core/content-status.types';
 
 /**
  * MainPopup 서비스
@@ -42,7 +41,6 @@ export class MainPopupService {
    * 모든 메인 팝업을 조회한다
    */
   async 모든_메인_팝업을_조회한다(options?: {
-    status?: ContentStatus;
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
   }): Promise<MainPopup[]> {
@@ -53,14 +51,8 @@ export class MainPopupService {
       .leftJoinAndSelect('popup.translations', 'translations')
       .leftJoinAndSelect('translations.language', 'language');
 
-    if (options?.status) {
-      queryBuilder.where('popup.status = :status', {
-        status: options.status,
-      });
-    }
-
     if (options?.isPublic !== undefined) {
-      queryBuilder.andWhere('popup.isPublic = :isPublic', {
+      queryBuilder.where('popup.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
     }
@@ -175,7 +167,6 @@ export class MainPopupService {
     return await this.mainPopupRepository.find({
       where: {
         isPublic: true,
-        status: ContentStatus.OPENED,
       },
       order: {
         order: 'ASC',
