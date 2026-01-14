@@ -301,11 +301,10 @@ erDiagram
     Brochure {
         uuid id PK
         boolean isPublic
-        varchar status "draft|approved|under_review|rejected|opened"
         jsonb attachments "nullable - 첨부파일"
         int order
     }
-    
+
     BrochureTranslation {
         uuid id PK
         uuid brochureId UK "FK"
@@ -313,12 +312,12 @@ erDiagram
         varchar title
         text description "간단한 설명"
     }
-    
+
     Language {
         uuid id PK
         varchar code
     }
-    
+
     Brochure ||--o{ BrochureTranslation : "translates"
     BrochureTranslation }o--|| Language : "in"
 ```

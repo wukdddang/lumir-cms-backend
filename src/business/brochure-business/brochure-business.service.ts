@@ -63,7 +63,6 @@ export class BrochureBusinessService {
       return {
         id: brochure.id,
         isPublic: brochure.isPublic,
-        status: brochure.status,
         order: brochure.order,
         title: koreanTranslation?.title || '',
         description: koreanTranslation?.description || null,

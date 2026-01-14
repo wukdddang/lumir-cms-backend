@@ -6,7 +6,6 @@ import { BrochureService } from '@domain/core/brochure/brochure.service';
 import { LanguageService } from '@domain/common/language/language.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 기본 브로슈어 생성 커맨드
@@ -45,7 +44,6 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
     const defaultBrochures = [
       {
         isPublic: true,
-        status: ContentStatus.OPENED,
         order: 1,
         translations: {
           ko: {
@@ -82,7 +80,6 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
       },
       {
         isPublic: true,
-        status: ContentStatus.OPENED,
         order: 2,
         translations: {
           ko: {
@@ -113,7 +110,6 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
       },
       {
         isPublic: false,
-        status: ContentStatus.DRAFT,
         order: 3,
         translations: {
           ko: {
@@ -135,7 +131,6 @@ export class InitializeDefaultBrochuresHandler implements ICommandHandler<Initia
       // 브로슈어 생성
       const savedBrochure = await this.brochureService.브로슈어를_생성한다({
         isPublic: brochureData.isPublic,
-        status: brochureData.status,
         order: brochureData.order,
         attachments:
           brochureData.attachments.length > 0 ? brochureData.attachments : null,

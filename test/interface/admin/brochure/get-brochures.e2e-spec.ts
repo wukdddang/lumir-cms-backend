@@ -42,15 +42,11 @@ describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
       // Given
       const brochures = [
         {
-          isPublic: false, // 기본값은 false
-          status: 'draft',
           translations: [
             { languageId, title: '브로슈어 1', description: '설명 1' },
           ],
         },
         {
-          isPublic: false, // 기본값은 false
-          status: 'approved',
           translations: [
             { languageId, title: '브로슈어 2', description: '설명 2' },
           ],
@@ -106,8 +102,6 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
         .request()
         .post('/api/admin/brochures')
         .send({
-          isPublic: false, // 기본값은 false
-          status: 'draft',
           translations: [
             {
               languageId,
@@ -128,8 +122,7 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
       // Then
       expect(response.body).toMatchObject({
         id: brochureId,
-        isPublic: false, // 기본값 확인
-        status: 'draft',
+        isPublic: true, // 기본값 확인
       });
       expect(response.body.translations).toHaveLength(1);
       expect(response.body.translations[0]).toMatchObject({

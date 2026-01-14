@@ -40,9 +40,6 @@ export class UpdateBrochureHandler implements ICommandHandler<UpdateBrochureComm
     if (data.isPublic !== undefined) {
       updateData.isPublic = data.isPublic;
     }
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-    }
     if (data.order !== undefined) {
       updateData.order = data.order;
     }

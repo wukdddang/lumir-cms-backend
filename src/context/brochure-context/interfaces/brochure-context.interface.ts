@@ -1,6 +1,5 @@
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { ContentStatus } from '@domain/core/content-status.types';
 import { LanguageCode } from '@domain/common/language/language-code.types';
 
 /**
@@ -28,7 +27,6 @@ export interface CreateBrochureDto {
  */
 export interface UpdateBrochureDto {
   isPublic?: boolean;
-  status?: ContentStatus;
   order?: number;
   attachments?: Array<{
     fileName: string;
@@ -87,7 +85,6 @@ export interface UpdateBrochureFileDto {
 export interface CreateBrochureResult {
   id: string;
   isPublic: boolean;
-  status: ContentStatus;
   order: number;
   createdAt: Date;
 }

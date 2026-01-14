@@ -1,6 +1,5 @@
 import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
-import { ContentStatus } from '../content-status.types';
 import { BrochureTranslation } from './brochure-translation.entity';
 
 /**
@@ -10,7 +9,6 @@ import { BrochureTranslation } from './brochure-translation.entity';
  * 다국어 지원: BrochureTranslation
  */
 @Entity('brochures')
-@Index('idx_brochure_status', ['status'])
 @Index('idx_brochure_is_public', ['isPublic'])
 @Index('idx_brochure_order', ['order'])
 export class Brochure extends BaseEntity<Brochure> {
@@ -20,14 +18,6 @@ export class Brochure extends BaseEntity<Brochure> {
     comment: '공개 여부',
   })
   isPublic: boolean;
-
-  @Column({
-    type: 'enum',
-    enum: ContentStatus,
-    default: ContentStatus.DRAFT,
-    comment: '상태 (draft|approved|under_review|rejected|opened)',
-  })
-  status: ContentStatus;
 
   @Column({
     type: 'jsonb',

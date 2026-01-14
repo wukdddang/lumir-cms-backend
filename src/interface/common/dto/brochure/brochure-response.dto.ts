@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 브로슈어 번역 응답 DTO
@@ -48,13 +47,6 @@ export class BrochureResponseDto {
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
 
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    example: ContentStatus.OPENED,
-  })
-  status: ContentStatus;
-
   @ApiProperty({ description: '정렬 순서', example: 1 })
   order: number;
 
@@ -94,13 +86,6 @@ export class BrochureListItemDto {
 
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
-
-  @ApiProperty({
-    description: '상태',
-    enum: ContentStatus,
-    example: ContentStatus.OPENED,
-  })
-  status: ContentStatus;
 
   @ApiProperty({ description: '정렬 순서', example: 1 })
   order: number;

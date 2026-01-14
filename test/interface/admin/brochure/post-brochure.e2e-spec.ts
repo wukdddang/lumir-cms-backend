@@ -27,8 +27,6 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
     it('유효한 데이터로 브로슈어를 생성해야 한다', async () => {
       // Given
       const createDto = {
-        isPublic: false, // 기본값은 false
-        status: 'draft',
         translations: [
           {
             languageId,
@@ -48,8 +46,7 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
       // Then
       expect(response.body).toMatchObject({
         id: expect.any(String),
-        isPublic: false, // 기본값 확인
-        status: 'draft',
+        isPublic: true, // 기본값 확인
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
@@ -70,8 +67,6 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
       const enLanguageId = enLangResponse.body.id;
 
       const createDto = {
-        isPublic: true,
-        status: 'draft',
         translations: [
           {
             languageId,
@@ -100,8 +95,6 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
     it('description 없이 브로슈어를 생성해야 한다', async () => {
       // Given
       const createDto = {
-        isPublic: true,
-        status: 'draft',
         translations: [
           {
             languageId,
@@ -125,10 +118,7 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
   describe('실패 케이스 - 필수 필드 누락', () => {
     it('translations가 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
-      const createDto = {
-        isPublic: true,
-        status: 'draft',
-      };
+      const createDto = {};
 
       // When & Then
       await testSuite
@@ -165,8 +155,6 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
     it('존재하지 않는 languageId로 생성 시 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
-        isPublic: true,
-        status: 'draft',
         translations: [
           {
             languageId: '00000000-0000-0000-0000-000000000001',
@@ -184,27 +172,5 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
       expect([400, 404, 500]).toContain(response.status);
     });
 
-    it('잘못된 status 값으로 생성 시 400 에러가 발생해야 한다', async () => {
-      // Given
-      const createDto = {
-        isPublic: false,
-        status: 'invalid_status', // 잘못된 status (ContentStatus enum에 없음)
-        translations: [
-          {
-            languageId,
-            title: '테스트',
-          },
-        ],
-      };
-
-      // When
-      const response = await testSuite
-        .request()
-        .post('/api/admin/brochures')
-        .send(createDto);
-      
-      // Status validation은 현재 없을 수 있으므로 201도 허용
-      expect([201, 400]).toContain(response.status);
-    });
   });
 });

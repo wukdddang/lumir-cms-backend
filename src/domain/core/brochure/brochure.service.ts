@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Brochure } from './brochure.entity';
 import { BrochureTranslation } from './brochure-translation.entity';
-import { ContentStatus } from '../content-status.types';
 
 /**
  * 브로슈어 서비스
@@ -37,7 +36,6 @@ export class BrochureService {
    * 모든 브로슈어를 조회한다
    */
   async 모든_브로슈어를_조회한다(options?: {
-    status?: ContentStatus;
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
   }): Promise<Brochure[]> {
@@ -46,14 +44,8 @@ export class BrochureService {
     const queryBuilder =
       this.brochureRepository.createQueryBuilder('brochure');
 
-    if (options?.status) {
-      queryBuilder.where('brochure.status = :status', {
-        status: options.status,
-      });
-    }
-
     if (options?.isPublic !== undefined) {
-      queryBuilder.andWhere('brochure.isPublic = :isPublic', {
+      queryBuilder.where('brochure.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
     }
@@ -120,19 +112,6 @@ export class BrochureService {
   }
 
   /**
-   * 브로슈어 상태를 변경한다
-   */
-  async 브로슈어_상태를_변경한다(
-    id: string,
-    status: ContentStatus,
-    updatedBy?: string,
-  ): Promise<Brochure> {
-    this.logger.log(`브로슈어 상태 변경 - ID: ${id}, 상태: ${status}`);
-
-    return await this.브로슈어를_업데이트한다(id, { status, updatedBy });
-  }
-
-  /**
    * 브로슈어 공개 여부를 변경한다
    */
   async 브로슈어_공개_여부를_변경한다(
@@ -181,7 +160,6 @@ export class BrochureService {
     return await this.brochureRepository.find({
       where: {
         isPublic: true,
-        status: ContentStatus.OPENED,
       },
       order: {
         order: 'ASC',

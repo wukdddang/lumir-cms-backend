@@ -7,7 +7,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ContentStatus } from '@domain/core/content-status.types';
 
 /**
  * 브로슈어 첨부파일 DTO (응답용)

@@ -158,7 +158,7 @@ export class BrochureController {
   @ApiOperation({
     summary: '브로슈어 생성',
     description:
-      '새로운 브로슈어를 생성합니다. 제목, 설명과 함께 생성됩니다. 기본값: 비공개, DRAFT 상태',
+      '새로운 브로슈어를 생성합니다. 제목, 설명과 함께 생성됩니다. 기본값: 공개',
   })
   @ApiBody({
     description:
@@ -192,7 +192,7 @@ export class BrochureController {
   })
   @ApiResponse({
     status: 201,
-    description: '브로슈어 생성 성공 (비공개, DRAFT 상태로 생성됨)',
+    description: '브로슈어 생성 성공 (공개로 생성됨)',
     type: BrochureResponseDto,
   })
   @ApiResponse({
