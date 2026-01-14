@@ -1,0 +1,393 @@
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull, In } from 'typeorm';
+import { WikiFileSystem } from './wiki-file-system.entity';
+import { WikiFileSystemClosure } from './wiki-file-system-closure.entity';
+import { WikiFileSystemType } from './wiki-file-system-type.types';
+
+/**
+ * WikiFileSystem 도메인 서비스
+ *
+ * 위키 파일 시스템 엔티티의 생성, 조회, 수정, 삭제를 담당합니다.
+ */
+@Injectable()
+export class WikiFileSystemService {
+  private readonly logger = new Logger(WikiFileSystemService.name);
+
+  constructor(
+    @InjectRepository(WikiFileSystem)
+    private readonly wikiRepository: Repository<WikiFileSystem>,
+    @InjectRepository(WikiFileSystemClosure)
+    private readonly closureRepository: Repository<WikiFileSystemClosure>,
+  ) {}
+
+  /**
+   * 폴더를 생성한다
+   */
+  async 폴더를_생성한다(data: {
+    name: string;
+    parentId?: string | null;
+    isPublic?: boolean;
+    permissionRankCodes?: string[] | null;
+    permissionPositionCodes?: string[] | null;
+    permissionDepartmentCodes?: string[] | null;
+    order?: number;
+    createdBy?: string;
+  }): Promise<WikiFileSystem> {
+    this.logger.log(`폴더 생성 시작 - 이름: ${data.name}`);
+
+    const folder = this.wikiRepository.create({
+      name: data.name,
+      type: WikiFileSystemType.FOLDER,
+      parentId: data.parentId || null,
+      isPublic: data.isPublic ?? true,
+      permissionRankCodes: data.permissionRankCodes || null,
+      permissionPositionCodes: data.permissionPositionCodes || null,
+      permissionDepartmentCodes: data.permissionDepartmentCodes || null,
+      order: data.order ?? 0,
+      createdBy: data.createdBy,
+    });
+
+    const saved = await this.wikiRepository.save(folder);
+    this.logger.log(`폴더 생성 완료 - ID: ${saved.id}`);
+
+    return saved;
+  }
+
+  /**
+   * 파일을 생성한다
+   */
+  async 파일을_생성한다(data: {
+    name: string;
+    parentId?: string | null;
+    title?: string | null;
+    content?: string | null;
+    fileUrl?: string | null;
+    fileSize?: number | null;
+    mimeType?: string | null;
+    attachments?: Array<{
+      fileName: string;
+      fileUrl: string;
+      fileSize: number;
+      mimeType: string;
+    }> | null;
+    order?: number;
+    createdBy?: string;
+  }): Promise<WikiFileSystem> {
+    this.logger.log(`파일 생성 시작 - 이름: ${data.name}`);
+
+    const file = this.wikiRepository.create({
+      name: data.name,
+      type: WikiFileSystemType.FILE,
+      parentId: data.parentId || null,
+      title: data.title || null,
+      content: data.content || null,
+      fileUrl: data.fileUrl || null,
+      fileSize: data.fileSize || null,
+      mimeType: data.mimeType || null,
+      attachments: data.attachments || null,
+      // 파일은 권한 필드 사용 안함 (폴더에서 cascading)
+      isPublic: true, // 기본값
+      permissionRankCodes: null,
+      permissionPositionCodes: null,
+      permissionDepartmentCodes: null,
+      order: data.order ?? 0,
+      createdBy: data.createdBy,
+    });
+
+    const saved = await this.wikiRepository.save(file);
+    this.logger.log(`파일 생성 완료 - ID: ${saved.id}`);
+
+    return saved;
+  }
+
+  /**
+   * ID로 조회한다
+   */
+  async ID로_조회한다(id: string): Promise<WikiFileSystem> {
+    const wiki = await this.wikiRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    if (!wiki) {
+      throw new NotFoundException(`Wiki not found - ID: ${id}`);
+    }
+
+    return wiki;
+  }
+
+  /**
+   * 루트 폴더 목록을 조회한다
+   */
+  async 루트_폴더_목록을_조회한다(): Promise<WikiFileSystem[]> {
+    return await this.wikiRepository.find({
+      where: {
+        parentId: IsNull(),
+        deletedAt: IsNull(),
+      },
+      order: {
+        type: 'DESC', // folder 먼저
+        order: 'ASC',
+        name: 'ASC',
+      },
+    });
+  }
+
+  /**
+   * 부모 ID로 자식 목록을 조회한다
+   */
+  async 부모_ID로_자식_목록을_조회한다(
+    parentId: string,
+  ): Promise<WikiFileSystem[]> {
+    return await this.wikiRepository.find({
+      where: {
+        parentId,
+        deletedAt: IsNull(),
+      },
+      order: {
+        type: 'DESC', // folder 먼저
+        order: 'ASC',
+        name: 'ASC',
+      },
+    });
+  }
+
+  /**
+   * 폴더 구조를 조회한다 (Closure Table 사용)
+   */
+  async 폴더_구조를_조회한다(
+    ancestorId: string,
+  ): Promise<{ wiki: WikiFileSystem; depth: number }[]> {
+    const closures = await this.closureRepository.find({
+      where: {
+        ancestor: ancestorId,
+      },
+      relations: ['descendantNode'],
+      order: {
+        depth: 'ASC',
+      },
+    });
+
+    return closures
+      .filter((c) => c.descendantNode && !c.descendantNode.deletedAt)
+      .map((c) => ({
+        wiki: c.descendantNode,
+        depth: c.depth,
+      }));
+  }
+
+  /**
+   * 상위 경로를 조회한다 (Breadcrumb용)
+   */
+  async 상위_경로를_조회한다(
+    descendantId: string,
+  ): Promise<{ wiki: WikiFileSystem; depth: number }[]> {
+    const closures = await this.closureRepository.find({
+      where: {
+        descendant: descendantId,
+      },
+      relations: ['ancestorNode'],
+      order: {
+        depth: 'DESC',
+      },
+    });
+
+    return closures
+      .filter((c) => c.ancestorNode && !c.ancestorNode.deletedAt)
+      .map((c) => ({
+        wiki: c.ancestorNode,
+        depth: c.depth,
+      }));
+  }
+
+  /**
+   * 위키를 수정한다
+   */
+  async 위키를_수정한다(
+    id: string,
+    data: {
+      name?: string;
+      title?: string | null;
+      content?: string | null;
+      fileUrl?: string | null;
+      fileSize?: number | null;
+      mimeType?: string | null;
+      attachments?: Array<{
+        fileName: string;
+        fileUrl: string;
+        fileSize: number;
+        mimeType: string;
+      }> | null;
+      order?: number;
+      updatedBy?: string;
+    },
+  ): Promise<WikiFileSystem> {
+    const wiki = await this.ID로_조회한다(id);
+
+    if (data.name !== undefined) wiki.name = data.name;
+    if (data.title !== undefined) wiki.title = data.title;
+    if (data.content !== undefined) wiki.content = data.content;
+    if (data.fileUrl !== undefined) wiki.fileUrl = data.fileUrl;
+    if (data.fileSize !== undefined) wiki.fileSize = data.fileSize;
+    if (data.mimeType !== undefined) wiki.mimeType = data.mimeType;
+    if (data.attachments !== undefined) wiki.attachments = data.attachments;
+    if (data.order !== undefined) wiki.order = data.order;
+    if (data.updatedBy) wiki.updatedBy = data.updatedBy;
+
+    return await this.wikiRepository.save(wiki);
+  }
+
+  /**
+   * 공개를 수정한다
+   */
+  async 공개를_수정한다(
+    id: string,
+    data: {
+      isPublic: boolean;
+      permissionRankCodes?: string[] | null;
+      permissionPositionCodes?: string[] | null;
+      permissionDepartmentCodes?: string[] | null;
+      updatedBy?: string;
+    },
+  ): Promise<WikiFileSystem> {
+    const wiki = await this.ID로_조회한다(id);
+
+    wiki.isPublic = data.isPublic;
+    if (data.permissionRankCodes !== undefined)
+      wiki.permissionRankCodes = data.permissionRankCodes;
+    if (data.permissionPositionCodes !== undefined)
+      wiki.permissionPositionCodes = data.permissionPositionCodes;
+    if (data.permissionDepartmentCodes !== undefined)
+      wiki.permissionDepartmentCodes = data.permissionDepartmentCodes;
+    if (data.updatedBy) wiki.updatedBy = data.updatedBy;
+
+    return await this.wikiRepository.save(wiki);
+  }
+
+  /**
+   * 경로를 수정한다 (부모 변경)
+   */
+  async 경로를_수정한다(
+    id: string,
+    data: {
+      parentId: string | null;
+      updatedBy?: string;
+    },
+  ): Promise<WikiFileSystem> {
+    const wiki = await this.ID로_조회한다(id);
+
+    // 순환 참조 체크
+    if (data.parentId) {
+      const descendants = await this.폴더_구조를_조회한다(id);
+      const descendantIds = descendants.map((d) => d.wiki.id);
+      if (descendantIds.includes(data.parentId)) {
+        throw new Error('Cannot move to descendant folder');
+      }
+    }
+
+    wiki.parentId = data.parentId;
+    if (data.updatedBy) wiki.updatedBy = data.updatedBy;
+
+    return await this.wikiRepository.save(wiki);
+  }
+
+  /**
+   * 위키를 삭제한다 (Soft Delete)
+   */
+  async 위키를_삭제한다(id: string): Promise<boolean> {
+    const wiki = await this.ID로_조회한다(id);
+
+    // CASCADE로 자식도 자동 삭제됨
+    await this.wikiRepository.softRemove(wiki);
+
+    return true;
+  }
+
+  /**
+   * 폴더만 삭제한다 (자식이 있으면 실패)
+   */
+  async 폴더만_삭제한다(id: string): Promise<boolean> {
+    const wiki = await this.ID로_조회한다(id);
+
+    if (wiki.type !== WikiFileSystemType.FOLDER) {
+      throw new Error('Not a folder');
+    }
+
+    const children = await this.부모_ID로_자식_목록을_조회한다(id);
+    if (children.length > 0) {
+      throw new Error('Folder is not empty');
+    }
+
+    await this.wikiRepository.softRemove(wiki);
+
+    return true;
+  }
+
+  /**
+   * 다중 ID로 조회한다
+   */
+  async 다중_ID로_조회한다(ids: string[]): Promise<WikiFileSystem[]> {
+    if (ids.length === 0) return [];
+
+    return await this.wikiRepository.find({
+      where: {
+        id: In(ids),
+        deletedAt: IsNull(),
+      },
+    });
+  }
+
+  /**
+   * 위키 항목의 접근 권한을 체크한다 (Cascading)
+   * 
+   * 파일/폴더 모두 사용 가능
+   * 상위 폴더들의 권한을 cascading하여 체크
+   */
+  async 접근_권한을_체크한다(
+    wikiId: string,
+    employee: {
+      id: string;
+      rankCode?: string;
+      positionCode?: string;
+      departmentCode?: string;
+    },
+  ): Promise<boolean> {
+    // Closure Table로 한 번의 쿼리로 모든 조상 폴더 조회
+    const ancestorFolders = await this.closureRepository
+      .createQueryBuilder('closure')
+      .innerJoinAndSelect('closure.ancestorNode', 'wiki')
+      .where('closure.descendant = :wikiId', { wikiId })
+      .andWhere('wiki.type = :type', { type: WikiFileSystemType.FOLDER })
+      .andWhere('wiki.deletedAt IS NULL')
+      .orderBy('closure.depth', 'DESC')
+      .getMany();
+
+    // 루트부터 순차적으로 권한 체크 (Cascading)
+    for (const closure of ancestorFolders) {
+      const folder = closure.ancestorNode;
+
+      // 전체 공개면 통과
+      if (folder.isPublic) {
+        continue;
+      }
+
+      // 제한 공개인 경우 권한 체크
+      const hasAccess =
+        (folder.permissionRankCodes &&
+          employee.rankCode &&
+          folder.permissionRankCodes.includes(employee.rankCode)) ||
+        (folder.permissionPositionCodes &&
+          employee.positionCode &&
+          folder.permissionPositionCodes.includes(employee.positionCode)) ||
+        (folder.permissionDepartmentCodes &&
+          employee.departmentCode &&
+          folder.permissionDepartmentCodes.includes(employee.departmentCode));
+
+      if (!hasAccess) {
+        return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가
+      }
+    }
+
+    return true;
+  }
+}

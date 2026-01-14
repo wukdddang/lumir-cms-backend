@@ -10,6 +10,13 @@ import { WikiPermissionLog } from './wiki-permission-log.entity';
  * 문서 및 파일 관리 (계층 구조)
  * - 자기 참조 (parentId)
  * - Closure Table (WikiFileSystemClosure)
+ * - 파일 타입:
+ *   - 문서형: title + content + attachments
+ *   - 첨부파일형: fileUrl + fileSize + mimeType
+ * - 권한 정책:
+ *   - 권한은 폴더만 설정 가능 (isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes)
+ *   - 파일의 권한은 상위 폴더에서 cascading되어 결정
+ *   - 파일은 권한 필드가 항상 NULL
  * 다국어 지원: 없음
  */
 @Entity('wiki_file_systems')
@@ -57,16 +64,31 @@ export class WikiFileSystem extends BaseEntity<WikiFileSystem> {
   depth: number;
 
   @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    comment: '문서 제목 (file 타입일 때만 사용)',
+  })
+  title: string | null;
+
+  @Column({
     type: 'text',
     nullable: true,
-    comment: '파일 URL (AWS S3) - 파일 타입일 때만',
+    comment: '문서 본문 (file 타입일 때만 사용)',
+  })
+  content: string | null;
+
+  @Column({
+    type: 'text',
+    nullable: true,
+    comment: '단일 파일 URL (AWS S3) - file 타입일 때만 사용',
   })
   fileUrl: string | null;
 
   @Column({
     type: 'bigint',
     nullable: true,
-    comment: '파일 크기 (bytes) - 파일 타입일 때만',
+    comment: '파일 크기 (bytes) - fileUrl이 있을 때만',
   })
   fileSize: number | null;
 
@@ -74,35 +96,47 @@ export class WikiFileSystem extends BaseEntity<WikiFileSystem> {
     type: 'varchar',
     length: 200,
     nullable: true,
-    comment: 'MIME 타입 - 파일 타입일 때만',
+    comment: 'MIME 타입 - fileUrl이 있을 때만',
   })
   mimeType: string | null;
 
   @Column({
+    type: 'jsonb',
+    nullable: true,
+    comment: '첨부파일 목록 (AWS S3 URLs) - file 타입일 때만 사용',
+  })
+  attachments: Array<{
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }> | null;
+
+  @Column({
     type: 'boolean',
     default: true,
-    comment: '공개 여부',
+    comment: '공개 여부 (folder만 사용 - 파일은 상위 폴더에서 cascading)',
   })
   isPublic: boolean;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직급 코드 목록',
+    comment: '직급 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
   })
   permissionRankCodes: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직책 코드 목록',
+    comment: '직책 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
   })
   permissionPositionCodes: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '부서 코드 목록',
+    comment: '부서 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
   })
   permissionDepartmentCodes: string[] | null;
 

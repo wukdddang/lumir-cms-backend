@@ -1,0 +1,572 @@
+---
+alwaysApply: true
+---
+
+# Wiki 권한 관리 전략 (Permission Cascading)
+
+## 📋 개요
+
+루미르 CMS의 Wiki는 **계층적 권한 관리**를 통해 폴더 기반의 접근 제어를 제공합니다.
+
+## 🔐 핵심 전략
+
+### 1. 폴더 기반 권한 설정
+
+**권한은 폴더에만 설정**하고, **파일의 권한은 상위 폴더에서 자동으로 cascading**됩니다.
+
+```
+루트 폴더 (전체 공개)
+  └── 개발팀 폴더 (dev 부서만 공개)
+      ├── 회의록.md (권한: dev 부서만 - 폴더에서 상속)
+      └── 기획서 폴더 (전체 공개로 설정해도 dev 부서만 접근 가능)
+          └── 요구사항.pdf (권한: dev 부서만 - 가장 제한적인 상위 폴더 권한 적용)
+```
+
+### 2. 권한 Cascading 원칙
+
+| 항목              | 설명                                                     |
+| ----------------- | -------------------------------------------------------- |
+| **폴더**          | `isPublic`, `permissionRankCodes`, `permissionPositionCodes`, `permissionDepartmentCodes` 설정 가능 |
+| **파일**          | 권한 필드는 항상 `NULL` (상위 폴더에서 자동 결정)        |
+| **계층 체크**     | 루트부터 현재 위치까지 모든 상위 폴더 권한 체크          |
+| **제한적 우선**   | 상위 폴더 중 하나라도 제한적이면 하위 항목도 제한됨      |
+
+### 3. 권한 타입
+
+Wiki는 세 가지 권한 체계를 지원합니다:
+
+- **직급 (Rank)**: `permissionRankCodes` - 예: `["manager", "general_manager"]`
+- **직책 (Position)**: `permissionPositionCodes` - 예: `["team_leader"]`
+- **부서 (Department)**: `permissionDepartmentCodes` - 예: `["dev", "hr"]`
+
+```typescript
+// 권한 체크 로직 (OR 조건)
+function hasAccess(folder, employee) {
+  if (folder.isPublic) return true;
+  
+  return (
+    folder.permissionRankCodes?.includes(employee.rankCode) ||
+    folder.permissionPositionCodes?.includes(employee.positionCode) ||
+    folder.permissionDepartmentCodes?.includes(employee.departmentCode)
+  );
+}
+```
+
+## 🏗️ 엔티티 구조
+
+### 단일 엔티티 (WikiFileSystem)
+
+현재 구조는 **하나의 엔티티**로 폴더와 파일을 모두 관리합니다.
+
+```typescript
+enum WikiFileSystemType {
+  FOLDER = 'folder',
+  FILE = 'file',
+}
+
+class WikiFileSystem {
+  id: uuid;
+  name: string;
+  type: WikiFileSystemType; // 'folder' | 'file'
+  parentId: uuid | null;    // 자기 참조
+  depth: number;            // 계층 깊이
+  
+  // 파일 전용 필드 (folder일 때는 NULL)
+  title: string | null;
+  content: text | null;
+  fileUrl: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  attachments: jsonb | null;
+  
+  // 권한 필드 (folder만 사용, file은 항상 NULL)
+  isPublic: boolean;
+  permissionRankCodes: jsonb | null;
+  permissionPositionCodes: jsonb | null;
+  permissionDepartmentCodes: jsonb | null;
+  
+  // 공통 필드
+  order: number;
+  createdAt: timestamp;
+  updatedAt: timestamp;
+  deletedAt: timestamp | null;
+  createdBy: uuid | null;
+  updatedBy: uuid | null;
+  version: number;
+}
+```
+
+### Closure Table (WikiFileSystemClosure)
+
+계층 구조의 효율적인 조회를 위해 Closure Table 패턴을 사용합니다.
+
+```typescript
+class WikiFileSystemClosure {
+  id: uuid;
+  ancestor: uuid;    // 조상 노드
+  descendant: uuid;  // 자손 노드
+  depth: number;     // 계층 깊이
+}
+```
+
+**장점**:
+- 모든 조상 노드를 한 번의 쿼리로 조회 가능
+- 권한 Cascading 구현 단순
+- 계층 이동/삭제 시 성능 우수
+
+## 🔄 권한 체크 프로세스
+
+```mermaid
+flowchart TD
+    Start([파일/폴더 접근 요청])
+    Start --> GetItem[대상 항목 조회]
+    GetItem --> GetAncestors[Closure Table로<br/>모든 조상 폴더 조회]
+    
+    GetAncestors --> LoopStart{조상 폴더<br/>순회 시작}
+    LoopStart --> CheckPublic{폴더가<br/>전체 공개?}
+    
+    CheckPublic -->|Yes| NextFolder[다음 폴더]
+    CheckPublic -->|No| CheckPermission{직급/직책/부서<br/>권한 있음?}
+    
+    CheckPermission -->|Yes| NextFolder
+    CheckPermission -->|No| Deny[접근 거부]
+    
+    NextFolder --> MoreFolders{더 확인할<br/>폴더 있음?}
+    MoreFolders -->|Yes| CheckPublic
+    MoreFolders -->|No| Allow[접근 허용]
+    
+    style Allow fill:#e1f5e1
+    style Deny fill:#ffe1e1
+    style GetAncestors fill:#e1f0ff
+```
+
+### 권한 체크 코드 예시
+
+```typescript
+/**
+ * 위키 항목의 접근 권한을 체크한다 (Cascading)
+ */
+async 접근_권한을_체크한다(
+  wikiId: string,
+  employee: {
+    id: string;
+    rankCode?: string;
+    positionCode?: string;
+    departmentCode?: string;
+  },
+): Promise<boolean> {
+  // Closure Table로 한 번의 쿼리로 모든 조상 폴더 조회
+  const ancestorFolders = await this.closureRepository
+    .createQueryBuilder('closure')
+    .innerJoinAndSelect('closure.ancestorNode', 'wiki')
+    .where('closure.descendant = :wikiId', { wikiId })
+    .andWhere('wiki.type = :type', { type: WikiFileSystemType.FOLDER })
+    .andWhere('wiki.deletedAt IS NULL')
+    .orderBy('closure.depth', 'DESC') // 루트부터 순서대로
+    .getMany();
+
+  // 루트부터 순차적으로 권한 체크 (Cascading)
+  for (const closure of ancestorFolders) {
+    const folder = closure.ancestorNode;
+
+    // 전체 공개면 통과
+    if (folder.isPublic) {
+      continue;
+    }
+
+    // 제한 공개인 경우 권한 체크 (OR 조건)
+    const hasAccess =
+      (folder.permissionRankCodes &&
+        employee.rankCode &&
+        folder.permissionRankCodes.includes(employee.rankCode)) ||
+      (folder.permissionPositionCodes &&
+        employee.positionCode &&
+        folder.permissionPositionCodes.includes(employee.positionCode)) ||
+      (folder.permissionDepartmentCodes &&
+        employee.departmentCode &&
+        folder.permissionDepartmentCodes.includes(employee.departmentCode));
+
+    if (!hasAccess) {
+      return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가
+    }
+  }
+
+  return true;
+}
+```
+
+## 📝 생성 프로세스
+
+### 폴더 생성
+
+```typescript
+// 폴더는 권한 설정 가능
+async 폴더를_생성한다(data: {
+  name: string;
+  parentId?: string | null;
+  isPublic?: boolean;
+  permissionRankCodes?: string[] | null;
+  permissionPositionCodes?: string[] | null;
+  permissionDepartmentCodes?: string[] | null;
+  order?: number;
+  createdBy?: string;
+}): Promise<WikiFileSystem> {
+  const folder = this.wikiRepository.create({
+    name: data.name,
+    type: WikiFileSystemType.FOLDER,
+    parentId: data.parentId || null,
+    // 권한 설정
+    isPublic: data.isPublic ?? true,
+    permissionRankCodes: data.permissionRankCodes || null,
+    permissionPositionCodes: data.permissionPositionCodes || null,
+    permissionDepartmentCodes: data.permissionDepartmentCodes || null,
+    order: data.order ?? 0,
+    createdBy: data.createdBy,
+  });
+
+  return await this.wikiRepository.save(folder);
+}
+```
+
+### 파일 생성
+
+```typescript
+// 파일은 권한 설정 없음 (상위 폴더에서 cascading)
+async 파일을_생성한다(data: {
+  name: string;
+  parentId?: string | null;
+  title?: string | null;
+  content?: string | null;
+  attachments?: Array<{
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    mimeType: string;
+  }> | null;
+  order?: number;
+  createdBy?: string;
+}): Promise<WikiFileSystem> {
+  const file = this.wikiRepository.create({
+    name: data.name,
+    type: WikiFileSystemType.FILE,
+    parentId: data.parentId || null,
+    title: data.title || null,
+    content: data.content || null,
+    attachments: data.attachments || null,
+    // 파일은 권한 필드 사용 안함 (폴더에서 cascading)
+    isPublic: true, // 기본값 (실제로는 사용되지 않음)
+    permissionRankCodes: null,
+    permissionPositionCodes: null,
+    permissionDepartmentCodes: null,
+    order: data.order ?? 0,
+    createdBy: data.createdBy,
+  });
+
+  return await this.wikiRepository.save(file);
+}
+```
+
+## 🎯 주요 검증 규칙
+
+### 1. 폴더 권한 검증
+
+```typescript
+// CHECK 제약조건: 폴더의 제한공개 시 최소 하나의 권한 필드 필요
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_folder_permissions
+  CHECK (
+    (type = 'file') OR
+    (type = 'folder' AND is_public = true) OR
+    (type = 'folder' AND is_public = false AND (
+      jsonb_array_length(permission_rank_codes) > 0 OR
+      jsonb_array_length(permission_position_codes) > 0 OR
+      jsonb_array_length(permission_department_codes) > 0
+    ))
+  );
+```
+
+### 2. 파일 권한 검증
+
+```typescript
+// CHECK 제약조건: 파일은 권한 필드가 모두 NULL
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_no_permissions
+  CHECK (
+    (type = 'folder') OR
+    (type = 'file' AND 
+      permission_rank_codes IS NULL AND 
+      permission_position_codes IS NULL AND 
+      permission_department_codes IS NULL
+    )
+  );
+```
+
+### 3. 폴더/파일 타입별 필드 검증
+
+```typescript
+// folder는 모든 파일 관련 필드가 NULL
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_folder_fields
+  CHECK (
+    (type = 'folder' AND title IS NULL AND content IS NULL 
+      AND file_url IS NULL AND attachments IS NULL) OR
+    (type = 'file')
+  );
+
+// file은 title, content, fileUrl, attachments 중 최소 하나 필요
+ALTER TABLE wiki_file_system ADD CONSTRAINT chk_wiki_file_has_content
+  CHECK (
+    (type = 'folder') OR
+    (type = 'file' AND (
+      title IS NOT NULL OR
+      content IS NOT NULL OR
+      file_url IS NOT NULL OR
+      attachments IS NOT NULL
+    ))
+  );
+```
+
+## 🔧 구현 체크리스트
+
+### 필수 구현 항목
+
+- ✅ **엔티티 구조**
+  - [x] WikiFileSystem 엔티티 (폴더 + 파일)
+  - [x] WikiFileSystemClosure (Closure Table)
+  - [x] WikiPermissionLog (권한 변경 이력)
+  - [x] CHECK 제약조건 (타입별 필드 검증)
+
+- ✅ **권한 로직**
+  - [x] 폴더 권한 설정 (isPublic, permissionCodes)
+  - [x] 파일 권한 필드 NULL 강제
+  - [x] Cascading 권한 체크 메서드
+  - [x] Closure Table 활용 조상 조회
+
+- ✅ **생성 로직**
+  - [x] 폴더 생성 (권한 설정 포함)
+  - [x] 파일 생성 (권한 설정 없음)
+  - [x] Closure Table 자동 관리
+  - [x] 파일 업로드 (AWS S3)
+
+- ✅ **수정 로직**
+  - [x] 폴더 권한 수정
+  - [ ] 파일 경로 이동 시 권한 재검증
+  - [x] 파일 첨부파일 교체
+
+- ✅ **조회 로직**
+  - [ ] 사용자별 접근 가능한 항목만 조회
+  - [x] 계층 구조 조회 (Closure Table)
+  - [x] 상위 경로 조회 (Breadcrumb)
+
+- ✅ **삭제 로직**
+  - [x] 폴더 삭제 (하위 항목 포함)
+  - [x] 폴더만 삭제 (하위 항목 유지)
+  - [x] Soft Delete
+
+## 💡 단일 엔티티 vs 엔티티 분리
+
+### 현재 구조: 단일 엔티티 (WikiFileSystem)
+
+#### ✅ 장점
+
+1. **계층 구조 관리 단순**
+   - `parentId` 하나로 폴더/파일 구분 없이 계층 관리
+   - Closure Table 구조 단순 (하나의 테이블만)
+
+2. **권한 Cascading 구현 단순**
+   - 상위 폴더 조회가 단순 (타입 필터만 추가)
+   - JOIN 없이 한 번의 쿼리로 조상 조회
+
+3. **성능 우수**
+   - 파일/폴더 혼합 조회 시 JOIN 불필요
+   - 인덱스 전략 단순 (하나의 테이블)
+
+4. **이동 용이**
+   - 파일과 폴더를 동일한 계층에서 관리
+   - 경로 변경 시 로직 단순
+
+5. **PostgreSQL TOAST**
+   - `text`, `jsonb` 필드는 TOAST로 별도 저장
+   - NULL 필드는 공간 낭비 최소
+
+#### ⚠️ 단점
+
+1. **엔티티 크기**
+   - 필드 수가 많음 (공통 + 폴더 전용 + 파일 전용)
+   - NULL 필드가 많음 (폴더는 파일 필드 NULL, 파일은 권한 필드 NULL)
+
+2. **타입별 로직 분기**
+   - 애플리케이션 레벨에서 타입 체크 필요
+   - 타입별 검증 로직 복잡
+
+3. **스키마 변경 영향**
+   - 한쪽 타입의 필드 추가 시 전체 테이블 영향
+
+### 대안: 엔티티 분리 (WikiFolder + WikiFile)
+
+#### ✅ 장점
+
+1. **책임 명확**
+   - 각 엔티티가 자신의 역할에 집중
+   - NULL 필드 없음
+
+2. **타입 안전성**
+   - 타입별 검증 로직 단순
+   - 잘못된 필드 조합 불가능
+
+3. **독립적 확장**
+   - 파일 타입 확장 시 WikiFile만 수정
+   - 폴더 기능 추가 시 WikiFolder만 수정
+
+#### ⚠️ 단점
+
+1. **계층 구조 복잡**
+   - `parentId`가 WikiFolder와 WikiFile을 모두 참조
+   - 다형 관계 (Polymorphic) 필요
+
+2. **Closure Table 복잡**
+   - 두 엔티티를 동시에 관리해야 함
+   - 조상 조회 시 두 테이블 UNION 필요
+
+3. **성능 저하 가능**
+   - 파일/폴더 혼합 조회 시 JOIN 또는 UNION 필요
+   - 인덱스 전략 복잡
+
+4. **이동 로직 복잡**
+   - 파일과 폴더의 경로 변경 로직 별도 관리
+
+## 🎓 권장 사항
+
+### 단일 엔티티 유지 권장
+
+현재 상황에서는 **단일 엔티티 (WikiFileSystem)를 유지하는 것이 좋습니다**.
+
+#### 이유
+
+1. **권한 Cascading 구조**
+   - 폴더만 권한을 가지고 파일은 상속받는 구조
+   - 하나의 엔티티로 계층을 관리하는 것이 훨씬 단순
+
+2. **계층 구조 복잡도**
+   - Wiki는 폴더와 파일이 깊게 중첩됨
+   - Closure Table과 결합 시 단일 엔티티가 유리
+
+3. **조회 성능**
+   - 파일/폴더 혼합 조회가 빈번함 (목록, 검색)
+   - JOIN/UNION 없이 조회 가능
+
+4. **필드 중복도 낮음**
+   - 폴더/파일 공통 필드가 많음 (name, order, created 등)
+   - 타입별 전용 필드는 소수
+
+5. **CHECK 제약조건**
+   - 데이터베이스 레벨에서 타입별 필드 검증 가능
+   - 잘못된 데이터 입력 방지
+
+### 엔티티 분리 고려 시점
+
+다음 상황에서는 엔티티 분리를 고려할 수 있습니다:
+
+- ❌ 파일 타입이 매우 다양해질 때 (문서형, 미디어형, 링크형, 임베드형 등)
+- ❌ 파일과 폴더의 비즈니스 로직이 완전히 독립적일 때
+- ❌ 각 타입의 전용 필드가 10개 이상 추가될 때
+- ❌ 파일/폴더 혼합 조회가 거의 없을 때
+
+## 📊 데이터베이스 인덱스
+
+### 권장 인덱스
+
+```sql
+-- 1. 기본 조회 (부모 ID + 타입)
+CREATE INDEX idx_wiki_parent_type ON wiki_file_system (parent_id, type, deleted_at);
+
+-- 2. 정렬 (부모 ID + 순서)
+CREATE INDEX idx_wiki_parent_order ON wiki_file_system (parent_id, "order", deleted_at);
+
+-- 3. 권한 체크 (Closure Table)
+CREATE INDEX idx_wiki_closure_descendant ON wiki_file_system_closure (descendant, depth);
+CREATE INDEX idx_wiki_closure_ancestor ON wiki_file_system_closure (ancestor, depth);
+
+-- 4. 검색 (이름)
+CREATE INDEX idx_wiki_name ON wiki_file_system USING gin (name gin_trgm_ops);
+
+-- 5. 권한 필터링 (JSONB)
+CREATE INDEX idx_wiki_permission_ranks ON wiki_file_system USING gin (permission_rank_codes);
+CREATE INDEX idx_wiki_permission_positions ON wiki_file_system USING gin (permission_position_codes);
+CREATE INDEX idx_wiki_permission_departments ON wiki_file_system USING gin (permission_department_codes);
+```
+
+## 🔄 확장 가능성
+
+### 향후 기능 추가 시나리오
+
+#### 1. 파일 타입 확장
+
+현재는 문서형과 첨부파일형만 지원하지만, 향후 다음과 같은 타입 추가 가능:
+
+```typescript
+// 옵션 1: 필드 추가 (단일 엔티티 유지)
+class WikiFileSystem {
+  // 기존 필드...
+  linkUrl: string | null;        // 링크형
+  embedCode: text | null;        // 임베드형
+  mediaType: string | null;      // 미디어형 (video, audio, image)
+}
+
+// 옵션 2: 서브타입 추가 (엔티티 분리)
+enum WikiFileType {
+  DOCUMENT = 'document',
+  ATTACHMENT = 'attachment',
+  LINK = 'link',
+  EMBED = 'embed',
+  MEDIA = 'media',
+}
+```
+
+**권장**: 옵션 1 (필드 추가) - 단일 엔티티 유지
+
+#### 2. 권한 세분화
+
+현재는 OR 조건이지만, 향후 AND 조건이나 복합 조건 추가 가능:
+
+```typescript
+interface WikiPermission {
+  mode: 'OR' | 'AND';  // 권한 체크 모드
+  rules: Array<{
+    type: 'rank' | 'position' | 'department';
+    codes: string[];
+    required: boolean;  // 필수 여부
+  }>;
+}
+```
+
+#### 3. 버전 관리
+
+문서 편집 이력 관리를 위한 버전 관리 추가 가능:
+
+```typescript
+class WikiFileVersion {
+  id: uuid;
+  wikiFileId: uuid;
+  version: number;
+  title: string;
+  content: text;
+  changedBy: uuid;
+  changedAt: timestamp;
+}
+```
+
+## 📚 참고 사항
+
+1. **Closure Table 유지보수**
+   - 폴더/파일 이동 시 Closure Table 자동 업데이트 필수
+   - 순환 참조 체크 로직 필요
+
+2. **성능 모니터링**
+   - 깊은 계층 구조 시 Cascading 권한 체크 성능 측정
+   - 필요 시 권한 결과 캐싱 고려
+
+3. **권한 변경 이력**
+   - WikiPermissionLog로 권한 변경 이력 추적
+   - 감사(Audit) 목적
+
+4. **트랜잭션 관리**
+   - Closure Table 업데이트는 항상 트랜잭션 내에서 처리
+   - 실패 시 롤백 보장

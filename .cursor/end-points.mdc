@@ -189,21 +189,23 @@ alwaysApply: true
 ## Wiki
 
 ```
-- 폴더를_조회한다
-- 폴더_공개를_수정한다
-- 폴더를_생성한다
-- 폴더를_삭제한다
-- 폴더만_삭제한다
-- 폴더를_수정한다
-- 폴더_경로를_수정한다
-- 폴더_이름을_수정한다
-- 폴더_구조를_가져온다
-- 파일을_삭제한다
-- 파일_경로를_수정한다
-- 파일_공개를_수정한다
-- 파일들을_조회한다
-- 파일을_조회한다
-- 파일을_생성한다
-- 빈_파일을_생성한다
-- 파일을_수정한다
+⚠️ 권한 정책: 권한은 폴더만 설정 가능, 파일의 권한은 상위 폴더에서 cascading
+
+- 폴더를_조회한다 (GET /admin/wiki/folders/:id)
+- 폴더_공개를_수정한다 (PATCH /admin/wiki/folders/:id/public)
+- 폴더를_생성한다 (POST /admin/wiki/folders)
+- 폴더를_삭제한다 (DELETE /admin/wiki/folders/:id)
+- 폴더만_삭제한다 (DELETE /admin/wiki/folders/:id/only)
+- 폴더를_수정한다 (PATCH /admin/wiki/folders/:id)
+- 폴더_경로를_수정한다 (PATCH /admin/wiki/folders/:id/path)
+- 폴더_이름을_수정한다 (PATCH /admin/wiki/folders/:id/name)
+- 폴더_구조를_가져온다 (GET /admin/wiki/folders/structure)
+- 파일을_삭제한다 (DELETE /admin/wiki/files/:id)
+- 파일_경로를_수정한다 (PATCH /admin/wiki/files/:id/path)
+- 파일들을_조회한다 (GET /admin/wiki/files)
+- 파일을_조회한다 (GET /admin/wiki/files/:id)
+- 파일을_생성한다 (POST /admin/wiki/files)
+- 빈_파일을_생성한다 (POST /admin/wiki/files/empty)
+- 파일을_수정한다 (PUT /admin/wiki/files/:id)
 ```
+

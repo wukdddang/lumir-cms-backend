@@ -535,10 +535,10 @@ erDiagram
         bigint fileSize "nullable - 파일 크기(bytes)"
         varchar mimeType "nullable - MIME 타입"
         jsonb attachments "nullable - 첨부파일 목록 (file일 때만 사용)"
-        boolean isPublic
-        jsonb permissionRankCodes "직급 코드 목록"
-        jsonb permissionPositionCodes "직책 코드 목록"
-        jsonb permissionDepartmentCodes "부서 코드 목록"
+        boolean isPublic "folder일 때만 사용 - 권한은 상위 폴더에서 cascading"
+        jsonb permissionRankCodes "nullable - 직급 코드 목록 (folder일 때만 사용)"
+        jsonb permissionPositionCodes "nullable - 직책 코드 목록 (folder일 때만 사용)"
+        jsonb permissionDepartmentCodes "nullable - 부서 코드 목록 (folder일 때만 사용)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -855,6 +855,13 @@ enum WikiPermissionAction {
 
 ## 변경 이력
 
+### v5.17 (2026-01-14)
+- ✅ **WikiFileSystem 권한 정책 변경**
+  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes)
+  - 파일의 권한은 **상위 폴더에서 cascading**되어 결정
+  - 상위 폴더가 더 제한적이면 하위 폴더/파일도 제한됨
+  - 루트에서 현재 위치까지의 모든 폴더 권한을 체크하여 가장 제한적인 권한 적용
+
 ### v5.16 (2026-01-14)
 - ✅ **WikiFileSystem 문서 기능 추가**
   - `title` 필드 추가 (문서 제목)
@@ -932,4 +939,4 @@ enum WikiPermissionAction {
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.16
+**버전**: v5.17

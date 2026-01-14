@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
+import { WikiFileSystemModule } from './wiki-file-system/wiki-file-system.module';
 // TODO: 모듈들 추가
 // import { MainPopupModule } from './main-popup/main-popup.module';
 // import { LumirStoryModule } from './lumir-story/lumir-story.module';
 // import { VideoGalleryModule } from './video-gallery/video-gallery.module';
 // import { SurveyModule } from './survey/survey.module';
 // import { EducationManagementModule } from './education-management/education-management.module';
-// import { WikiFileSystemModule } from './wiki-file-system/wiki-file-system.module';
 
 /**
  * Sub Domain 통합 모듈
@@ -13,9 +13,11 @@ import { Module } from '@nestjs/common';
  */
 @Module({
   imports: [
+    WikiFileSystemModule,
     // TODO: 모듈들 추가
   ],
   exports: [
+    WikiFileSystemModule,
     // TODO: 모듈들 추가
   ],
 })

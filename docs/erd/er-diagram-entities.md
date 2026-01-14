@@ -783,10 +783,10 @@ erDiagram
         bigint fileSize "nullable"
         varchar mimeType "nullable"
         jsonb attachments "nullable - 첨부파일 목록"
-        boolean isPublic
-        jsonb permissionRankCodes "직급"
-        jsonb permissionPositionCodes "직책"
-        jsonb permissionDepartmentCodes "부서"
+        boolean isPublic "folder만 - 권한 cascading"
+        jsonb permissionRankCodes "nullable - 직급 (folder만)"
+        jsonb permissionPositionCodes "nullable - 직책 (folder만)"
+        jsonb permissionDepartmentCodes "nullable - 부서 (folder만)"
         int order
     }
     
@@ -811,39 +811,48 @@ erDiagram
   - **문서형**: title + content + attachments (텍스트 위주, 첨부파일 선택)
   - **첨부파일형**: fileUrl + fileSize + mimeType (파일만 업로드)
 - **AWS S3**: 모든 파일은 S3에 업로드 후 URL 참조
-- **세밀한 권한**: 직급, 직책, 부서별 공개 설정 (Announcement와 동일한 패턴)
+- **권한 Cascading**: 
+  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes)
+  - 파일의 권한은 **상위 폴더들의 권한을 cascading**하여 결정
+  - 루트부터 현재 위치까지 모든 폴더 권한 체크, 가장 제한적인 권한 적용
 
-**권한 로직** (Closure Table 활용):
+**권한 로직** (Closure Table 활용 - Cascading):
 ```typescript
-// 단일 파일/폴더 권한 체크
-function canAccessWiki(wiki: WikiFileSystem, employee: Employee): boolean {
-  if (wiki.isPublic) return true;
+// 폴더 권한 체크
+function canAccessFolder(folder: WikiFileSystem, employee: Employee): boolean {
+  if (folder.type !== 'folder') {
+    throw new Error('폴더만 권한 체크 가능');
+  }
+  
+  if (folder.isPublic) return true;
 
   return (
-    wiki.permissionRankCodes.includes(employee.rankCode) ||
-    wiki.permissionPositionCodes.includes(employee.positionCode) ||
-    wiki.permissionDepartmentCodes.includes(employee.departmentCode)
+    folder.permissionRankCodes?.includes(employee.rankCode) ||
+    folder.permissionPositionCodes?.includes(employee.positionCode) ||
+    folder.permissionDepartmentCodes?.includes(employee.departmentCode)
   );
 }
 
-// 계층적 권한 체크 (Closure Table 활용 - 최적화)
-async function canAccessWikiHierarchy(
+// 계층적 권한 체크 (Closure Table 활용 - Cascading)
+// 파일/폴더 모두 사용 가능
+async function canAccessWiki(
   wikiId: string,
   employee: Employee
 ): Promise<boolean> {
-  // Closure Table로 한 번의 쿼리로 모든 조상 조회
-  const ancestors = await db.query(`
+  // Closure Table로 한 번의 쿼리로 모든 조상 폴더 조회
+  const ancestorFolders = await db.query(`
     SELECT w.*
     FROM wiki_file_system w
     JOIN wiki_file_system_closure c ON w.id = c.ancestor
     WHERE c.descendant = $1
+      AND w.type = 'folder'
       AND w.deleted_at IS NULL
     ORDER BY c.depth DESC
   `, [wikiId]);
   
-  // 루트부터 순차적으로 권한 체크
-  for (const ancestor of ancestors) {
-    if (!canAccessWiki(ancestor, employee)) {
+  // 루트부터 순차적으로 권한 체크 (Cascading)
+  for (const folder of ancestorFolders) {
+    if (!canAccessFolder(folder, employee)) {
       return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가
     }
   }
@@ -877,10 +886,12 @@ async function moveFolder(
 }
 ```
 
-**⚠️ 중요: 계층적 권한 관리**
-- **상위 폴더의 권한이 더 제한적이면 하위 항목도 접근 불가**
+**⚠️ 중요: 계층적 권한 관리 (Cascading)**
+- **권한은 폴더만 설정 가능**, 파일은 권한 필드 사용 안함
+- **파일의 권한은 상위 폴더들의 권한을 cascading하여 결정**
+- 상위 폴더가 더 제한적이면 하위 폴더/파일도 접근 불가
 - 애플리케이션 레벨에서 처리 (데이터베이스 제약조건으로는 불가능)
-- Closure Table을 활용하여 한 번의 쿼리로 모든 조상 조회 가능
+- Closure Table을 활용하여 한 번의 쿼리로 모든 조상 폴더 조회 가능
 - 폴더 이동 시 순환 참조 체크 필수
 
 **쿼리 예시** (Closure Table 활용):
@@ -1035,4 +1046,4 @@ FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_move();
 
 **문서 생성일**: 2026년 1월 6일  
 **최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.16
+**버전**: v5.17
