@@ -162,8 +162,9 @@ export class BrochureController {
         if (allowedMimeTypes.includes(file.mimetype)) {
           callback(null, true);
         } else {
+          // BadRequestException을 사용하여 400 에러로 처리
           callback(
-            new Error(
+            new BadRequestException(
               `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP (현재: ${file.mimetype})`,
             ),
             false,
@@ -246,103 +247,6 @@ export class BrochureController {
     }
 
     return await this.brochureBusinessService.브로슈어를_생성한다(
-      translations,
-      user.id,
-      files,
-    );
-  }
-
-  /**
-   * 브로슈어를 수정한다 (번역 및 파일 포함)
-   */
-  @Put(':id')
-  @UseInterceptors(
-    FilesInterceptor('files', undefined, {
-      fileFilter: (req, file, callback) => {
-        // 허용된 MIME 타입: PDF, JPG, PNG, WEBP
-        const allowedMimeTypes = [
-          'application/pdf',
-          'image/jpeg',
-          'image/jpg',
-          'image/png',
-          'image/webp',
-        ];
-
-        if (allowedMimeTypes.includes(file.mimetype)) {
-          callback(null, true);
-        } else {
-          callback(
-            new Error(
-              `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP (현재: ${file.mimetype})`,
-            ),
-            false,
-          );
-        }
-      },
-    }),
-  )
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({
-    summary: '브로슈어 수정',
-    description:
-      '브로슈어의 번역 정보 및 파일을 수정합니다. 수정된 번역은 자동 동기화에서 제외됩니다 (isSynced: false).',
-  })
-  @ApiBody({
-    description:
-      '⚠️ **중요**: translations 필드는 반드시 배열 형태의 JSON 문자열로 입력해야 합니다.\n\n' +
-      '**파일 관리 방식**:\n' +
-      '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
-      '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
-      '- 기존 파일을 유지하려면 반드시 해당 파일을 다시 전송해야 합니다',
-    schema: {
-      type: 'object',
-      properties: {
-        translations: {
-          type: 'string',
-          description:
-            '번역 목록 (JSON 배열 문자열) - 반드시 대괄호 []로 감싸야 합니다!',
-          example:
-            '[{"languageId":"31e6bbc6-2839-4477-9672-bb4b381e8914","title":"회사 소개 브로슈어","description":"루미르 회사 소개 자료입니다."}]',
-        },
-        files: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-          description:
-            '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능) - 전송한 파일들로 완전히 교체됩니다',
-        },
-      },
-      required: ['translations'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '브로슈어 수정 성공',
-    type: BrochureResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: '브로슈어를 찾을 수 없음',
-  })
-  async 브로슈어를_수정한다(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() body: any,
-    @UploadedFiles() files: Express.Multer.File[],
-  ): Promise<any> {
-    // translations 파싱
-    let translations = body.translations;
-    if (typeof translations === 'string') {
-      try {
-        translations = JSON.parse(translations);
-      } catch (error) {
-        throw new BadRequestException(
-          'translations 파싱 실패: 올바른 JSON 형식이 아닙니다.',
-        );
-      }
-    }
-
-    return await this.brochureBusinessService.브로슈어를_수정한다(
-      id,
       translations,
       user.id,
       files,
@@ -450,6 +354,9 @@ export class BrochureController {
 
   /**
    * 브로슈어 오더를 일괄 수정한다
+   *
+   * 주의: 이 라우트는 @Put(':id') 보다 앞에 와야 합니다.
+   * 그렇지 않으면 batch-order가 :id로 매칭됩니다.
    */
   @Put('batch-order')
   @ApiOperation({
@@ -483,6 +390,116 @@ export class BrochureController {
     return await this.brochureBusinessService.브로슈어_오더를_일괄_수정한다(
       updateDto.brochures,
       user.id,
+    );
+  }
+
+  /**
+   * 브로슈어를 수정한다
+   *
+   * 주의: 이 라우트는 batch-order 등 다른 구체적인 라우트보다 뒤에 와야 합니다.
+   * 그렇지 않으면 /batch-order가 :id로 매칭됩니다.
+   */
+  @Put(':id')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      fileFilter: (req, file, callback) => {
+        if (!file.mimetype.match(/\/(pdf|jpg|jpeg|png|webp)$/)) {
+          return callback(
+            new BadRequestException(
+              '파일은 PDF, JPG, PNG, WEBP 형식만 가능합니다.',
+            ),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: '브로슈어 수정',
+    description:
+      '브로슈어의 번역 정보를 수정하고 첨부파일을 관리합니다.\n\n' +
+      '⚠️ **파일 관리 방식**:\n' +
+      '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
+      '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
+      '- 기존 파일을 유지하려면 반드시 해당 파일을 다시 전송해야 합니다',
+  })
+  @ApiBody({
+    description:
+      '⚠️ **중요**: translations 필드는 반드시 배열 형태의 JSON 문자열로 입력해야 합니다.\n\n' +
+      '**파일 관리 방식**:\n' +
+      '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
+      '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
+      '- 기존 파일을 유지하려면 반드시 해당 파일을 다시 전송해야 합니다',
+    schema: {
+      type: 'object',
+      properties: {
+        translations: {
+          type: 'string',
+          description:
+            '번역 목록 (JSON 배열 문자열) - 반드시 대괄호 []로 감싸야 합니다!',
+          example:
+            '[{"languageId":"31e6bbc6-2839-4477-9672-bb4b381e8914","title":"회사 소개 브로슈어","description":"루미르 회사 소개 자료입니다."}]',
+        },
+        files: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+          description:
+            '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능) - 전송한 파일들로 완전히 교체됩니다',
+        },
+      },
+      required: ['translations'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: '브로슈어 수정 성공',
+    type: BrochureResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '브로슈어를 찾을 수 없음',
+  })
+  async 브로슈어를_수정한다(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  ): Promise<any> {
+    // body 자체가 없거나 비어있는 경우 체크
+    if (!body || Object.keys(body).length === 0) {
+      throw new BadRequestException('요청 본문이 비어있습니다.');
+    }
+
+    // translations 파싱
+    let translations = body.translations;
+
+    if (!translations) {
+      throw new BadRequestException('translations 필드는 필수입니다.');
+    }
+
+    if (typeof translations === 'string') {
+      try {
+        translations = JSON.parse(translations);
+      } catch (error) {
+        throw new BadRequestException(
+          'translations 파싱 실패: 올바른 JSON 형식이 아닙니다.',
+        );
+      }
+    }
+
+    if (!Array.isArray(translations) || translations.length === 0) {
+      throw new BadRequestException(
+        'translations는 비어있지 않은 배열이어야 합니다.',
+      );
+    }
+
+    return await this.brochureBusinessService.브로슈어를_수정한다(
+      id,
+      translations,
+      user.id,
+      files,
     );
   }
 

@@ -106,7 +106,11 @@ export class BaseE2ETest {
     this.app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
         whitelist: true,
+        forbidNonWhitelisted: false,
       }),
     );
 
@@ -125,6 +129,24 @@ export class BaseE2ETest {
     await this.dataSource.synchronize(true);
 
     await this.app.init();
+
+    // 기본 언어 초기화 (스케줄러에서 언어를 찾는 에러 방지)
+    await this.initializeDefaultLanguages();
+  }
+
+  /**
+   * 기본 언어 초기화
+   */
+  private async initializeDefaultLanguages(): Promise<void> {
+    try {
+      // 기본 언어 초기화 API 호출
+      await request(this.app.getHttpServer())
+        .post('/api/admin/languages/initialize-default')
+        .set('Authorization', `Bearer ${this.testAccessToken}`)
+        .send();
+    } catch (error) {
+      console.warn('기본 언어 초기화 중 오류 발생:', error);
+    }
   }
 
   /**
@@ -193,6 +215,8 @@ export class BaseE2ETest {
    */
   async cleanupBeforeTest(): Promise<void> {
     await this.cleanDatabase();
+    // 기본 언어 다시 초기화
+    await this.initializeDefaultLanguages();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject, BadRequestException } from '@nestjs/common';
 import { BrochureContextService } from '@context/brochure-context/brochure-context.service';
 import { CategoryService } from '@domain/common/category/category.service';
 import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
@@ -390,6 +390,10 @@ export class BrochureBusinessService {
     updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<BrochureTranslation[]> {
+    if (!translations || translations.length === 0) {
+      throw new BadRequestException('translations는 비어있지 않은 배열이어야 합니다.');
+    }
+
     this.logger.log(
       `브로슈어 수정 시작 - 브로슈어 ID: ${brochureId}, 번역 수: ${translations.length}`,
     );

@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnnouncementBusinessService } from '@business/announcement-business/announcement-business.service';
 import { AnnouncementContextService } from '@context/announcement-context/announcement-context.service';
+import { SurveyContextService } from '@context/survey-context/survey-context.service';
 import { CompanyContextService } from '@context/company-context/company-context.service';
 import { CategoryService } from '@domain/common/category/category.service';
+import { SsoService } from '@domain/common/sso/sso.service';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AnnouncementRead } from '@domain/core/announcement/announcement-read.entity';
@@ -13,6 +15,7 @@ import { Announcement } from '@domain/core/announcement/announcement.entity';
 describe('AnnouncementBusinessService', () => {
   let service: AnnouncementBusinessService;
   let announcementContextService: jest.Mocked<AnnouncementContextService>;
+  let surveyContextService: jest.Mocked<SurveyContextService>;
   let companyContextService: jest.Mocked<CompanyContextService>;
   let categoryService: jest.Mocked<CategoryService>;
 
@@ -27,20 +30,32 @@ describe('AnnouncementBusinessService', () => {
     공지사항_오더를_일괄_수정한다: jest.fn(),
   };
 
+  const mockSurveyContextService = {
+    설문조사를_생성한다: jest.fn(),
+    설문조사를_수정한다: jest.fn(),
+    설문조사를_삭제한다: jest.fn(),
+    공지사항의_설문조사를_조회한다: jest.fn(),
+  };
+
   const mockCompanyContextService = {
-    조직정보를_조회한다: jest.fn(),
-    부서_목록을_조회한다: jest.fn(),
-    직급_목록을_조회한다: jest.fn(),
-    직책_목록을_조회한다: jest.fn(),
+    조직_정보를_가져온다: jest.fn(),
+    부서_정보를_가져온다: jest.fn(),
+    직급_정보를_가져온다: jest.fn(),
+    직책_정보를_가져온다: jest.fn(),
   };
 
   const mockCategoryService = {
     카테고리_목록을_조회한다: jest.fn(),
     엔티티_타입별_카테고리를_조회한다: jest.fn(),
     카테고리를_생성한다: jest.fn(),
+    카테고리를_업데이트한다: jest.fn(),
     카테고리를_수정한다: jest.fn(),
     카테고리를_삭제한다: jest.fn(),
     카테고리_오더를_변경한다: jest.fn(),
+  };
+
+  const mockSsoService = {
+    FCM_토큰을_조회한다: jest.fn(),
   };
 
   const mockAnnouncementReadRepository = {
@@ -77,12 +92,20 @@ describe('AnnouncementBusinessService', () => {
           useValue: mockAnnouncementContextService,
         },
         {
+          provide: SurveyContextService,
+          useValue: mockSurveyContextService,
+        },
+        {
           provide: CompanyContextService,
           useValue: mockCompanyContextService,
         },
         {
           provide: CategoryService,
           useValue: mockCategoryService,
+        },
+        {
+          provide: SsoService,
+          useValue: mockSsoService,
         },
         {
           provide: ConfigService,
@@ -103,8 +126,11 @@ describe('AnnouncementBusinessService', () => {
       ],
     }).compile();
 
-    service = module.get<AnnouncementBusinessService>(AnnouncementBusinessService);
+    service = module.get<AnnouncementBusinessService>(
+      AnnouncementBusinessService,
+    );
     announcementContextService = module.get(AnnouncementContextService);
+    surveyContextService = module.get(SurveyContextService);
     companyContextService = module.get(CompanyContextService);
     categoryService = module.get(CategoryService);
   });
@@ -137,13 +163,17 @@ describe('AnnouncementBusinessService', () => {
         limit: 10,
       };
 
-      mockAnnouncementContextService.공지사항_목록을_조회한다.mockResolvedValue(mockResult);
+      mockAnnouncementContextService.공지사항_목록을_조회한다.mockResolvedValue(
+        mockResult,
+      );
 
       // When
       const result = await service.공지사항_목록을_조회한다(params);
 
       // Then
-      expect(announcementContextService.공지사항_목록을_조회한다).toHaveBeenCalledWith(params);
+      expect(
+        announcementContextService.공지사항_목록을_조회한다,
+      ).toHaveBeenCalledWith(params);
       expect(result).toEqual(mockResult);
     });
   });
@@ -161,13 +191,17 @@ describe('AnnouncementBusinessService', () => {
         limit: 10000,
       };
 
-      mockAnnouncementContextService.공지사항_목록을_조회한다.mockResolvedValue(mockResult);
+      mockAnnouncementContextService.공지사항_목록을_조회한다.mockResolvedValue(
+        mockResult,
+      );
 
       // When
       const result = await service.공지사항_전체_목록을_조회한다();
 
       // Then
-      expect(announcementContextService.공지사항_목록을_조회한다).toHaveBeenCalledWith({
+      expect(
+        announcementContextService.공지사항_목록을_조회한다,
+      ).toHaveBeenCalledWith({
         limit: 10000,
       });
       expect(result).toEqual(mockResult.items);
@@ -184,13 +218,17 @@ describe('AnnouncementBusinessService', () => {
         content: '테스트 내용',
       } as Announcement;
 
-      mockAnnouncementContextService.공지사항을_조회한다.mockResolvedValue(mockAnnouncement);
+      mockAnnouncementContextService.공지사항을_조회한다.mockResolvedValue(
+        mockAnnouncement,
+      );
 
       // When
       const result = await service.공지사항을_조회한다(announcementId);
 
       // Then
-      expect(announcementContextService.공지사항을_조회한다).toHaveBeenCalledWith(announcementId);
+      expect(
+        announcementContextService.공지사항을_조회한다,
+      ).toHaveBeenCalledWith(announcementId);
       expect(result).toEqual(mockAnnouncement);
     });
   });
@@ -216,15 +254,23 @@ describe('AnnouncementBusinessService', () => {
         ...createDto,
       } as any;
 
-      mockAnnouncementContextService.공지사항을_생성한다.mockResolvedValue(mockCreateResult as any);
-      mockAnnouncementContextService.공지사항을_조회한다.mockResolvedValue(mockDetailAnnouncement);
+      mockAnnouncementContextService.공지사항을_생성한다.mockResolvedValue(
+        mockCreateResult as any,
+      );
+      mockAnnouncementContextService.공지사항을_조회한다.mockResolvedValue(
+        mockDetailAnnouncement,
+      );
 
       // When
       const result = await service.공지사항을_생성한다(createDto);
 
       // Then
-      expect(announcementContextService.공지사항을_생성한다).toHaveBeenCalledWith(createDto);
-      expect(announcementContextService.공지사항을_조회한다).toHaveBeenCalledWith('new-announcement-1');
+      expect(
+        announcementContextService.공지사항을_생성한다,
+      ).toHaveBeenCalledWith(createDto);
+      expect(
+        announcementContextService.공지사항을_조회한다,
+      ).toHaveBeenCalledWith('new-announcement-1');
       expect(result).toEqual(mockDetailAnnouncement);
     });
   });
@@ -243,16 +289,20 @@ describe('AnnouncementBusinessService', () => {
         ...updateDto,
       } as Announcement;
 
-      mockAnnouncementContextService.공지사항을_수정한다.mockResolvedValue(mockUpdatedAnnouncement);
+      mockAnnouncementContextService.공지사항을_수정한다.mockResolvedValue(
+        mockUpdatedAnnouncement,
+      );
 
       // When
-      const result = await service.공지사항을_수정한다(announcementId, updateDto);
-
-      // Then
-      expect(announcementContextService.공지사항을_수정한다).toHaveBeenCalledWith(
+      const result = await service.공지사항을_수정한다(
         announcementId,
         updateDto,
       );
+
+      // Then
+      expect(
+        announcementContextService.공지사항을_수정한다,
+      ).toHaveBeenCalledWith(announcementId, updateDto);
       expect(result).toEqual(mockUpdatedAnnouncement);
     });
   });
@@ -274,13 +324,16 @@ describe('AnnouncementBusinessService', () => {
       );
 
       // When
-      const result = await service.공지사항_공개를_수정한다(announcementId, isPublic, updatedBy);
+      const result = await service.공지사항_공개를_수정한다(
+        announcementId,
+        isPublic,
+        updatedBy,
+      );
 
       // Then
-      expect(announcementContextService.공지사항_공개를_수정한다).toHaveBeenCalledWith(
-        announcementId,
-        { isPublic, updatedBy },
-      );
+      expect(
+        announcementContextService.공지사항_공개를_수정한다,
+      ).toHaveBeenCalledWith(announcementId, { isPublic, updatedBy });
       expect(result).toEqual(mockUpdatedAnnouncement);
     });
   });
@@ -302,13 +355,16 @@ describe('AnnouncementBusinessService', () => {
       );
 
       // When
-      const result = await service.공지사항_고정을_수정한다(announcementId, isFixed, updatedBy);
+      const result = await service.공지사항_고정을_수정한다(
+        announcementId,
+        isFixed,
+        updatedBy,
+      );
 
       // Then
-      expect(announcementContextService.공지사항_고정을_수정한다).toHaveBeenCalledWith(
-        announcementId,
-        { isFixed, updatedBy },
-      );
+      expect(
+        announcementContextService.공지사항_고정을_수정한다,
+      ).toHaveBeenCalledWith(announcementId, { isFixed, updatedBy });
       expect(result).toEqual(mockUpdatedAnnouncement);
     });
   });
@@ -317,13 +373,17 @@ describe('AnnouncementBusinessService', () => {
     it('컨텍스트 서비스를 호출하여 공지사항을 삭제해야 한다', async () => {
       // Given
       const announcementId = 'announcement-1';
-      mockAnnouncementContextService.공지사항을_삭제한다.mockResolvedValue(true);
+      mockAnnouncementContextService.공지사항을_삭제한다.mockResolvedValue(
+        true,
+      );
 
       // When
       const result = await service.공지사항을_삭제한다(announcementId);
 
       // Then
-      expect(announcementContextService.공지사항을_삭제한다).toHaveBeenCalledWith(announcementId);
+      expect(
+        announcementContextService.공지사항을_삭제한다,
+      ).toHaveBeenCalledWith(announcementId);
       expect(result).toBe(true);
     });
   });
@@ -338,13 +398,20 @@ describe('AnnouncementBusinessService', () => {
       const updatedBy = 'user-1';
 
       const mockResult = { success: true, updatedCount: 2 };
-      mockAnnouncementContextService.공지사항_오더를_일괄_수정한다.mockResolvedValue(mockResult);
+      mockAnnouncementContextService.공지사항_오더를_일괄_수정한다.mockResolvedValue(
+        mockResult,
+      );
 
       // When
-      const result = await service.공지사항_오더를_일괄_수정한다(announcements, updatedBy);
+      const result = await service.공지사항_오더를_일괄_수정한다(
+        announcements,
+        updatedBy,
+      );
 
       // Then
-      expect(announcementContextService.공지사항_오더를_일괄_수정한다).toHaveBeenCalledWith({
+      expect(
+        announcementContextService.공지사항_오더를_일괄_수정한다,
+      ).toHaveBeenCalledWith({
         announcements,
         updatedBy,
       });
@@ -360,16 +427,17 @@ describe('AnnouncementBusinessService', () => {
         { id: 'category-2', name: '총무', entityType: 'announcement' },
       ];
 
-      mockCategoryService.엔티티_타입별_카테고리를_조회한다.mockResolvedValue(mockCategories as any);
+      mockCategoryService.엔티티_타입별_카테고리를_조회한다.mockResolvedValue(
+        mockCategories as any,
+      );
 
       // When
       const result = await service.공지사항_카테고리_목록을_조회한다();
 
       // Then
-      expect(categoryService.엔티티_타입별_카테고리를_조회한다).toHaveBeenCalledWith(
-        'announcement',
-        false,
-      );
+      expect(
+        categoryService.엔티티_타입별_카테고리를_조회한다,
+      ).toHaveBeenCalledWith('announcement', false);
       expect(result).toEqual(mockCategories);
     });
   });
@@ -391,7 +459,9 @@ describe('AnnouncementBusinessService', () => {
         entityType: 'announcement',
       };
 
-      mockCategoryService.카테고리를_생성한다.mockResolvedValue(mockCreatedCategory as any);
+      mockCategoryService.카테고리를_생성한다.mockResolvedValue(
+        mockCreatedCategory as any,
+      );
 
       // When
       const result = await service.공지사항_카테고리를_생성한다(createDto);

@@ -15,12 +15,17 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 테스트용 언어 생성
-    const langResponse = await testSuite
+    // 이미 초기화된 한국어 언어를 조회
+    const languagesResponse = await testSuite
       .request()
-      .post('/api/admin/languages')
-      .send({ code: 'ko', name: '한국어', isActive: true });
-    languageId = langResponse.body.id;
+      .get('/api/admin/languages')
+      .expect(200);
+
+    const koreanLanguage = languagesResponse.body.items.find(
+      (lang: any) => lang.code === 'ko',
+    );
+
+    languageId = koreanLanguage.id;
   });
 
   describe('성공 케이스', () => {
@@ -50,21 +55,43 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
-      expect(response.body.translations).toHaveLength(1);
-      expect(response.body.translations[0]).toMatchObject({
+      
+      // 자동 번역 동기화로 인해 4개 언어 모두 번역이 생성됨
+      expect(response.body.translations).toHaveLength(4);
+      
+      // 한국어 번역 확인 (isSynced: false, 수동 입력)
+      const koTranslation = response.body.translations.find(
+        (t: any) => t.languageId === languageId,
+      );
+      expect(koTranslation).toMatchObject({
         languageId,
         title: '회사 소개 브로슈어',
         description: '루미르 테크놀로지 회사 소개서',
+        isSynced: false,
+      });
+      
+      // 다른 언어들은 자동 동기화됨 (isSynced: true)
+      const syncedTranslations = response.body.translations.filter(
+        (t: any) => t.languageId !== languageId,
+      );
+      expect(syncedTranslations).toHaveLength(3);
+      syncedTranslations.forEach((t: any) => {
+        expect(t.isSynced).toBe(true);
+        expect(t.title).toBe('회사 소개 브로슈어');
       });
     });
 
     it('여러 언어 번역을 포함한 브로슈어를 생성해야 한다', async () => {
-      // Given - 영어 언어 추가
-      const enLangResponse = await testSuite
+      // Given - 이미 초기화된 영어 언어를 조회
+      const languagesResponse = await testSuite
         .request()
-        .post('/api/admin/languages')
-        .send({ code: 'en', name: 'English', isActive: true });
-      const enLanguageId = enLangResponse.body.id;
+        .get('/api/admin/languages')
+        .expect(200);
+
+      const englishLanguage = languagesResponse.body.items.find(
+        (lang: any) => lang.code === 'en',
+      );
+      const enLanguageId = englishLanguage.id;
 
       const createDto = {
         translations: [
@@ -89,7 +116,20 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         .expect(201);
 
       // Then
-      expect(response.body.translations).toHaveLength(2);
+      // 한국어, 영어는 수동 입력(isSynced: false), 일본어, 중국어는 자동 동기화(isSynced: true)
+      expect(response.body.translations).toHaveLength(4);
+      
+      // 수동 입력된 번역 확인
+      const koTranslation = response.body.translations.find(
+        (t: any) => t.languageId === languageId,
+      );
+      expect(koTranslation.isSynced).toBe(false);
+      
+      const enTranslation = response.body.translations.find(
+        (t: any) => t.languageId === enLanguageId,
+      );
+      expect(enTranslation.isSynced).toBe(false);
+      expect(enTranslation.title).toBe('Company Brochure');
     });
 
     it('description 없이 브로슈어를 생성해야 한다', async () => {
@@ -111,7 +151,15 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         .expect(201);
 
       // Then
-      expect(response.body.translations[0].description).toBeNull();
+      // 자동 번역 동기화로 4개 언어 생성
+      expect(response.body.translations).toHaveLength(4);
+      
+      // 한국어 번역 확인
+      const koTranslation = response.body.translations.find(
+        (t: any) => t.languageId === languageId,
+      );
+      expect(koTranslation.title).toBe('회사 소개 브로슈어');
+      expect(koTranslation.description).toBeNull();
     });
   });
 
@@ -128,7 +176,7 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         .expect(400);
     });
 
-    it('translation의 title이 누락된 경우 에러가 발생해야 한다', async () => {
+    it('translation의 title이 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given - title 없이 생성 시도
       const createDto = {
         translations: [
@@ -140,14 +188,12 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
         ],
       };
 
-      // When
-      const response = await testSuite
+      // When & Then - DTO validation에서 400 에러 발생
+      await testSuite
         .request()
         .post('/api/admin/brochures')
-        .field('translations', JSON.stringify(createDto.translations));
-      
-      // Then - title 필드가 없으면 DTO validation 또는 DB에서 에러
-      expect([400, 500]).toContain(response.status);
+        .send(createDto)
+        .expect(400);
     });
   });
 
@@ -171,6 +217,5 @@ describe('POST /api/admin/brochures (브로슈어 생성)', () => {
 
       expect([400, 404, 500]).toContain(response.status);
     });
-
   });
 });

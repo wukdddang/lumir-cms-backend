@@ -39,6 +39,16 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
       `브로슈어 생성 시작 - 번역 수: ${data.translations.length}`,
     );
 
+    // 각 translation 필수 필드 검증
+    for (const translation of data.translations) {
+      if (!translation.languageId) {
+        throw new BadRequestException('languageId는 필수입니다.');
+      }
+      if (!translation.title) {
+        throw new BadRequestException('title은 필수입니다.');
+      }
+    }
+
     // 모든 언어 ID 검증
     const languageIds = data.translations.map((t) => t.languageId);
     const languages = await Promise.all(

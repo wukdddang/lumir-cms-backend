@@ -27,21 +27,23 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
 
   beforeAll(async () => {
     testHelper = new BaseE2ETest();
-    await testHelper.initializeApp();
+    await testHelper.beforeAll(); // 기본 언어 초기화 포함
 
-    // 테스트용 언어 생성
-    const languageResponse = await testHelper
+    // 이미 초기화된 한국어 언어를 조회
+    const languagesResponse = await testHelper
       .request()
-      .post('/api/admin/languages')
-      .send({
-        code: 'ko',
-        name: '한국어',
-        nativeName: '한국어',
-        isActive: true,
-      })
-      .expect(201);
+      .get('/api/admin/languages')
+      .expect(200);
 
-    languageId = languageResponse.body.id;
+    const koreanLanguage = languagesResponse.body.items.find(
+      (lang: any) => lang.code === 'ko',
+    );
+
+    if (!koreanLanguage) {
+      throw new Error('한국어 언어를 찾을 수 없습니다.');
+    }
+
+    languageId = koreanLanguage.id;
   });
 
   afterAll(async () => {
@@ -53,15 +55,9 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
         .expect(200);
     }
 
-    // 생성된 언어 삭제
-    if (languageId) {
-      await testHelper
-        .request()
-        .delete(`/api/admin/languages/${languageId}`)
-        .expect(200);
-    }
+    // 언어는 기본 초기화된 것이므로 삭제하지 않음
 
-    await testHelper.closeApp();
+    await testHelper.afterAll();
   });
 
   describe('파일 업로드 테스트', () => {
@@ -161,21 +157,33 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
       // 파일 업로드 확인 (null 이어야 함)
       expect(createResponse.body.attachments).toBeNull();
 
-      // 파일 추가
+      // 파일 추가 - PUT으로 translations와 함께 파일 업데이트
       const pdfBuffer = createTestPdfBuffer('Added PDF content');
       const fileName = 'added-file.pdf';
 
       const updateResponse = await testHelper
         .request()
-        .patch(`/api/admin/brochures/${brochureId}/files`)
+        .put(`/api/admin/brochures/${brochureId}`)
+        .field('translations', JSON.stringify([{
+          languageId,
+          title: '파일 추가 테스트 브로슈어',
+        }]))
         .attach('files', pdfBuffer, { filename: fileName, contentType: 'application/pdf' })
         .expect(200);
 
-      // 파일 추가 확인
-      expect(updateResponse.body.attachments).toBeDefined();
-      expect(updateResponse.body.attachments).not.toBeNull();
-      expect(updateResponse.body.attachments!.length).toBe(1);
-      expect(updateResponse.body.attachments![0].fileName).toBe(fileName);
+      // 파일 추가 확인 - PUT 응답은 translations 배열을 반환
+      expect(Array.isArray(updateResponse.body)).toBe(true);
+      
+      // 브로슈어 다시 조회하여 파일 확인
+      const getResponse = await testHelper
+        .request()
+        .get(`/api/admin/brochures/${brochureId}`)
+        .expect(200);
+
+      expect(getResponse.body.attachments).toBeDefined();
+      expect(getResponse.body.attachments).not.toBeNull();
+      expect(getResponse.body.attachments!.length).toBe(1);
+      expect(getResponse.body.attachments![0].fileName).toBe(fileName);
 
       // 정리
       await testHelper
@@ -200,17 +208,29 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
         .expect(201);
 
       const brochureId = createResponse.body.id;
-      const fileUrl = createResponse.body.attachments[0].fileUrl;
 
-      // 파일 삭제
-      const deleteResponse = await testHelper
+      // 파일 삭제 - PUT으로 translations만 보내고 files는 보내지 않으면 파일 삭제됨
+      const updateResponse = await testHelper
         .request()
-        .delete(`/api/admin/brochures/${brochureId}/files`)
-        .send({ fileUrls: [fileUrl] })
+        .put(`/api/admin/brochures/${brochureId}`)
+        .field('translations', JSON.stringify([{
+          languageId,
+          title: '파일 삭제 테스트 브로슈어',
+        }]))
+        // files를 전송하지 않으면 기존 파일이 모두 삭제됨
         .expect(200);
 
-      // 파일 삭제 확인
-      expect(deleteResponse.body.attachments).toEqual([]);
+      // 파일 삭제 확인 - 브로슈어 다시 조회
+      const getResponse = await testHelper
+        .request()
+        .get(`/api/admin/brochures/${brochureId}`)
+        .expect(200);
+
+      // attachments가 null이거나 빈 배열이면 파일이 삭제된 것
+      expect(
+        getResponse.body.attachments === null || 
+        getResponse.body.attachments.length === 0
+      ).toBe(true);
 
       // 정리
       await testHelper
@@ -231,10 +251,11 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           title: '잘못된 파일 테스트',
         }]))
         .attach('files', executableContent, 'malicious.exe')
-        .expect(500); // 파일 필터 에러
+        .expect(400); // 클라이언트 검증 에러
 
-      // 에러가 발생했는지 확인
+      // 에러 메시지 확인
       expect(response.body).toBeDefined();
+      expect(response.body.message).toContain('지원하지 않는 파일 형식');
     });
   });
 });

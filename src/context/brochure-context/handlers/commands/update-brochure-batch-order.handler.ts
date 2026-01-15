@@ -46,13 +46,14 @@ export class UpdateBrochureBatchOrderHandler
   ): Promise<{ success: boolean; updatedCount: number }> {
     const { brochures, updatedBy } = command.data;
 
+    // DTO validation이 이미 처리했으므로 간단한 체크만
+    if (!brochures || brochures.length === 0) {
+      throw new BadRequestException('수정할 브로슈어가 없습니다.');
+    }
+
     this.logger.log(
       `브로슈어 일괄 순서 수정 시작 - 수정할 브로슈어 수: ${brochures.length}`,
     );
-
-    if (brochures.length === 0) {
-      throw new BadRequestException('수정할 브로슈어가 없습니다.');
-    }
 
     // 브로슈어 ID 목록 추출
     const brochureIds = brochures.map((item) => item.id);

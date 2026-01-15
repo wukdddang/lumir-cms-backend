@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsNumber, ValidateNested } from 'class-validator';
+import { IsArray, IsString, IsNumber, ValidateNested, IsNotEmpty, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -11,13 +11,15 @@ export class BrochureOrderItemDto {
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   @IsString()
+  @IsNotEmpty()
   id: string;
 
   @ApiProperty({
     description: '새로운 순서',
     example: 1,
   })
-  @IsNumber()
+  @IsNumber({}, { message: 'order는 숫자여야 합니다.' })
+  @Type(() => Number)
   order: number;
 }
 
@@ -35,6 +37,7 @@ export class UpdateBrochureBatchOrderDto {
     ],
   })
   @IsArray()
+  @ArrayMinSize(1, { message: '최소 1개 이상의 브로슈어가 필요합니다.' })
   @ValidateNested({ each: true })
   @Type(() => BrochureOrderItemDto)
   brochures: BrochureOrderItemDto[];

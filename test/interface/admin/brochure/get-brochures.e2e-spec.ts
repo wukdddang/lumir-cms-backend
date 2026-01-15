@@ -15,12 +15,17 @@ describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 테스트용 언어 생성
-    const langResponse = await testSuite
+    // 이미 초기화된 한국어 언어를 조회
+    const languagesResponse = await testSuite
       .request()
-      .post('/api/admin/languages')
-      .send({ code: 'ko', name: '한국어', isActive: true });
-    languageId = langResponse.body.id;
+      .get('/api/admin/languages')
+      .expect(200);
+
+    const koreanLanguage = languagesResponse.body.items.find(
+      (lang: any) => lang.code === 'ko',
+    );
+
+    languageId = koreanLanguage.id;
   });
 
   describe('성공 케이스', () => {
@@ -87,12 +92,17 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 테스트용 언어 생성
-    const langResponse = await testSuite
+    // 이미 초기화된 한국어 언어를 조회
+    const languagesResponse = await testSuite
       .request()
-      .post('/api/admin/languages')
-      .send({ code: 'ko', name: '한국어', isActive: true });
-    languageId = langResponse.body.id;
+      .get('/api/admin/languages')
+      .expect(200);
+
+    const koreanLanguage = languagesResponse.body.items.find(
+      (lang: any) => lang.code === 'ko',
+    );
+
+    languageId = koreanLanguage.id;
   });
 
   describe('성공 케이스', () => {

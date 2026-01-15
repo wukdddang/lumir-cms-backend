@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -47,6 +48,7 @@ export class CreateBrochureTranslationDto {
     description: '제목',
     example: '회사 소개 브로슈어',
   })
+  @IsNotEmpty()
   @IsString()
   title: string;
 
