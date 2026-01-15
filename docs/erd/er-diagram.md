@@ -241,9 +241,9 @@ erDiagram
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
         jsonb permissionEmployeeIds "특정 직원 ID 목록"
-        jsonb permissionRankCodes "직급 코드 목록"
-        jsonb permissionPositionCodes "직책 코드 목록"
-        jsonb permissionDepartmentCodes "부서 코드 목록"
+        jsonb permissionRankIds "직급 ID 목록 (UUID)"
+        jsonb permissionPositionIds "직책 ID 목록 (UUID)"
+        jsonb permissionDepartmentIds "부서 ID 목록 (UUID)"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order "정렬 순서"
         timestamp createdAt
@@ -265,6 +265,22 @@ erDiagram
         uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
         uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
         int version
+    }
+
+    AnnouncementPermissionLog {
+        uuid id PK "description"
+        uuid announcementId FK "announcement ID"
+        jsonb invalidDepartments "nullable - 무효화된 부서 정보 (ID와 이름)"
+        jsonb invalidRankIds "nullable - 무효화된 직급 ID 목록 (UUID)"
+        jsonb invalidPositionIds "nullable - 무효화된 직책 ID 목록 (UUID)"
+        jsonb invalidEmployees "nullable - 무효화된 직원 정보 (ID와 이름)"
+        jsonb snapshotPermissions "권한 설정 스냅샷 (변경 전 - 부서/직원은 ID와 이름 포함)"
+        varchar action "detected|removed|notified|resolved"
+        text note "nullable - 추가 메모"
+        timestamp detectedAt "감지 시각"
+        timestamp resolvedAt "nullable - 해결 시각"
+        uuid resolvedBy "nullable - 해결한 관리자 ID (외부 시스템 직원 ID - SSO)"
+        timestamp createdAt
     }
 
     %% ==========================================
@@ -527,9 +543,9 @@ erDiagram
         varchar mimeType "nullable - MIME 타입"
         jsonb attachments "nullable - 첨부파일 목록 (file일 때만 사용)"
         boolean isPublic "folder일 때만 사용 - 권한은 상위 폴더에서 cascading"
-        jsonb permissionRankCodes "nullable - 직급 코드 목록 (folder일 때만 사용)"
-        jsonb permissionPositionCodes "nullable - 직책 코드 목록 (folder일 때만 사용)"
-        jsonb permissionDepartmentCodes "nullable - 부서 코드 목록 (folder일 때만 사용)"
+        jsonb permissionRankIds "nullable - 직급 ID 목록 (UUID, folder일 때만 사용)"
+        jsonb permissionPositionIds "nullable - 직책 ID 목록 (UUID, folder일 때만 사용)"
+        jsonb permissionDepartmentIds "nullable - 부서 ID 목록 (UUID, folder일 때만 사용)"
         int order
         timestamp createdAt
         timestamp updatedAt
@@ -549,10 +565,10 @@ erDiagram
     WikiPermissionLog {
         uuid id PK "description"
         uuid wikiFileSystemId FK "wiki_file_system ID"
-        jsonb invalidDepartmentCodes "nullable - 무효화된 부서 코드 목록"
-        jsonb invalidRankCodes "nullable - 무효화된 직급 코드 목록"
-        jsonb invalidPositionCodes "nullable - 무효화된 직책 코드 목록"
-        jsonb snapshotPermissions "권한 설정 스냅샷"
+        jsonb invalidDepartments "nullable - 무효화된 부서 정보 (ID와 이름)"
+        jsonb invalidRankIds "nullable - 무효화된 직급 ID 목록 (UUID)"
+        jsonb invalidPositionIds "nullable - 무효화된 직책 ID 목록 (UUID)"
+        jsonb snapshotPermissions "권한 설정 스냅샷 (변경 전 - 부서는 ID와 이름 포함)"
         varchar action "detected|removed|notified|resolved"
         text note "nullable - 추가 메모"
         timestamp detectedAt "감지 시각"
@@ -589,6 +605,7 @@ erDiagram
     
     Announcement ||--o{ CategoryMapping : "has"
     Announcement ||--o{ AnnouncementRead : "has reads (lazy)"
+    Announcement ||--o{ AnnouncementPermissionLog : "has permission logs"
     Announcement ||--o| Survey : "has survey (optional)"
     
     %% ==========================================
@@ -648,6 +665,7 @@ erDiagram
 | **Brochure** | 회사 소개 및 제품 브로슈어 | ✅ |
 | **News** | 언론 보도 및 뉴스 | ❌ |
 | **Announcement** | 내부 공지사항 및 직원 응답 | ❌ |
+| **AnnouncementPermissionLog** | Announcement 권한 무효화 이력 추적 | ❌ |
 
 ### Sub Domain (부가 기능)
 핵심 비즈니스를 지원하는 부가 기능
@@ -747,6 +765,16 @@ enum WikiPermissionAction {
 }
 ```
 
+### AnnouncementPermissionAction (공지사항 권한 무효화 처리 상태)
+```typescript
+enum AnnouncementPermissionAction {
+  DETECTED = 'detected',   // 감지됨 (무효한 코드 발견)
+  REMOVED = 'removed',     // 무효한 코드 자동 제거됨
+  NOTIFIED = 'notified',   // 관리자에게 통보됨
+  RESOLVED = 'resolved'    // 관리자가 수동으로 해결함
+}
+```
+
 ---
 
 ## 외부 시스템 참조
@@ -792,11 +820,20 @@ enum WikiPermissionAction {
 - **파일 저장**: AWS S3에 업로드 후 URL 참조
 
 ### 6. WikiFileSystem 권한 무효화 추적
-- **WikiPermissionLog**: 외부 시스템(SSO)의 부서/직급/직책 코드 제거/변경 시 이력 추적
+- **WikiPermissionLog**: 외부 시스템(SSO)의 부서/직급/직책 ID 제거/변경 시 이력 추적
 - **용도**: WikiFileSystem 권한 변경 감사 로그, 문제 해결 추적
-- **특징**: 무효화된 코드별 추적, 권한 설정 스냅샷 보관, 해결 여부 관리
+- **특징**: 무효화된 부서 정보(ID와 이름), 권한 설정 스냅샷 보관, 해결 여부 관리
+- **스케줄러**: 매일 새벽 2시 자동 검증 및 무효한 권한 제거 (중복 로그 방지 기능 포함)
+- **수동 실행**: `POST /admin/permission-validation/wiki` API로 즉시 실행 가능
 
-### 7. 공통 기능
+### 7. Announcement 권한 무효화 추적
+- **AnnouncementPermissionLog**: 외부 시스템(SSO)의 부서/직급/직책/직원 정보 제거/변경 시 이력 추적
+- **용도**: Announcement 권한 변경 감사 로그, 문제 해결 추적
+- **특징**: 무효화된 부서/직원 정보(ID와 이름), 권한 설정 스냅샷 보관, 해결 여부 관리
+- **스케줄러**: 매일 새벽 3시 자동 검증 및 무효한 권한 제거 (중복 로그 방지 기능 포함)
+- **수동 실행**: `POST /admin/permission-validation/announcement` API로 즉시 실행 가능
+
+### 8. 공통 기능
 - **Soft Delete**: `deletedAt` 필드로 논리 삭제 (단, SurveyResponseCheckbox는 hard delete 사용)
 - **Optimistic Locking**: `version` 필드로 동시성 제어
 - **Audit Fields**: `createdAt`, `updatedAt`, `createdBy`, `updatedBy`
@@ -824,6 +861,26 @@ enum WikiPermissionAction {
 
 ## 변경 이력
 
+### v5.20 (2026-01-15)
+- ✅ **Announcement 권한 무효화 추적 추가**
+  - `AnnouncementPermissionLog` 엔티티 추가
+  - 외부 시스템(SSO) 부서/직급/직책/직원 정보 제거 시 이력 추적
+  - 무효화된 부서/직원 정보를 ID와 이름 함께 저장 (프론트엔드 UI용)
+  - `AnnouncementPermissionAction` enum 추가 (detected|removed|notified|resolved)
+  - **매일 새벽 3시 자동 검증 스케줄러 구현** (Cron: `0 3 * * *`)
+  - 중복 로그 방지: 미해결 로그가 있으면 새 로그 생성 안 함
+  - **수동 실행 API 추가**: `POST /admin/permission-validation/announcement`
+  - WikiPermissionLog와 동일한 패턴 적용
+  - SSO 서비스를 `domain/common`으로 통합 (FCM 토큰 조회 기능 포함)
+- ✅ **WikiPermissionLog 스케줄러 개선**
+  - **매일 새벽 2시 자동 검증** (Cron: `0 2 * * *`)
+  - 중복 로그 방지 기능 추가
+  - **수동 실행 API 추가**: `POST /admin/permission-validation/wiki`
+- ✅ **권한 검증 관리자 API 추가**
+  - `PermissionValidationController` 컨트롤러 추가
+  - 위키/공지사항 권한 검증 즉시 실행 기능
+  - 모든 권한 검증 병렬 실행 기능 (`POST /admin/permission-validation/all`)
+
 ### v5.19 (2026-01-14)
 - ✅ **ContentStatus 제거 및 콘텐츠 관리 단순화**
   - 9개 콘텐츠 엔티티에서 `status` 필드 제거: Announcement, Brochure, ElectronicDisclosure, IR, News, LumirStory, MainPopup, ShareholdersMeeting, VideoGallery
@@ -833,16 +890,25 @@ enum WikiPermissionAction {
   - 기본값 변경: 모든 콘텐츠 생성 시 `isPublic: true` (즉시 공개)
   - 상태 흐름 다이어그램 9개 삭제
 
+### v5.19 (2026-01-15)
+- ✅ **권한 필드를 모두 ID 기반으로 변경**
+  - `permissionRankCodes` → `permissionRankIds` (직급 ID)
+  - `permissionPositionCodes` → `permissionPositionIds` (직책 ID)
+  - `permissionDepartmentCodes` → `permissionDepartmentIds` (부서 ID)
+  - 코드 대신 UUID 기반 ID로 권한 설정
+  - ID는 고유하고 변경되지 않아 안정적
+  - 예: `["manager", "경영지원-경지"]` → `["uuid-1", "uuid-2"]`
+
 ### v5.18 (2026-01-14)
 - ✅ **WikiFileSystem 파일 비공개 설정 추가**
   - 파일의 `isPublic` 필드 활성화
   - 파일 `isPublic: false` → 완전 비공개 (아무도 접근 불가)
   - 파일 `isPublic: true` (기본값) → 상위 폴더 권한 cascading
-  - 파일의 `permissionRankCodes/PositionCodes/DepartmentCodes`는 여전히 NULL
+  - 파일의 `permissionRankIds/PositionIds/DepartmentIds`는 여전히 NULL
 
 ### v5.17 (2026-01-14)
 - ✅ **WikiFileSystem 권한 정책 변경**
-  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes)
+  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankIds, permissionPositionIds, permissionDepartmentIds)
   - 파일의 권한은 **상위 폴더에서 cascading**되어 결정
   - 상위 폴더가 더 제한적이면 하위 폴더/파일도 제한됨
   - 루트에서 현재 위치까지의 모든 폴더 권한을 체크하여 가장 제한적인 권한 적용
@@ -868,7 +934,7 @@ enum WikiPermissionAction {
   - 모든 날짜 관련 필드가 시간 정보 포함 (정확한 일시 관리)
 - ✅ **WikiFileSystem 권한 무효화 추적**
   - `WikiPermissionLog` 엔티티 추가
-  - 외부 시스템(SSO) 부서/직급/직책 코드 제거 시 이력 추적
+  - 외부 시스템(SSO) 부서/직급/직책 ID 제거 시 이력 추적
   - WikiFileSystem 전용 감사 로그 및 문제 해결 히스토리
 - ✅ **설문 응답 삭제 정책 명확화**
   - `SurveyResponseCheckbox`: hard delete 사용 (체크박스 선택/해제 반복 지원)
@@ -893,9 +959,9 @@ enum WikiPermissionAction {
 ### v5.11 (2026-01-08)
 - ✅ **WikiFileSystem 권한 관리 개선**
   - `WikiFileSystem.permissionEmployeeIds` 제거
-  - `WikiFileSystem.permissionRankCodes` 추가 (직급 코드 목록)
-  - `WikiFileSystem.permissionPositionCodes` 추가 (직책 코드 목록)
-  - `WikiFileSystem.permissionDepartmentCodes` 추가 (부서 코드 목록)
+  - `WikiFileSystem.permissionRankIds` 추가 (직급 ID 목록)
+  - `WikiFileSystem.permissionPositionIds` 추가 (직책 ID 목록)
+  - `WikiFileSystem.permissionDepartmentIds` 추가 (부서 ID 목록)
   - 세밀한 권한 관리 (Announcement와 동일한 패턴)
   - CHECK 제약조건 업데이트: 제한공개 시 최소 하나의 권한 필드 필요
 
@@ -921,5 +987,5 @@ enum WikiPermissionAction {
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.19
+**최종 업데이트**: 2026년 1월 15일  
+**버전**: v5.20

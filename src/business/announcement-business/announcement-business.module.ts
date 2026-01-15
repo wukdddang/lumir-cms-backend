@@ -6,6 +6,7 @@ import { AnnouncementContextModule } from '@context/announcement-context/announc
 import { SurveyContextModule } from '@context/survey-context/survey-context.module';
 import { CompanyContextModule } from '@context/company-context/company-context.module';
 import { CategoryModule } from '@domain/common/category/category.module';
+import { SsoModule } from '@domain/common/sso/sso.module';
 import { AnnouncementRead } from '@domain/core/announcement/announcement-read.entity';
 import { Survey } from '@domain/sub/survey/survey.entity';
 import { SurveyQuestion } from '@domain/sub/survey/survey-question.entity';
@@ -29,6 +30,7 @@ import { SurveyCompletion } from '@domain/sub/survey/survey-completion.entity';
     SurveyContextModule,
     CompanyContextModule,
     CategoryModule,
+    SsoModule,
   ],
   providers: [AnnouncementBusinessService],
   exports: [AnnouncementBusinessService],

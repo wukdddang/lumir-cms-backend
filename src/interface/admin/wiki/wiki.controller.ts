@@ -181,9 +181,9 @@ export class WikiController {
   ): Promise<WikiResponseDto> {
     const folder = await this.wikiBusinessService.폴더_공개를_수정한다(id, {
       isPublic: dto.isPublic,
-      permissionRankCodes: dto.permissionRankCodes,
-      permissionPositionCodes: dto.permissionPositionCodes,
-      permissionDepartmentCodes: dto.permissionDepartmentCodes,
+      permissionRankIds: dto.permissionRankIds,
+      permissionPositionIds: dto.permissionPositionIds,
+      permissionDepartmentIds: dto.permissionDepartmentIds,
       updatedBy: user.id,
     });
     return WikiResponseDto.from(folder);
@@ -213,9 +213,9 @@ export class WikiController {
       name: dto.name,
       parentId: dto.parentId,
       isPublic: true, // 기본적으로 전사공개
-      permissionRankCodes: null,
-      permissionPositionCodes: null,
-      permissionDepartmentCodes: null,
+      permissionRankIds: null,
+      permissionPositionIds: null,
+      permissionDepartmentIds: null,
       order: dto.order,
       createdBy: user.id,
     });
@@ -286,9 +286,9 @@ export class WikiController {
     const folder = await this.wikiBusinessService.폴더를_수정한다(id, {
       name: dto.name,
       isPublic: dto.isPublic,
-      permissionRankCodes: dto.permissionRankCodes,
-      permissionPositionCodes: dto.permissionPositionCodes,
-      permissionDepartmentCodes: dto.permissionDepartmentCodes,
+      permissionRankIds: dto.permissionRankIds,
+      permissionPositionIds: dto.permissionPositionIds,
+      permissionDepartmentIds: dto.permissionDepartmentIds,
       order: dto.order,
       updatedBy: user.id,
     });

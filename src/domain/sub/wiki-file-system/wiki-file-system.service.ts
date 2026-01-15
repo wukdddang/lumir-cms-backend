@@ -28,9 +28,9 @@ export class WikiFileSystemService {
     name: string;
     parentId?: string | null;
     isPublic?: boolean;
-    permissionRankCodes?: string[] | null;
-    permissionPositionCodes?: string[] | null;
-    permissionDepartmentCodes?: string[] | null;
+    permissionRankIds?: string[] | null;
+    permissionPositionIds?: string[] | null;
+    permissionDepartmentIds?: string[] | null;
     order?: number;
     createdBy?: string;
   }): Promise<WikiFileSystem> {
@@ -41,9 +41,9 @@ export class WikiFileSystemService {
       type: WikiFileSystemType.FOLDER,
       parentId: data.parentId || null,
       isPublic: data.isPublic ?? true,
-      permissionRankCodes: data.permissionRankCodes || null,
-      permissionPositionCodes: data.permissionPositionCodes || null,
-      permissionDepartmentCodes: data.permissionDepartmentCodes || null,
+      permissionRankIds: data.permissionRankIds || null,
+      permissionPositionIds: data.permissionPositionIds || null,
+      permissionDepartmentIds: data.permissionDepartmentIds || null,
       order: data.order ?? 0,
       createdBy: data.createdBy,
     });
@@ -90,9 +90,9 @@ export class WikiFileSystemService {
       // 파일의 isPublic 설정 (기본값: true - 상위 폴더 cascading)
       isPublic: data.isPublic ?? true,
       // 파일은 나머지 권한 필드 사용 안함
-      permissionRankCodes: null,
-      permissionPositionCodes: null,
-      permissionDepartmentCodes: null,
+      permissionRankIds: null,
+      permissionPositionIds: null,
+      permissionDepartmentIds: null,
       order: data.order ?? 0,
       createdBy: data.createdBy,
     });
@@ -240,9 +240,9 @@ export class WikiFileSystemService {
         mimeType: string;
       }> | null;
       isPublic?: boolean;
-      permissionRankCodes?: string[] | null;
-      permissionPositionCodes?: string[] | null;
-      permissionDepartmentCodes?: string[] | null;
+      permissionRankIds?: string[] | null;
+      permissionPositionIds?: string[] | null;
+      permissionDepartmentIds?: string[] | null;
       order?: number;
       updatedBy?: string;
     },
@@ -257,12 +257,12 @@ export class WikiFileSystemService {
     if (data.mimeType !== undefined) wiki.mimeType = data.mimeType;
     if (data.attachments !== undefined) wiki.attachments = data.attachments;
     if (data.isPublic !== undefined) wiki.isPublic = data.isPublic;
-    if (data.permissionRankCodes !== undefined)
-      wiki.permissionRankCodes = data.permissionRankCodes;
-    if (data.permissionPositionCodes !== undefined)
-      wiki.permissionPositionCodes = data.permissionPositionCodes;
-    if (data.permissionDepartmentCodes !== undefined)
-      wiki.permissionDepartmentCodes = data.permissionDepartmentCodes;
+    if (data.permissionRankIds !== undefined)
+      wiki.permissionRankIds = data.permissionRankIds;
+    if (data.permissionPositionIds !== undefined)
+      wiki.permissionPositionIds = data.permissionPositionIds;
+    if (data.permissionDepartmentIds !== undefined)
+      wiki.permissionDepartmentIds = data.permissionDepartmentIds;
     if (data.order !== undefined) wiki.order = data.order;
     if (data.updatedBy) wiki.updatedBy = data.updatedBy;
 
@@ -276,21 +276,21 @@ export class WikiFileSystemService {
     id: string,
     data: {
       isPublic: boolean;
-      permissionRankCodes?: string[] | null;
-      permissionPositionCodes?: string[] | null;
-      permissionDepartmentCodes?: string[] | null;
+      permissionRankIds?: string[] | null;
+      permissionPositionIds?: string[] | null;
+      permissionDepartmentIds?: string[] | null;
       updatedBy?: string;
     },
   ): Promise<WikiFileSystem> {
     const wiki = await this.ID로_조회한다(id);
 
     wiki.isPublic = data.isPublic;
-    if (data.permissionRankCodes !== undefined)
-      wiki.permissionRankCodes = data.permissionRankCodes;
-    if (data.permissionPositionCodes !== undefined)
-      wiki.permissionPositionCodes = data.permissionPositionCodes;
-    if (data.permissionDepartmentCodes !== undefined)
-      wiki.permissionDepartmentCodes = data.permissionDepartmentCodes;
+    if (data.permissionRankIds !== undefined)
+      wiki.permissionRankIds = data.permissionRankIds;
+    if (data.permissionPositionIds !== undefined)
+      wiki.permissionPositionIds = data.permissionPositionIds;
+    if (data.permissionDepartmentIds !== undefined)
+      wiki.permissionDepartmentIds = data.permissionDepartmentIds;
     if (data.updatedBy) wiki.updatedBy = data.updatedBy;
 
     return await this.wikiRepository.save(wiki);
@@ -380,9 +380,9 @@ export class WikiFileSystemService {
     wikiId: string,
     employee: {
       id: string;
-      rankCode?: string;
-      positionCode?: string;
-      departmentCode?: string;
+      rankId?: string;
+      positionId?: string;
+      departmentId?: string;
     },
   ): Promise<boolean> {
     // 대상 항목 조회
@@ -414,15 +414,15 @@ export class WikiFileSystemService {
 
       // 제한 공개인 경우 권한 체크
       const hasAccess =
-        (folder.permissionRankCodes &&
-          employee.rankCode &&
-          folder.permissionRankCodes.includes(employee.rankCode)) ||
-        (folder.permissionPositionCodes &&
-          employee.positionCode &&
-          folder.permissionPositionCodes.includes(employee.positionCode)) ||
-        (folder.permissionDepartmentCodes &&
-          employee.departmentCode &&
-          folder.permissionDepartmentCodes.includes(employee.departmentCode));
+        (folder.permissionRankIds &&
+          employee.rankId &&
+          folder.permissionRankIds.includes(employee.rankId)) ||
+        (folder.permissionPositionIds &&
+          employee.positionId &&
+          folder.permissionPositionIds.includes(employee.positionId)) ||
+        (folder.permissionDepartmentIds &&
+          employee.departmentId &&
+          folder.permissionDepartmentIds.includes(employee.departmentId));
 
       if (!hasAccess) {
         return false; // 상위 폴더에 접근 불가하면 하위도 접근 불가

@@ -14,11 +14,11 @@ import { WikiPermissionLog } from './wiki-permission-log.entity';
  *   - 문서형: title + content + attachments
  *   - 첨부파일형: fileUrl + fileSize + mimeType
  * - 권한 정책:
- *   - 폴더: isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes 설정 가능
+ *   - 폴더: isPublic, permissionRankIds, permissionPositionIds, permissionDepartmentIds 설정 가능
  *   - 파일: isPublic만 설정 가능
  *     - isPublic: false → 완전 비공개 (아무도 접근 불가)
  *     - isPublic: true (기본값) → 상위 폴더 권한 cascading
- *   - 파일의 permissionRankCodes/PositionCodes/DepartmentCodes는 항상 NULL
+ *   - 파일의 permissionRankIds/PositionIds/DepartmentIds는 항상 NULL
  * 다국어 지원: 없음
  */
 @Entity('wiki_file_systems')
@@ -124,23 +124,23 @@ export class WikiFileSystem extends BaseEntity<WikiFileSystem> {
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직급 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
+    comment: '직급 ID 목록 (UUID, folder만 사용 - 파일은 항상 NULL)',
   })
-  permissionRankCodes: string[] | null;
+  permissionRankIds: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직책 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
+    comment: '직책 ID 목록 (UUID, folder만 사용 - 파일은 항상 NULL)',
   })
-  permissionPositionCodes: string[] | null;
+  permissionPositionIds: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '부서 코드 목록 (folder만 사용 - 파일은 항상 NULL)',
+    comment: '부서 ID 목록 (UUID, folder만 사용 - 파일은 항상 NULL)',
   })
-  permissionDepartmentCodes: string[] | null;
+  permissionDepartmentIds: string[] | null;
 
   @Column({
     type: 'int',

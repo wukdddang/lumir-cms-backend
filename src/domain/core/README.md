@@ -152,9 +152,9 @@ core/
 
 ### 4. 권한 관리 (Announcement)
 - `permissionEmployeeIds`: 특정 직원 ID 목록
-- `permissionRankCodes`: 직급 코드 목록
-- `permissionPositionCodes`: 직책 코드 목록
-- `permissionDepartmentCodes`: 부서 코드 목록
+- `permissionRankIds`: 직급 ID 목록 (UUID)
+- `permissionPositionIds`: 직책 ID 목록 (UUID)
+- `permissionDepartmentIds`: 부서 ID 목록 (UUID)
 
 ### 5. 공통 필드
 - **Soft Delete**: `deletedAt` 필드로 논리 삭제

@@ -54,9 +54,9 @@ export class WikiBusinessService {
     id: string,
     data: {
       isPublic: boolean;
-      permissionRankCodes?: string[] | null;
-      permissionPositionCodes?: string[] | null;
-      permissionDepartmentCodes?: string[] | null;
+      permissionRankIds?: string[] | null;
+      permissionPositionIds?: string[] | null;
+      permissionDepartmentIds?: string[] | null;
       updatedBy?: string;
     },
   ): Promise<WikiFileSystem> {
@@ -76,9 +76,9 @@ export class WikiBusinessService {
     name: string;
     parentId?: string | null;
     isPublic?: boolean;
-    permissionRankCodes?: string[] | null;
-    permissionPositionCodes?: string[] | null;
-    permissionDepartmentCodes?: string[] | null;
+    permissionRankIds?: string[] | null;
+    permissionPositionIds?: string[] | null;
+    permissionDepartmentIds?: string[] | null;
     order?: number;
     createdBy?: string;
   }): Promise<WikiFileSystem> {
@@ -127,9 +127,9 @@ export class WikiBusinessService {
     data: {
       name?: string;
       isPublic?: boolean;
-      permissionRankCodes?: string[] | null;
-      permissionPositionCodes?: string[] | null;
-      permissionDepartmentCodes?: string[] | null;
+      permissionRankIds?: string[] | null;
+      permissionPositionIds?: string[] | null;
+      permissionDepartmentIds?: string[] | null;
       order?: number;
       updatedBy?: string;
     },

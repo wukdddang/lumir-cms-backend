@@ -283,15 +283,15 @@ export class SeedDataContextService {
 
       const deptResult = await this.companyContextService.부서_정보를_가져온다();
       departments = deptResult.departments
-        .map((d) => d.departmentCode)
+        .map((d) => d.id)
         .filter(Boolean);
 
       const rankResult = await this.companyContextService.직급_정보를_가져온다();
-      rankCodes = rankResult.map((r) => r.rankCode).filter(Boolean);
+      rankCodes = rankResult.map((r) => r.id).filter(Boolean);
 
       const positionResult = await this.companyContextService.직책_정보를_가져온다();
       positionCodes = positionResult
-        .map((p) => p.positionCode)
+        .map((p) => p.id)
         .filter(Boolean);
 
       this.logger.debug(
@@ -314,7 +314,9 @@ export class SeedDataContextService {
       let permissionEmployeeIds: string[] | null = null;
       let permissionRankCodes: string[] | null = null;
       let permissionPositionCodes: string[] | null = null;
-      let permissionDepartmentCodes: string[] | null = null;
+      let permissionRankIds: string[] | null = null;
+      let permissionPositionIds: string[] | null = null;
+      let permissionDepartmentIds: string[] | null = null;
       let isPublic = true;
 
       if (i >= 3 && i < 6 && employeeIds.length > 0) {
@@ -330,7 +332,7 @@ export class SeedDataContextService {
         const selectedDepts = departments
           .sort(() => 0.5 - Math.random())
           .slice(0, Math.min(3, departments.length));
-        permissionDepartmentCodes = selectedDepts;
+        permissionDepartmentIds = selectedDepts;
       } else if (i >= 9 && i < 12 && rankCodes.length > 0) {
         // 10~12번: 특정 직급만 (제한 공개)
         isPublic = false;
@@ -386,9 +388,9 @@ export class SeedDataContextService {
         expiredAt: null,
         mustRead,
         permissionEmployeeIds,
-        permissionRankCodes,
-        permissionPositionCodes,
-        permissionDepartmentCodes,
+        permissionRankIds,
+        permissionPositionIds,
+        permissionDepartmentIds,
         attachments,
         order: count - i,
         createdBy: 'seed',
@@ -1011,16 +1013,16 @@ export class SeedDataContextService {
       const deptResult =
         await this.companyContextService.부서_정보를_가져온다();
       departments = deptResult.departments
-        .map((d) => d.departmentCode)
+        .map((d) => d.id)
         .filter(Boolean);
 
       const rankResult = await this.companyContextService.직급_정보를_가져온다();
-      rankCodes = rankResult.map((r) => r.rankCode).filter(Boolean);
+      rankCodes = rankResult.map((r) => r.id).filter(Boolean);
 
       const positionResult =
         await this.companyContextService.직책_정보를_가져온다();
       positionCodes = positionResult
-        .map((p) => p.positionCode)
+        .map((p) => p.id)
         .filter(Boolean);
 
       this.logger.debug(
@@ -1049,7 +1051,7 @@ export class SeedDataContextService {
       name: '인사 규정',
       parentId: null,
       isPublic: departments.length > 0 ? false : true,
-      permissionDepartmentCodes:
+      permissionDepartmentIds:
         departments.length > 0
           ? departments
               .sort(() => 0.5 - Math.random())
@@ -1064,13 +1066,13 @@ export class SeedDataContextService {
       name: '프로젝트',
       parentId: null,
       isPublic: rankCodes.length > 0 || positionCodes.length > 0 ? false : true,
-      permissionRankCodes:
+      permissionRankIds:
         rankCodes.length > 0
           ? rankCodes
               .sort(() => 0.5 - Math.random())
               .slice(0, Math.min(2, rankCodes.length))
           : null,
-      permissionPositionCodes:
+      permissionPositionIds:
         positionCodes.length > 0
           ? positionCodes
               .sort(() => 0.5 - Math.random())

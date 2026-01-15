@@ -72,28 +72,28 @@ export class AnnouncementResponseDto {
   permissionEmployeeIds: string[] | null;
 
   @ApiProperty({
-    description: '직급 코드 목록',
+    description: '직급 ID 목록 (UUID)',
     type: [String],
     required: false,
     nullable: true,
   })
-  permissionRankCodes: string[] | null;
+  permissionRankIds: string[] | null;
 
   @ApiProperty({
-    description: '직책 코드 목록',
+    description: '직책 ID 목록 (UUID)',
     type: [String],
     required: false,
     nullable: true,
   })
-  permissionPositionCodes: string[] | null;
+  permissionPositionIds: string[] | null;
 
   @ApiProperty({
-    description: '부서 코드 목록',
+    description: '부서 ID 목록 (UUID)',
     type: [String],
     required: false,
     nullable: true,
   })
-  permissionDepartmentCodes: string[] | null;
+  permissionDepartmentIds: string[] | null;
 
   @ApiProperty({
     description: '첨부파일 목록',

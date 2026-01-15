@@ -7,40 +7,40 @@ import {
   CreateDateColumn,
   Index,
 } from 'typeorm';
-import { WikiPermissionAction } from './wiki-permission-action.types';
-import { WikiFileSystem } from './wiki-file-system.entity';
+import { AnnouncementPermissionAction } from './announcement-permission-action.types';
+import { Announcement } from './announcement.entity';
 
 /**
- * WikiPermissionLog Entity (위키 권한 로그)
+ * AnnouncementPermissionLog Entity (공지사항 권한 로그)
  * 
- * WikiFileSystem 권한 무효화 추적
- * - 외부 시스템(SSO)의 부서/직급/직책 코드 제거/변경 시 이력 기록
+ * Announcement 권한 무효화 추적
+ * - 외부 시스템(SSO)의 부서/직급/직책/직원 코드 제거/변경 시 이력 기록
  * - 감사 로그 및 문제 해결 히스토리
  * 
  * ⚠️ Soft Delete 없음: 로그는 영구 보관
  */
-@Entity('wiki_permission_logs')
-@Index('idx_wiki_permission_log_wiki_id', ['wikiFileSystemId'])
-@Index('idx_wiki_permission_log_action', ['action'])
-@Index('idx_wiki_permission_log_detected_at', ['detectedAt'])
-@Index('idx_wiki_permission_log_resolved_at', ['resolvedAt'])
-export class WikiPermissionLog {
+@Entity('announcement_permission_logs')
+@Index('idx_announcement_permission_log_announcement_id', ['announcementId'])
+@Index('idx_announcement_permission_log_action', ['action'])
+@Index('idx_announcement_permission_log_detected_at', ['detectedAt'])
+@Index('idx_announcement_permission_log_resolved_at', ['resolvedAt'])
+export class AnnouncementPermissionLog {
   @PrimaryGeneratedColumn('uuid', {
-    comment: '위키 권한 로그 ID',
+    comment: '공지사항 권한 로그 ID',
   })
   id: string;
 
   @Column({
     type: 'uuid',
-    comment: '위키 파일 시스템 ID',
+    comment: '공지사항 ID',
   })
-  wikiFileSystemId: string;
+  announcementId: string;
 
-  @ManyToOne(() => WikiFileSystem, (wiki) => wiki.permissionLogs, {
+  @ManyToOne(() => Announcement, (announcement) => announcement.permissionLogs, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'wikiFileSystemId' })
-  wikiFileSystem: WikiFileSystem;
+  @JoinColumn({ name: 'announcementId' })
+  announcement: Announcement;
 
   @Column({
     type: 'jsonb',
@@ -68,7 +68,17 @@ export class WikiPermissionLog {
 
   @Column({
     type: 'jsonb',
-    comment: '권한 설정 스냅샷 (변경 전) - 부서는 ID와 이름 포함',
+    nullable: true,
+    comment: '무효화된 직원 정보 (ID와 이름)',
+  })
+  invalidEmployees: Array<{
+    id: string;
+    name: string | null;
+  }> | null;
+
+  @Column({
+    type: 'jsonb',
+    comment: '권한 설정 스냅샷 (변경 전) - 부서와 직원은 ID와 이름 포함',
   })
   snapshotPermissions: {
     permissionRankCodes: string[] | null;
@@ -77,14 +87,18 @@ export class WikiPermissionLog {
       id: string;
       name: string | null;
     }> | null;
+    permissionEmployees: Array<{
+      id: string;
+      name: string | null;
+    }> | null;
   };
 
   @Column({
     type: 'enum',
-    enum: WikiPermissionAction,
+    enum: AnnouncementPermissionAction,
     comment: '처리 상태 (detected|removed|notified|resolved)',
   })
-  action: WikiPermissionAction;
+  action: AnnouncementPermissionAction;
 
   @Column({
     type: 'text',

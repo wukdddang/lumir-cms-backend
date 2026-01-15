@@ -19,13 +19,14 @@
   - [Brochure (브로슈어)](#4-브로슈어-brochure)
   - [News (뉴스)](#5-뉴스-news)
   - [Announcement (공지사항)](#6-공지사항-announcement)
+  - [AnnouncementPermissionLog (공지사항 권한 로그)](#6-1-공지사항-권한-로그-announcementpermissionlog)
 - [Sub Domain 상세](#sub-domain-상세)
   - [MainPopup (메인 팝업)](#1-메인-팝업-mainpopup)
   - [LumirStory (루미르 스토리)](#2-루미르-스토리-lumirstory)
   - [VideoGallery (비디오 갤러리)](#3-비디오-갤러리-videogallery)
-  - [Survey (설문조사)](#4-설문조사-survey)
-  - [EducationManagement (교육 관리)](#5-교육-관리-educationmanagement)
-  - [WikiFileSystem (위키 파일 시스템)](#6-위키-파일-시스템-wikifilesystem)
+  - [Survey (설문조사)](#7-설문조사-survey)
+  - [EducationManagement (교육 관리)](#8-교육-관리-educationmanagement)
+  - [WikiFileSystem (위키 파일 시스템)](#9-위키-파일-시스템-wikifilesystem)
 
 ---
 
@@ -375,9 +376,9 @@ erDiagram
         timestamp expiredAt "nullable"
         boolean mustRead "필독 여부"
         jsonb permissionEmployeeIds "특정 직원"
-        jsonb permissionRankCodes "직급"
-        jsonb permissionPositionCodes "직책"
-        jsonb permissionDepartmentCodes "부서"
+        jsonb permissionRankIds "직급 ID (UUID)"
+        jsonb permissionPositionIds "직책 ID (UUID)"
+        jsonb permissionDepartmentIds "부서 ID (UUID)"
         jsonb attachments "nullable"
         int order
     }
@@ -400,6 +401,7 @@ erDiagram
     }
 
     Announcement ||--o{ AnnouncementRead : "tracks (lazy)"
+    Announcement ||--o{ AnnouncementPermissionLog : "has permission logs"
     Announcement ||--o| Survey : "has survey (optional)"
 ```
 
@@ -408,6 +410,7 @@ erDiagram
 - **세밀한 권한**: 특정 직원, 직급, 직책, 부서별 공개 설정
 - **유니크 제약**: `(announcementId, employeeId)` - 중복 읽음 방지
 - **설문조사 연결**: 공지사항에 설문조사를 선택적으로 연결 가능
+- **권한 무효화 추적**: AnnouncementPermissionLog로 SSO 조직 정보 변경 이력 기록
 
 **권한 로직** (OR 조건):
 ```typescript
@@ -416,9 +419,9 @@ function canAccess(announcement: Announcement, employee: Employee): boolean {
 
   return (
     announcement.permissionEmployeeIds.includes(employee.id) ||
-    announcement.permissionRankCodes.includes(employee.rankCode) ||
-    announcement.permissionPositionCodes.includes(employee.positionCode) ||
-    announcement.permissionDepartmentCodes.includes(employee.departmentCode)
+    announcement.permissionRankIds.includes(employee.rankId) ||
+    announcement.permissionPositionIds.includes(employee.positionId) ||
+    announcement.permissionDepartmentIds.includes(employee.departmentId)
   );
 }
 ```
@@ -539,7 +542,102 @@ erDiagram
 
 ---
 
-### 4. 설문조사 (Survey)
+### 6-1. 공지사항 권한 로그 (AnnouncementPermissionLog)
+
+```mermaid
+erDiagram
+    Announcement {
+        uuid id PK
+        varchar title
+        text content
+        boolean isPublic
+        jsonb permissionEmployeeIds "nullable"
+        jsonb permissionRankIds "nullable"
+        jsonb permissionPositionIds "nullable"
+        jsonb permissionDepartmentIds "nullable"
+    }
+
+    AnnouncementPermissionLog {
+        uuid id PK
+        uuid announcementId FK
+        jsonb invalidDepartments "nullable - Array of {id, name}"
+        jsonb invalidRankIds "nullable - Array of UUIDs"
+        jsonb invalidPositionIds "nullable - Array of UUIDs"
+        jsonb invalidEmployees "nullable - Array of {id, name}"
+        jsonb snapshotPermissions "변경 전 스냅샷"
+        varchar action "detected|removed|notified|resolved"
+        text note "nullable"
+        timestamp detectedAt
+        timestamp resolvedAt "nullable"
+        uuid resolvedBy "nullable"
+        timestamp createdAt
+    }
+
+    Announcement ||--o{ AnnouncementPermissionLog : "tracks"
+```
+
+**설명**:
+- **용도**: SSO 시스템에서 부서/직급/직책/직원 정보가 삭제될 때 자동 감지 및 로그 기록
+- **스케줄러**: 매일 새벽 3시에 모든 공지사항의 권한 검증
+- **처리 흐름**:
+  1. `DETECTED` - 무효한 코드/ID 발견
+  2. `REMOVED` - 공지사항에서 무효한 권한 자동 제거
+  3. `NOTIFIED` - 관리자에게 알림 전송
+  4. `RESOLVED` - 관리자가 수동으로 해결
+
+**JSONB 구조**:
+```typescript
+// invalidDepartments
+[
+  { id: "DEPT_001", name: "개발팀" },
+  { id: "DEPT_999", name: null }  // SSO에서 삭제된 부서
+]
+
+// invalidEmployees
+[
+  { id: "emp001", name: "홍길동" },
+  { id: "emp999", name: null }  // SSO에서 삭제된 직원
+]
+
+// snapshotPermissions (변경 전)
+{
+  permissionRankIds: ["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "b2c3d4e5-f6a7-8901-bcde-f12345678901"],
+  permissionPositionIds: ["c3d4e5f6-a7b8-9012-cdef-123456789012"],
+  permissionDepartments: [
+    { id: "e2b3b884-833c-4fdb-ba00-ede1a45b8160", name: "개발팀" },
+    { id: "c11023a2-fb66-4e3f-bfcf-0666fb19f6bf", name: "디자인팀" },
+    { id: "00000000-0000-0000-0000-000000000999", name: "구 마케팅팀" }  // 삭제된 부서
+  ],
+  permissionEmployees: [
+    { id: "emp001", name: "홍길동" },
+    { id: "emp999", name: "퇴사자" }  // 삭제된 직원
+  ]
+}
+```
+
+**프론트엔드 UI 표시 예시**:
+```
+📋 공지사항: "2026년 1분기 전체 회의"
+⚠️ 권한 변경 감지됨 (2026-01-15 02:00)
+
+이전 부서: 개발팀, 디자인팀, 구 마케팅팀
+이후 부서: 개발팀, 디자인팀
+제거됨: 구 마케팅팀 (SSO에서 삭제됨)
+
+이전 직원: 홍길동, 퇴사자
+이후 직원: 홍길동
+제거됨: 퇴사자 (SSO에서 삭제됨)
+```
+
+**특징**:
+- ⚠️ **Soft Delete 없음**: 로그는 영구 보관 (감사 로그)
+- 📊 **이전/이후 비교**: 부서/직원 ID와 이름을 함께 저장하여 프론트엔드에서 명확한 비교 가능
+- 🔄 **자동화**: 스케줄러가 매일 자동 검증 및 로그 생성
+- 🔔 **알림**: 관리자에게 변경 사항 통보
+
+---
+
+### 7. 설문조사 (Survey)
 
 ```mermaid
 erDiagram
@@ -703,7 +801,7 @@ WHERE question_id = 'question-uuid';
 
 ---
 
-### 5. 교육 관리 (EducationManagement)
+### 8. 교육 관리 (EducationManagement)
 
 ```mermaid
 erDiagram
@@ -750,7 +848,7 @@ cancelled    postponed → scheduled
 
 ---
 
-### 6. 위키 파일 시스템 (WikiFileSystem)
+### 9. 위키 파일 시스템 (WikiFileSystem)
 
 ```mermaid
 erDiagram
@@ -767,9 +865,9 @@ erDiagram
         varchar mimeType "nullable"
         jsonb attachments "nullable - 첨부파일 목록"
         boolean isPublic "folder만 - 권한 cascading"
-        jsonb permissionRankCodes "nullable - 직급 (folder만)"
-        jsonb permissionPositionCodes "nullable - 직책 (folder만)"
-        jsonb permissionDepartmentCodes "nullable - 부서 (folder만)"
+        jsonb permissionRankIds "nullable - 직급 ID (UUID, folder만)"
+        jsonb permissionPositionIds "nullable - 직책 ID (UUID, folder만)"
+        jsonb permissionDepartmentIds "nullable - 부서 ID (UUID, folder만)"
         int order
     }
     
@@ -795,7 +893,7 @@ erDiagram
   - **첨부파일형**: fileUrl + fileSize + mimeType (파일만 업로드)
 - **AWS S3**: 모든 파일은 S3에 업로드 후 URL 참조
 - **권한 Cascading**: 
-  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankCodes, permissionPositionCodes, permissionDepartmentCodes)
+  - 권한은 **폴더만** 설정 가능 (isPublic, permissionRankIds, permissionPositionIds, permissionDepartmentIds)
   - 파일의 권한은 **상위 폴더들의 권한을 cascading**하여 결정
   - 루트부터 현재 위치까지 모든 폴더 권한 체크, 가장 제한적인 권한 적용
 
@@ -810,9 +908,9 @@ function canAccessFolder(folder: WikiFileSystem, employee: Employee): boolean {
   if (folder.isPublic) return true;
 
   return (
-    folder.permissionRankCodes?.includes(employee.rankCode) ||
-    folder.permissionPositionCodes?.includes(employee.positionCode) ||
-    folder.permissionDepartmentCodes?.includes(employee.departmentCode)
+    folder.permissionRankIds?.includes(employee.rankId) ||
+    folder.permissionPositionIds?.includes(employee.positionId) ||
+    folder.permissionDepartmentIds?.includes(employee.departmentId)
   );
 }
 
@@ -1028,5 +1126,5 @@ FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_move();
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.17
+**최종 업데이트**: 2026년 1월 15일  
+**버전**: v5.20

@@ -108,37 +108,37 @@ export class CreateAnnouncementDto {
   permissionEmployeeIds?: string[];
 
   @ApiProperty({
-    description: '직급 코드 목록',
+    description: '직급 ID 목록 (UUID)',
     type: [String],
-    example: ['매니저', '책임매니저'],
+    example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'b2c3d4e5-f6a7-8901-bcde-f12345678901'],
     required: false,
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionRankCodes?: string[];
+  permissionRankIds?: string[];
 
   @ApiProperty({
-    description: '직책 코드 목록',
+    description: '직책 ID 목록 (UUID)',
     type: [String],
-    example: ['팀장', '파트장'],
+    example: ['c3d4e5f6-a7b8-9012-cdef-123456789012', 'd4e5f6a7-b890-1234-def0-234567890123'],
     required: false,
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionPositionCodes?: string[];
+  permissionPositionIds?: string[];
 
   @ApiProperty({
-    description: '부서 코드 목록',
+    description: '부서 ID 목록 (UUID)',
     type: [String],
-    example: ['경영지원-경지', '연구-시스템'],
+    example: ['e2b3b884-833c-4fdb-ba00-ede1a45b8160', 'c11023a2-fb66-4e3f-bfcf-0666fb19f6bf'],
     required: false,
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionDepartmentCodes?: string[];
+  permissionDepartmentIds?: string[];
 
   @ApiProperty({
     description: '첨부파일 목록',

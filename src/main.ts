@@ -76,6 +76,10 @@ async function bootstrap() {
       },
       { name: 'A-8. 관리자 - 뉴스', description: '뉴스 관리 API' },
       { name: 'A-9. 관리자 - 공지사항', description: '공지사항 관리 API' },
+      {
+        name: '공통. 관리자 - 권한 검증',
+        description: '권한 검증 배치 작업 수동 실행 API',
+      },
     ],
   });
 

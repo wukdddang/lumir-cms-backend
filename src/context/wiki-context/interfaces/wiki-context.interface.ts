@@ -7,9 +7,9 @@ export interface CreateFolderDto {
   name: string;
   parentId?: string | null;
   isPublic?: boolean;
-  permissionRankCodes?: string[] | null;
-  permissionPositionCodes?: string[] | null;
-  permissionDepartmentCodes?: string[] | null;
+  permissionRankIds?: string[] | null;
+  permissionPositionIds?: string[] | null;
+  permissionDepartmentIds?: string[] | null;
   order?: number;
   createdBy?: string;
 }
@@ -44,9 +44,9 @@ export interface UpdateWikiDto {
   title?: string | null;
   content?: string | null;
   isPublic?: boolean;
-  permissionRankCodes?: string[] | null;
-  permissionPositionCodes?: string[] | null;
-  permissionDepartmentCodes?: string[] | null;
+  permissionRankIds?: string[] | null;
+  permissionPositionIds?: string[] | null;
+  permissionDepartmentIds?: string[] | null;
   order?: number;
   updatedBy?: string;
 }
@@ -72,9 +72,9 @@ export interface UpdateWikiFileDto {
  */
 export interface UpdateWikiPublicDto {
   isPublic: boolean;
-  permissionRankCodes?: string[] | null;
-  permissionPositionCodes?: string[] | null;
-  permissionDepartmentCodes?: string[] | null;
+  permissionRankIds?: string[] | null;
+  permissionPositionIds?: string[] | null;
+  permissionDepartmentIds?: string[] | null;
   updatedBy?: string;
 }
 

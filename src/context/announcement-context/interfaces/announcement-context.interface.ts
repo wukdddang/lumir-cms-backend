@@ -12,9 +12,9 @@ export interface CreateAnnouncementDto {
   expiredAt?: Date | null;
   mustRead?: boolean;
   permissionEmployeeIds?: string[] | null;
-  permissionRankCodes?: string[] | null;
-  permissionPositionCodes?: string[] | null;
-  permissionDepartmentCodes?: string[] | null;
+  permissionRankIds?: string[] | null;
+  permissionPositionIds?: string[] | null;
+  permissionDepartmentIds?: string[] | null;
   attachments?: Array<{
     fileName: string;
     fileUrl: string;
@@ -36,9 +36,9 @@ export interface UpdateAnnouncementDto {
   expiredAt?: Date | null;
   mustRead?: boolean;
   permissionEmployeeIds?: string[] | null;
-  permissionRankCodes?: string[] | null;
-  permissionPositionCodes?: string[] | null;
-  permissionDepartmentCodes?: string[] | null;
+  permissionRankIds?: string[] | null;
+  permissionPositionIds?: string[] | null;
+  permissionDepartmentIds?: string[] | null;
   attachments?: Array<{
     fileName: string;
     fileUrl: string;

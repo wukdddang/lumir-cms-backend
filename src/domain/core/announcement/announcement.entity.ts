@@ -2,6 +2,7 @@ import { Entity, Column, OneToMany, OneToOne, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
 import { AnnouncementRead } from './announcement-read.entity';
 import { Survey } from '../../sub/survey/survey.entity';
+import { AnnouncementPermissionLog } from './announcement-permission-log.entity';
 
 /**
  * Announcement Entity (공지사항)
@@ -76,23 +77,23 @@ export class Announcement extends BaseEntity<Announcement> {
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직급 코드 목록',
+    comment: '직급 ID 목록 (UUID)',
   })
-  permissionRankCodes: string[] | null;
+  permissionRankIds: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '직책 코드 목록',
+    comment: '직책 ID 목록 (UUID)',
   })
-  permissionPositionCodes: string[] | null;
+  permissionPositionIds: string[] | null;
 
   @Column({
     type: 'jsonb',
     nullable: true,
-    comment: '부서 코드 목록',
+    comment: '부서 ID 목록 (UUID)',
   })
-  permissionDepartmentCodes: string[] | null;
+  permissionDepartmentIds: string[] | null;
 
   @Column({
     type: 'jsonb',
@@ -118,6 +119,9 @@ export class Announcement extends BaseEntity<Announcement> {
 
   @OneToOne(() => Survey, (survey) => survey.announcement)
   survey: Survey | null;
+
+  @OneToMany(() => AnnouncementPermissionLog, (log) => log.announcement)
+  permissionLogs: AnnouncementPermissionLog[];
 
   /**
    * 엔티티를 DTO로 변환한다

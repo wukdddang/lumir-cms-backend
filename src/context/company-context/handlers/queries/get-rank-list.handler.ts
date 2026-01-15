@@ -37,7 +37,7 @@ export class GetRankListHandler implements IQueryHandler<GetRankListQuery> {
   }
 
   async execute(query: GetRankListQuery): Promise<RankListResult> {
-    this.logger.debug('직급 목록 조회 시작');
+    this.logger.debug('직급 목록 조회 시작 (isActive 필터링)');
 
     try {
       const response = await firstValueFrom(
@@ -46,9 +46,18 @@ export class GetRankListHandler implements IQueryHandler<GetRankListQuery> {
         ),
       );
 
-      this.logger.debug('직급 목록 조회 완료');
+      const rankList = response.data as RankListResult;
 
-      return response.data as RankListResult;
+      // isActive가 true인 직급만 필터링 (isActive 필드가 없으면 모두 포함)
+      const activeRanks = rankList.filter(
+        (rank) => rank.isActive === undefined || rank.isActive,
+      );
+
+      this.logger.debug(
+        `직급 목록 조회 완료 (전체: ${rankList.length}개 → 활성: ${activeRanks.length}개)`,
+      );
+
+      return activeRanks;
     } catch (error) {
       this.logger.error('직급 목록 조회 실패', error);
       throw new Error('직급 목록을 가져오는데 실패했습니다.');

@@ -14,9 +14,9 @@ import { AdminLumirStoryModule } from './interface/admin/lumir-story/lumir-story
 import { AdminVideoGalleryModule } from './interface/admin/video-gallery/video-gallery.module';
 import { AdminNewsModule } from './interface/admin/news/news.module';
 import { AnnouncementModule } from './interface/admin/announcement/announcement.module';
-import { SurveyAdminModule } from './interface/admin/survey/survey.module';
 import { WikiModule } from './interface/admin/wiki/wiki.module';
 import { SeedDataModule } from './interface/admin/seed-data/seed-data.module';
+import { PermissionValidationModule } from './interface/admin/permission-validation/permission-validation.module';
 import { HealthModule } from './interface/common/health/health.module';
 import { CompanyModule } from './interface/common/company/company.module';
 import { AuthContextModule } from '@context/auth-context';
@@ -60,9 +60,9 @@ import { JwtAuthGuard } from '@interface/common/guards/jwt-auth.guard';
     AdminVideoGalleryModule,
     AdminNewsModule,
     AnnouncementModule,
-    SurveyAdminModule,
     WikiModule,
     SeedDataModule,
+    PermissionValidationModule,
     CompanyModule,
   ],
   providers: [

@@ -55,6 +55,7 @@ export interface Rank {
   rankName: string;
   rankCode: string;
   level: number;
+  isActive?: boolean;
 }
 
 /**
@@ -66,6 +67,7 @@ export interface Position {
   positionCode: string;
   level: number;
   hasManagementAuthority: boolean;
+  isActive?: boolean;
 }
 
 /**

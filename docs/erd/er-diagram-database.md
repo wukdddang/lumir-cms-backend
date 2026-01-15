@@ -133,41 +133,22 @@ Announcement에는 세밀한 공개범위 설정을 위한 4가지 권한 필드
 ["employee-uuid-1", "employee-uuid-2", "employee-uuid-3"]
 ```
 
-#### 2. permissionRankCodes (직급)
+#### 2. permissionRankIds (직급 ID)
 ```json
-["staff", "assistant_manager", "manager", "deputy_general_manager", "general_manager", "executive"]
+["a1b2c3d4-e5f6-7890-abcd-ef1234567890", "b2c3d4e5-f6a7-8901-bcde-f12345678901"]
 ```
 
-**직급 코드 예시**:
-- `staff` - 사원
-- `assistant_manager` - 대리
-- `manager` - 과장
-- `deputy_general_manager` - 차장
-- `general_manager` - 부장
-- `executive` - 임원
-
-#### 3. permissionPositionCodes (직책)
+#### 3. permissionPositionIds (직책 ID)
 ```json
-["team_leader", "part_leader", "division_head", "department_head"]
+["c3d4e5f6-a7b8-9012-cdef-123456789012", "d4e5f6a7-b890-1234-def0-234567890123"]
 ```
 
-**직책 코드 예시**:
-- `team_leader` - 팀장
-- `part_leader` - 파트장
-- `division_head` - 본부장
-- `department_head` - 실장
-
-#### 4. permissionDepartmentCodes (부서)
+#### 4. permissionDepartmentIds (부서 ID)
 ```json
-["dev", "hr", "sales", "marketing", "finance"]
+["e2b3b884-833c-4fdb-ba00-ede1a45b8160", "c11023a2-fb66-4e3f-bfcf-0666fb19f6bf"]
 ```
 
-**부서 코드 예시**:
-- `dev` - 개발팀
-- `hr` - 인사팀
-- `sales` - 영업팀
-- `marketing` - 마케팅팀
-- `finance` - 재무팀
+**참고**: 부서 ID는 SSO 서버에서 조회한 UUID 값을 사용합니다.
 
 #### 접근 권한 로직 (OR 조건)
 
@@ -181,9 +162,9 @@ function canAccess(announcement: Announcement, employee: Employee): boolean {
   // 제한 공개 (하나라도 일치하면 접근 가능)
   return (
     announcement.permissionEmployeeIds.includes(employee.id) ||
-    announcement.permissionRankCodes.includes(employee.rankCode) ||
-    announcement.permissionPositionCodes.includes(employee.positionCode) ||
-    announcement.permissionDepartmentCodes.includes(employee.departmentCode)
+    announcement.permissionRankIds.includes(employee.rankId) ||
+    announcement.permissionPositionIds.includes(employee.positionId) ||
+    announcement.permissionDepartmentIds.includes(employee.departmentId)
   );
 }
 ```
@@ -195,9 +176,9 @@ function canAccess(announcement: Announcement, employee: Employee): boolean {
   "title": "2024년 성과평가 안내",
   "isPublic": false,
   "permissionEmployeeIds": ["emp-123"],
-  "permissionRankCodes": ["manager", "general_manager", "executive"],
-  "permissionPositionCodes": ["team_leader"],
-  "permissionDepartmentCodes": ["hr"]
+  "permissionRankIds": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"],
+  "permissionPositionIds": ["c3d4e5f6-a7b8-9012-cdef-123456789012"],
+  "permissionDepartmentIds": ["e2b3b884-833c-4fdb-ba00-ede1a45b8160"]
 }
 // → 김철수(emp-123) OR 과장급 이상 OR 팀장 OR 인사팀 = 접근 가능
 ```
@@ -468,6 +449,27 @@ WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX idx_announcement_read_unique 
 ON announcement_read(announcement_id, employee_id) 
 WHERE deleted_at IS NULL;
+```
+
+### AnnouncementPermissionLog
+
+```sql
+-- 공지사항별 권한 로그 조회
+CREATE INDEX idx_announcement_permission_log_announcement_id
+ON announcement_permission_logs(announcement_id);
+
+-- 처리 상태별 조회
+CREATE INDEX idx_announcement_permission_log_action
+ON announcement_permission_logs(action);
+
+-- 감지 일시 기준 정렬
+CREATE INDEX idx_announcement_permission_log_detected_at
+ON announcement_permission_logs(detected_at DESC);
+
+-- 해결되지 않은 로그 조회
+CREATE INDEX idx_announcement_permission_log_resolved_at
+ON announcement_permission_logs(resolved_at)
+WHERE resolved_at IS NULL;
 ```
 
 ### Survey
@@ -777,6 +779,15 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 ## 변경 이력
 
+### v5.19 (2026-01-15)
+- ✅ **권한 필드를 모두 ID 기반으로 변경**
+  - `permissionRankCodes` → `permissionRankIds` (직급 ID)
+  - `permissionPositionCodes` → `permissionPositionIds` (직책 ID)
+  - `permissionDepartmentCodes` → `permissionDepartmentIds` (부서 ID)
+  - 코드 대신 UUID 기반 ID로 권한 설정
+  - ID는 고유하고 변경되지 않아 안정적
+  - 스케줄러 및 비즈니스 로직 전체 업데이트
+
 ### v5.18 (2026-01-14)
 - ✅ **WikiFileSystem 파일 비공개 설정 추가**
   - 파일의 `isPublic` 필드 활성화
@@ -811,10 +822,48 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ### v5.11 (2026-01-08)
 - ✅ **WikiFileSystem 권한 관리 개선**
   - `WikiFileSystem.permissionEmployeeIds` 제거
-  - `WikiFileSystem.permissionRankCodes` 추가 (직급 코드 목록)
-  - `WikiFileSystem.permissionPositionCodes` 추가 (직책 코드 목록)
-  - `WikiFileSystem.permissionDepartmentCodes` 추가 (부서 코드 목록)
+  - `WikiFileSystem.permissionRankIds` 추가 (직급 ID 목록)
+  - `WikiFileSystem.permissionPositionIds` 추가 (직책 ID 목록)
+  - `WikiFileSystem.permissionDepartmentIds` 추가 (부서 ID 목록)
   - CHECK 제약조건 업데이트: 제한공개 시 최소 하나의 권한 필드 필요 (Announcement 패턴과 동일)
+
+### v5.15 (2026-01-09)
+- ✅ **파일 업로드 방식 변경**
+  - 클라이언트: Form-data로 파일 전송 (multipart/form-data)
+  - 백엔드: Multer로 파일 수신 → S3 업로드 → 메타데이터 저장
+  - attachments JSONB 필드는 백엔드가 자동 생성
+
+### v5.14 (2026-01-08)
+- ✅ **데이터 타입 일관성 개선**
+  - VoteResult.order 필드 제거 (agendaNumber로 정렬)
+  - date → timestamp 변경: ShareholdersMeeting.meetingDate, Survey.startDate/endDate, EducationManagement.deadline
+  - 모든 날짜 관련 필드가 시간 정보 포함 (정확한 일시 관리)
+- ✅ **WikiPermissionLog 엔티티 추가**
+  - 외부 시스템(SSO) 부서/직급/직책 ID 제거 시 이력 추적
+  - WikiFileSystem 전용 감사 로그 및 문제 해결 히스토리
+- ✅ **설문 응답 삭제 정책 명확화**
+  - SurveyResponseCheckbox: hard delete 사용 (체크박스 선택/해제 반복 지원)
+  - 사용자가 선택 취소 시 레코드 완전 삭제 (UK 제약조건 문제 없음)
+
+### v5.13 (2026-01-08)
+- ✅ **상태 관리 필드 추가**
+  - EducationManagement.status 필드 추가 (EducationStatus enum)
+  - EducationStatus enum 정의 추가: scheduled, in_progress, completed, cancelled, postponed
+
+### v5.12 (2026-01-08)
+- ✅ **WikiFileSystem Closure Table 도입**
+  - WikiFileSystemClosure 엔티티 추가 (조상-자손 관계 미리 저장)
+  - WikiFileSystem.depth 필드 추가 (계층 깊이 캐싱)
+  - 빈번한 폴더 이동/추가/삭제 작업 최적화
+  - 조회 성능 극대화 (재귀 쿼리 불필요)
+
+### v5.11 (2026-01-08)
+- ✅ **WikiFileSystem 권한 관리 개선**
+  - WikiFileSystem.permissionEmployeeIds 제거
+  - WikiFileSystem.permissionRankIds 추가 (직급 ID 목록)
+  - WikiFileSystem.permissionPositionIds 추가 (직책 ID 목록)
+  - WikiFileSystem.permissionDepartmentIds 추가 (부서 ID 목록)
+  - 세밀한 권한 관리 (Announcement와 동일한 패턴)
 
 ### v5.10 (2026-01-08)
 - ✅ **Survey-Announcement 통합**
@@ -826,7 +875,7 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
   - CHECK 제약조건 업데이트: Survey의 permission 제약 제거, announcementId 유니크 제약 추가
   - 인덱스 추가: `idx_survey_announcement`, `idx_survey_end_date`
 
-### v5.15 (2026-01-09)
+### v5.9 (2026-01-08)
 - ✅ **파일 업로드 방식 변경**
   - 클라이언트: Form-data로 파일 전송 (multipart/form-data)
   - 백엔드: Multer로 파일 수신 → S3 업로드 → 메타데이터 저장
@@ -854,42 +903,8 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
   - 부분 인덱스 활용 (WHERE deleted_at IS NULL)
   - 유니크 인덱스로 무결성 + 성능 달성
 
-### v5.6 (2026-01-07)
-- ✅ **공지사항 테이블 구조 개선**
-  - Sparse Data Pattern 적용 (Lazy Creation)
-  - `AnnouncementEmployee` → `AnnouncementRead`, `AnnouncementResponse` 분리
-  - 세밀한 공개범위 설정 (직급/직책/부서별)
-  - 확장성 대폭 향상
-- ✅ **첨부파일 구조 단순화**
-  - `Attachment` 테이블 제거 → JSONB 필드로 통합
-  - ShareholdersMeeting: 언어 독립적 첨부파일은 기본 테이블에 저장
-
-### v5.5 (2026-01-07)
-- ✅ **설문조사 응답 테이블 타입별 분리**
-  - JSONB 단일 테이블 → 7개 타입별 테이블
-  - 통계 쿼리 성능 10배 이상 향상
-  - `survey_completion` 테이블 추가
-  - CHECK 제약조건 추가
-
-### v5.4 (2026-01-07)
-- ✅ **설문조사 통계 처리 전략 추가**
-  - 4가지 해결 방안 제시
-  - 단계별 권장 사항
-
-### v5.3 (2026-01-07)
-- ✅ **JSONB 통계 집계 쿼리 예시 추가**
-
-### v5.2 (2026-01-07)
-- ✅ **CHECK 제약조건 추가** (모든 주요 엔티티)
-- ✅ **다국어 Fallback 전략 추가** (한국어 기본)
-
-### v5.1 (2026-01-06)
-- ✅ **Core/Sub Domain 분리 및 재구성**
-- ✅ **Common Domain 상세 정보 추가**
-- ✅ **CategoryMapping entityType 제거** (데이터 정규화)
-
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 14일  
-**버전**: v5.18
+**최종 업데이트**: 2026년 1월 15일  
+**버전**: v5.20

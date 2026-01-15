@@ -7,6 +7,7 @@ import { AnnouncementContextService } from '@context/announcement-context/announ
 import { SurveyContextService } from '@context/survey-context/survey-context.service';
 import { CompanyContextService } from '@context/company-context/company-context.service';
 import { CategoryService } from '@domain/common/category/category.service';
+import { SsoService } from '@domain/common/sso/sso.service';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
 import { AnnouncementRead } from '@domain/core/announcement/announcement-read.entity';
 import { Survey } from '@domain/sub/survey/survey.entity';
@@ -44,6 +45,7 @@ export class AnnouncementBusinessService {
     private readonly surveyContextService: SurveyContextService,
     private readonly companyContextService: CompanyContextService,
     private readonly categoryService: CategoryService,
+    private readonly ssoService: SsoService,
     private readonly configService: ConfigService,
     @InjectRepository(AnnouncementRead)
     private readonly announcementReadRepository: Repository<AnnouncementRead>,
@@ -53,9 +55,8 @@ export class AnnouncementBusinessService {
     private readonly surveyCompletionRepository: Repository<SurveyCompletion>,
   ) {
     this.ssoBaseUrl = this.configService.get<string>('SSO_API_URL') || '';
-    this.notificationBaseUrl = this.configService.get<string>(
-      'NOTIFICATION_API_URL',
-    ) || '';
+    this.notificationBaseUrl =
+      this.configService.get<string>('NOTIFICATION_API_URL') || '';
   }
 
   /**
@@ -127,14 +128,16 @@ export class AnnouncementBusinessService {
     // 1. 공지사항 생성 (survey 필드 제외)
     const { survey, ...announcementData } = data;
     const result =
-      await this.announcementContextService.공지사항을_생성한다(announcementData);
+      await this.announcementContextService.공지사항을_생성한다(
+        announcementData,
+      );
 
     this.logger.log(`공지사항 생성 완료 - ID: ${result.id}`);
 
     // 2. 설문조사가 있으면 생성
     if (survey) {
       this.logger.log(`설문조사 생성 시작 - 공지사항 ID: ${result.id}`);
-      
+
       await this.surveyContextService.설문조사를_생성한다({
         announcementId: result.id,
         title: survey.title,
@@ -163,8 +166,10 @@ export class AnnouncementBusinessService {
 
     // 1. 공지사항 수정 (survey 필드 제외)
     const { survey, ...announcementData } = data;
-    const result =
-      await this.announcementContextService.공지사항을_수정한다(id, announcementData);
+    const result = await this.announcementContextService.공지사항을_수정한다(
+      id,
+      announcementData,
+    );
 
     this.logger.log(`공지사항 수정 완료 - ID: ${id}`);
 
@@ -178,7 +183,9 @@ export class AnnouncementBusinessService {
         // 설문조사 삭제 요청
         if (existingSurvey) {
           this.logger.log(`설문조사 삭제 시작 - 공지사항 ID: ${id}`);
-          await this.surveyContextService.설문조사를_삭제한다(existingSurvey.id);
+          await this.surveyContextService.설문조사를_삭제한다(
+            existingSurvey.id,
+          );
           this.logger.log(`설문조사 삭제 완료 - 공지사항 ID: ${id}`);
         }
       } else if (existingSurvey) {
@@ -211,7 +218,9 @@ export class AnnouncementBusinessService {
     isPublic: boolean,
     updatedBy?: string,
   ): Promise<Announcement> {
-    this.logger.log(`공지사항 공개 상태 수정 시작 - ID: ${id}, 공개: ${isPublic}`);
+    this.logger.log(
+      `공지사항 공개 상태 수정 시작 - ID: ${id}, 공개: ${isPublic}`,
+    );
 
     const result =
       await this.announcementContextService.공지사항_공개를_수정한다(id, {
@@ -232,7 +241,9 @@ export class AnnouncementBusinessService {
     isFixed: boolean,
     updatedBy?: string,
   ): Promise<Announcement> {
-    this.logger.log(`공지사항 고정 상태 수정 시작 - ID: ${id}, 고정: ${isFixed}`);
+    this.logger.log(
+      `공지사항 고정 상태 수정 시작 - ID: ${id}, 고정: ${isFixed}`,
+    );
 
     const result =
       await this.announcementContextService.공지사항_고정을_수정한다(id, {
@@ -296,7 +307,8 @@ export class AnnouncementBusinessService {
   async 공지사항을_삭제한다(id: string): Promise<boolean> {
     this.logger.log(`공지사항 삭제 시작 - ID: ${id}`);
 
-    const result = await this.announcementContextService.공지사항을_삭제한다(id);
+    const result =
+      await this.announcementContextService.공지사항을_삭제한다(id);
 
     this.logger.log(`공지사항 삭제 완료 - ID: ${id}`);
 
@@ -367,7 +379,9 @@ export class AnnouncementBusinessService {
         false, // 활성화된 것만
       );
 
-    this.logger.log(`공지사항 카테고리 목록 조회 완료 - 총 ${categories.length}개`);
+    this.logger.log(
+      `공지사항 카테고리 목록 조회 완료 - 총 ${categories.length}개`,
+    );
 
     return categories;
   }
@@ -478,9 +492,8 @@ export class AnnouncementBusinessService {
       await this.announcementContextService.공지사항을_조회한다(announcementId);
 
     // 2. 공지사항 대상 직원 목록 추출
-    const targetEmployees = await this.공지사항_대상_직원_목록을_추출한다(
-      announcement,
-    );
+    const targetEmployees =
+      await this.공지사항_대상_직원_목록을_추출한다(announcement);
 
     if (targetEmployees.length === 0) {
       this.logger.warn(`대상 직원이 없습니다 - 공지사항 ID: ${announcementId}`);
@@ -542,9 +555,8 @@ export class AnnouncementBusinessService {
     }
 
     // 3. 공지사항 대상 직원 목록 추출
-    const targetEmployees = await this.공지사항_대상_직원_목록을_추출한다(
-      announcement,
-    );
+    const targetEmployees =
+      await this.공지사항_대상_직원_목록을_추출한다(announcement);
 
     if (targetEmployees.length === 0) {
       this.logger.warn(`대상 직원이 없습니다 - 공지사항 ID: ${announcementId}`);
@@ -621,9 +633,8 @@ export class AnnouncementBusinessService {
       await this.announcementContextService.공지사항을_조회한다(announcementId);
 
     // 2. 공지사항 대상 직원 목록 추출
-    const targetEmployees = await this.공지사항_대상_직원_목록을_추출한다(
-      announcement,
-    );
+    const targetEmployees =
+      await this.공지사항_대상_직원_목록을_추출한다(announcement);
 
     if (targetEmployees.length === 0) {
       this.logger.warn(`대상 직원이 없습니다 - 공지사항 ID: ${announcementId}`);
@@ -692,33 +703,45 @@ export class AnnouncementBusinessService {
     const orgInfo = await this.companyContextService.조직_정보를_가져온다();
 
     // 특정 직원 ID 목록
-    if (announcement.permissionEmployeeIds && announcement.permissionEmployeeIds.length > 0) {
+    if (
+      announcement.permissionEmployeeIds &&
+      announcement.permissionEmployeeIds.length > 0
+    ) {
       announcement.permissionEmployeeIds.forEach((id) => employeeIds.add(id));
     }
 
-    // 직급 코드로 필터링
-    if (announcement.permissionRankCodes && announcement.permissionRankCodes.length > 0) {
+    // 직급 ID로 필터링
+    if (
+      announcement.permissionRankIds &&
+      announcement.permissionRankIds.length > 0
+    ) {
       const employees = this.조직에서_직급별_직원ID를_추출한다(
         orgInfo,
-        announcement.permissionRankCodes,
+        announcement.permissionRankIds,
       );
       employees.forEach((id) => employeeIds.add(id));
     }
 
-    // 직책 코드로 필터링
-    if (announcement.permissionPositionCodes && announcement.permissionPositionCodes.length > 0) {
+    // 직책 ID로 필터링
+    if (
+      announcement.permissionPositionIds &&
+      announcement.permissionPositionIds.length > 0
+    ) {
       const employees = this.조직에서_직책별_직원ID를_추출한다(
         orgInfo,
-        announcement.permissionPositionCodes,
+        announcement.permissionPositionIds,
       );
       employees.forEach((id) => employeeIds.add(id));
     }
 
-    // 부서 코드로 필터링
-    if (announcement.permissionDepartmentCodes && announcement.permissionDepartmentCodes.length > 0) {
+    // 부서 ID로 필터링
+    if (
+      announcement.permissionDepartmentIds &&
+      announcement.permissionDepartmentIds.length > 0
+    ) {
       const employees = this.조직에서_부서별_직원ID를_추출한다(
         orgInfo,
-        announcement.permissionDepartmentCodes,
+        announcement.permissionDepartmentIds,
       );
       employees.forEach((id) => employeeIds.add(id));
     }
@@ -759,15 +782,19 @@ export class AnnouncementBusinessService {
    */
   private 조직에서_직급별_직원ID를_추출한다(
     orgInfo: OrganizationInfo,
-    rankCodes: string[],
+    rankIds: string[],
   ): string[] {
     const employeeIds: string[] = [];
-    const rankCodeSet = new Set(rankCodes);
+    const rankIdSet = new Set(rankIds);
 
     const extractFromDept = (dept: any) => {
       if (dept.employees) {
         dept.employees.forEach((emp: any) => {
-          if (emp.employeeNumber && emp.rankCode && rankCodeSet.has(emp.rankCode)) {
+          if (
+            emp.employeeNumber &&
+            emp.rankId &&
+            rankIdSet.has(emp.rankId)
+          ) {
             employeeIds.push(emp.employeeNumber);
           }
         });
@@ -790,18 +817,18 @@ export class AnnouncementBusinessService {
    */
   private 조직에서_직책별_직원ID를_추출한다(
     orgInfo: OrganizationInfo,
-    positionCodes: string[],
+    positionIds: string[],
   ): string[] {
     const employeeIds: string[] = [];
-    const positionCodeSet = new Set(positionCodes);
+    const positionIdSet = new Set(positionIds);
 
     const extractFromDept = (dept: any) => {
       if (dept.employees) {
         dept.employees.forEach((emp: any) => {
           if (
             emp.employeeNumber &&
-            emp.positionCode &&
-            positionCodeSet.has(emp.positionCode)
+            emp.positionId &&
+            positionIdSet.has(emp.positionId)
           ) {
             employeeIds.push(emp.employeeNumber);
           }
@@ -825,14 +852,14 @@ export class AnnouncementBusinessService {
    */
   private 조직에서_부서별_직원ID를_추출한다(
     orgInfo: OrganizationInfo,
-    departmentCodes: string[],
+    departmentIds: string[],
   ): string[] {
     const employeeIds: string[] = [];
-    const departmentCodeSet = new Set(departmentCodes);
+    const departmentIdSet = new Set(departmentIds);
 
     const extractFromDept = (dept: any) => {
       const isDepartmentMatch =
-        dept.departmentCode && departmentCodeSet.has(dept.departmentCode);
+        dept.id && departmentIdSet.has(dept.id);
 
       if (isDepartmentMatch && dept.employees) {
         dept.employees.forEach((emp: any) => {
@@ -874,38 +901,11 @@ export class AnnouncementBusinessService {
 
     try {
       // 1. SSO에서 FCM 토큰 조회
-      this.logger.debug(
-        `FCM 토큰 조회 중: ${employeeNumbers.length}명의 직원`,
-      );
+      this.logger.debug(`FCM 토큰 조회 중: ${employeeNumbers.length}명의 직원`);
 
-      const fcmResponse = await axios.post(
-        `${this.ssoBaseUrl}/api/v1/fcm-tokens/bulk`,
-        { employeeNumbers },
-      );
-
-      const fcmData = fcmResponse.data;
-
-      if (!fcmData.byEmployee || fcmData.byEmployee.length === 0) {
-        this.logger.warn('FCM 토큰이 있는 수신자가 없습니다.');
-        return {
-          success: false,
-          sentCount: 0,
-          failedCount: employeeNumbers.length,
-          message: 'FCM 토큰이 있는 수신자가 없습니다.',
-        };
-      }
-
-      // 2. deviceType에 'portal'이 포함된 FCM 토큰만 필터링
-      const recipients = fcmData.byEmployee
-        .map((emp: any) => ({
-          employeeNumber: emp.employeeNumber,
-          tokens: emp.tokens
-            .filter((token: any) =>
-              token.deviceType.toLowerCase().includes('portal'),
-            )
-            .map((t: any) => t.fcmToken),
-        }))
-        .filter((emp: any) => emp.tokens.length > 0);
+      const recipients = await this.ssoService.FCM_토큰을_조회한다({
+        employeeNumbers,
+      });
 
       if (recipients.length === 0) {
         this.logger.warn('Portal FCM 토큰이 있는 수신자가 없습니다.');
@@ -921,7 +921,7 @@ export class AnnouncementBusinessService {
         `Portal FCM 토큰 조회 완료: ${recipients.length}명의 수신자`,
       );
 
-      // 3. 알림 서버로 전송
+      // 2. 알림 서버로 전송
       const notificationResponse = await axios.post(
         `${this.notificationBaseUrl}/api/v1/notifications/send`,
         {
@@ -948,7 +948,10 @@ export class AnnouncementBusinessService {
         message: '알림 전송 완료',
       };
     } catch (error) {
-      this.logger.error(`알림 전송 중 오류 발생: ${error.message}`, error.stack);
+      this.logger.error(
+        `알림 전송 중 오류 발생: ${error.message}`,
+        error.stack,
+      );
 
       return {
         success: false,

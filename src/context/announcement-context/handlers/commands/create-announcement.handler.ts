@@ -41,9 +41,9 @@ export class CreateAnnouncementHandler
       expiredAt: data.expiredAt ?? null,
       mustRead: data.mustRead ?? false, // 기본값: 필독 아님
       permissionEmployeeIds: data.permissionEmployeeIds ?? null,
-      permissionRankCodes: data.permissionRankCodes ?? null,
-      permissionPositionCodes: data.permissionPositionCodes ?? null,
-      permissionDepartmentCodes: data.permissionDepartmentCodes ?? null,
+      permissionRankIds: data.permissionRankIds ?? null,
+      permissionPositionIds: data.permissionPositionIds ?? null,
+      permissionDepartmentIds: data.permissionDepartmentIds ?? null,
       attachments: data.attachments ?? null,
       order: 0, // 기본값
       createdBy: data.createdBy,

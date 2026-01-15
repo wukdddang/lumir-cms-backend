@@ -15,13 +15,11 @@ export class GetDepartmentListQuery {
 /**
  * 부서 목록 조회 핸들러
  *
- * SSO 서버로부터 부서 목록을 가져옵니다.
+ * SSO 서버로부터 부서 목록을 가져오고, isActive가 true인 부서만 필터링합니다.
  */
 @Injectable()
 @QueryHandler(GetDepartmentListQuery)
-export class GetDepartmentListHandler
-  implements IQueryHandler<GetDepartmentListQuery>
-{
+export class GetDepartmentListHandler implements IQueryHandler<GetDepartmentListQuery> {
   private readonly logger = new Logger(GetDepartmentListHandler.name);
   private readonly ssoBaseUrl: string;
 
@@ -39,8 +37,6 @@ export class GetDepartmentListHandler
   }
 
   async execute(query: GetDepartmentListQuery): Promise<DepartmentListResult> {
-    this.logger.debug('부서 목록 조회 시작');
-
     try {
       const response = await firstValueFrom(
         this.httpService.get(
@@ -48,9 +44,18 @@ export class GetDepartmentListHandler
         ),
       );
 
-      this.logger.debug('부서 목록 조회 완료');
+      const deptList = response.data as DepartmentListResult;
 
-      return response.data as DepartmentListResult;
+      // isActive가 true인 부서만 필터링
+      const activeDepartments = deptList.departments.filter(
+        (dept) => dept.isActive,
+      );
+
+      const filteredDeptList: DepartmentListResult = {
+        departments: activeDepartments,
+      };
+
+      return filteredDeptList;
     } catch (error) {
       this.logger.error('부서 목록 조회 실패', error);
       throw new Error('부서 목록을 가져오는데 실패했습니다.');

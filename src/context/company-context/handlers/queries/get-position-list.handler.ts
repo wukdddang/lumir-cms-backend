@@ -19,9 +19,7 @@ export class GetPositionListQuery {
  */
 @Injectable()
 @QueryHandler(GetPositionListQuery)
-export class GetPositionListHandler
-  implements IQueryHandler<GetPositionListQuery>
-{
+export class GetPositionListHandler implements IQueryHandler<GetPositionListQuery> {
   private readonly logger = new Logger(GetPositionListHandler.name);
   private readonly ssoBaseUrl: string;
 
@@ -39,8 +37,6 @@ export class GetPositionListHandler
   }
 
   async execute(query: GetPositionListQuery): Promise<PositionListResult> {
-    this.logger.debug('직책 목록 조회 시작');
-
     try {
       const response = await firstValueFrom(
         this.httpService.get(
@@ -48,9 +44,14 @@ export class GetPositionListHandler
         ),
       );
 
-      this.logger.debug('직책 목록 조회 완료');
+      const positionList = response.data as PositionListResult;
 
-      return response.data as PositionListResult;
+      // isActive가 true인 직책만 필터링 (isActive 필드가 없으면 모두 포함)
+      const activePositions = positionList.filter(
+        (position) => position.isActive === undefined || position.isActive,
+      );
+
+      return activePositions;
     } catch (error) {
       this.logger.error('직책 목록 조회 실패', error);
       throw new Error('직책 목록을 가져오는데 실패했습니다.');

@@ -3,7 +3,9 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnnouncementContextService } from './announcement-context.service';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
+import { AnnouncementPermissionLog } from '@domain/core/announcement/announcement-permission-log.entity';
 import { AnnouncementModule } from '@domain/core/announcement/announcement.module';
+import { AnnouncementPermissionScheduler } from './announcement-permission.scheduler';
 import {
   GetAnnouncementListHandler,
   GetAnnouncementDetailHandler,
@@ -15,6 +17,7 @@ import {
   UpdateAnnouncementBatchOrderHandler,
   DeleteAnnouncementHandler,
 } from './handlers';
+import { SsoModule } from '@domain/common/sso/sso.module';
 
 const QueryHandlers = [
   GetAnnouncementListHandler,
@@ -39,14 +42,16 @@ const CommandHandlers = [
 @Module({
   imports: [
     CqrsModule,
-    TypeOrmModule.forFeature([Announcement]),
+    TypeOrmModule.forFeature([Announcement, AnnouncementPermissionLog]),
     AnnouncementModule,
+    SsoModule,
   ],
   providers: [
     AnnouncementContextService,
+    AnnouncementPermissionScheduler,
     ...QueryHandlers,
     ...CommandHandlers,
   ],
-  exports: [AnnouncementContextService],
+  exports: [AnnouncementContextService, AnnouncementPermissionScheduler],
 })
 export class AnnouncementContextModule {}

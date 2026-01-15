@@ -98,14 +98,14 @@ export class CreateFileDto {
   permissionPositionCodes?: string[];
 
   @ApiPropertyOptional({
-    description: '부서 코드 목록',
-    example: ['dev', 'hr'],
+    description: '부서 ID 목록 (UUID)',
+    example: ['e2b3b884-833c-4fdb-ba00-ede1a45b8160', 'c11023a2-fb66-4e3f-bfcf-0666fb19f6bf'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionDepartmentCodes?: string[];
+  permissionDepartmentIds?: string[];
 
   @ApiPropertyOptional({ description: '정렬 순서', example: 0, default: 0 })
   @IsOptional()
@@ -157,34 +157,34 @@ export class UpdateFolderDto {
   isPublic?: boolean;
 
   @ApiPropertyOptional({
-    description: '직급 코드 목록',
-    example: ['manager', 'general_manager'],
+    description: '직급 ID 목록 (UUID)',
+    example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionRankCodes?: string[];
+  permissionRankIds?: string[];
 
   @ApiPropertyOptional({
-    description: '직책 코드 목록',
-    example: ['team_leader'],
+    description: '직책 ID 목록 (UUID)',
+    example: ['c3d4e5f6-a7b8-9012-cdef-123456789012'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionPositionCodes?: string[];
+  permissionPositionIds?: string[];
 
   @ApiPropertyOptional({
-    description: '부서 코드 목록',
-    example: ['dev', 'hr'],
+    description: '부서 ID 목록 (UUID)',
+    example: ['e2b3b884-833c-4fdb-ba00-ede1a45b8160', 'c11023a2-fb66-4e3f-bfcf-0666fb19f6bf'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionDepartmentCodes?: string[];
+  permissionDepartmentIds?: string[];
 
   @ApiPropertyOptional({ description: '정렬 순서', example: 0 })
   @IsOptional()
@@ -235,34 +235,34 @@ export class UpdateWikiPublicDto {
   isPublic: boolean;
 
   @ApiPropertyOptional({
-    description: '직급 코드 목록',
-    example: ['manager', 'general_manager'],
+    description: '직급 ID 목록 (UUID)',
+    example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionRankCodes?: string[];
+  permissionRankIds?: string[];
 
   @ApiPropertyOptional({
-    description: '직책 코드 목록',
-    example: ['team_leader'],
+    description: '직책 ID 목록 (UUID)',
+    example: ['c3d4e5f6-a7b8-9012-cdef-123456789012'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionPositionCodes?: string[];
+  permissionPositionIds?: string[];
 
   @ApiPropertyOptional({
-    description: '부서 코드 목록',
-    example: ['dev', 'hr'],
+    description: '부서 ID 목록 (UUID)',
+    example: ['e2b3b884-833c-4fdb-ba00-ede1a45b8160', 'c11023a2-fb66-4e3f-bfcf-0666fb19f6bf'],
     type: [String],
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissionDepartmentCodes?: string[];
+  permissionDepartmentIds?: string[];
 }
 
 /**
@@ -424,22 +424,22 @@ export class WikiResponseDto {
   isPublic: boolean;
 
   @ApiPropertyOptional({
-    description: '직급 코드 목록',
-    example: ['manager'],
+    description: '직급 ID 목록 (UUID)',
+    example: ['a1b2c3d4-e5f6-7890-abcd-ef1234567890'],
   })
-  permissionRankCodes: string[] | null;
+  permissionRankIds: string[] | null;
 
   @ApiPropertyOptional({
-    description: '직책 코드 목록',
-    example: ['team_leader'],
+    description: '직책 ID 목록 (UUID)',
+    example: ['c3d4e5f6-a7b8-9012-cdef-123456789012'],
   })
-  permissionPositionCodes: string[] | null;
+  permissionPositionIds: string[] | null;
 
   @ApiPropertyOptional({
-    description: '부서 코드 목록',
-    example: ['dev'],
+    description: '부서 ID 목록 (UUID)',
+    example: ['e2b3b884-833c-4fdb-ba00-ede1a45b8160'],
   })
-  permissionDepartmentCodes: string[] | null;
+  permissionDepartmentIds: string[] | null;
 
   @ApiProperty({ description: '정렬 순서', example: 0 })
   order: number;
@@ -476,9 +476,9 @@ export class WikiResponseDto {
     dto.mimeType = wiki.mimeType;
     dto.attachments = wiki.attachments;
     dto.isPublic = wiki.isPublic;
-    dto.permissionRankCodes = wiki.permissionRankCodes;
-    dto.permissionPositionCodes = wiki.permissionPositionCodes;
-    dto.permissionDepartmentCodes = wiki.permissionDepartmentCodes;
+    dto.permissionRankIds = wiki.permissionRankIds;
+    dto.permissionPositionIds = wiki.permissionPositionIds;
+    dto.permissionDepartmentIds = wiki.permissionDepartmentIds;
     dto.order = wiki.order;
     dto.createdAt = wiki.createdAt;
     dto.updatedAt = wiki.updatedAt;
