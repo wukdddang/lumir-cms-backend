@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -186,7 +187,7 @@ export class ElectronicDisclosureController {
     description: '전자공시를 찾을 수 없음',
   })
   async 전자공시_상세를_조회한다(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ElectronicDisclosure> {
     return await this.electronicDisclosureBusinessService.전자공시_상세를_조회한다(
       id,
@@ -214,8 +215,9 @@ export class ElectronicDisclosureController {
         if (allowedMimeTypes.includes(file.mimetype)) {
           callback(null, true);
         } else {
+          // BadRequestException을 사용하여 400 에러 처리
           callback(
-            new Error(
+            new BadRequestException(
               `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
             ),
             false,
@@ -275,6 +277,11 @@ export class ElectronicDisclosureController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<ElectronicDisclosureResponseDto> {
+    // body 존재 여부 확인
+    if (!body) {
+      throw new BadRequestException('요청 본문이 필요합니다.');
+    }
+
     // translations가 JSON 문자열로 전달될 수 있으므로 파싱
     let translations = body.translations;
 
@@ -296,6 +303,23 @@ export class ElectronicDisclosureController {
       throw new BadRequestException(
         'translations는 비어있지 않은 배열이어야 합니다.',
       );
+    }
+
+    // 각 translation 항목의 필수 필드 검증
+    for (let i = 0; i < translations.length; i++) {
+      const translation = translations[i];
+      
+      if (!translation.languageId) {
+        throw new BadRequestException(
+          `translations[${i}]: languageId는 필수입니다.`,
+        );
+      }
+      
+      if (!translation.title || translation.title.trim() === '') {
+        throw new BadRequestException(
+          `translations[${i}]: title은 필수이며 비어있을 수 없습니다.`,
+        );
+      }
     }
 
     return await this.electronicDisclosureBusinessService.전자공시를_생성한다(
@@ -326,8 +350,9 @@ export class ElectronicDisclosureController {
         if (allowedMimeTypes.includes(file.mimetype)) {
           callback(null, true);
         } else {
+          // BadRequestException을 사용하여 400 에러 처리
           callback(
-            new Error(
+            new BadRequestException(
               `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
             ),
             false,
@@ -379,18 +404,51 @@ export class ElectronicDisclosureController {
   })
   async 전자공시를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<ElectronicDisclosureResponseDto> {
+    // body 존재 여부 확인
+    if (!body) {
+      throw new BadRequestException('요청 본문이 필요합니다.');
+    }
+
     // translations 파싱
     let translations = body.translations;
+    
+    if (!translations) {
+      throw new BadRequestException('translations 필드는 필수입니다.');
+    }
+    
     if (typeof translations === 'string') {
       try {
         translations = JSON.parse(translations);
       } catch (error) {
         throw new BadRequestException(
           'translations 파싱 실패: 올바른 JSON 형식이 아닙니다.',
+        );
+      }
+    }
+
+    if (!Array.isArray(translations) || translations.length === 0) {
+      throw new BadRequestException(
+        'translations는 비어있지 않은 배열이어야 합니다.',
+      );
+    }
+
+    // 각 translation 항목의 필수 필드 검증
+    for (let i = 0; i < translations.length; i++) {
+      const translation = translations[i];
+      
+      if (!translation.languageId) {
+        throw new BadRequestException(
+          `translations[${i}]: languageId는 필수입니다.`,
+        );
+      }
+      
+      if (!translation.title || translation.title.trim() === '') {
+        throw new BadRequestException(
+          `translations[${i}]: title은 필수이며 비어있을 수 없습니다.`,
         );
       }
     }
@@ -460,7 +518,7 @@ export class ElectronicDisclosureController {
   })
   async 전자공시_공개를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { isPublic: boolean },
   ): Promise<ElectronicDisclosure> {
     return await this.electronicDisclosureBusinessService.전자공시_공개를_수정한다(
@@ -487,7 +545,7 @@ export class ElectronicDisclosureController {
     description: '전자공시를 찾을 수 없음',
   })
   async 전자공시를_삭제한다(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ success: boolean }> {
     const result =
       await this.electronicDisclosureBusinessService.전자공시를_삭제한다(id);
@@ -534,7 +592,7 @@ export class ElectronicDisclosureController {
   })
   async 전자공시_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateElectronicDisclosureCategoryEntityDto,
   ): Promise<ElectronicDisclosureCategoryResponseDto> {
     return await this.electronicDisclosureBusinessService.전자공시_카테고리를_수정한다(
@@ -565,7 +623,7 @@ export class ElectronicDisclosureController {
   })
   async 전자공시_카테고리_오더를_변경한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateElectronicDisclosureCategoryOrderDto,
   ): Promise<ElectronicDisclosureCategoryResponseDto> {
     const result =
@@ -596,7 +654,7 @@ export class ElectronicDisclosureController {
     description: '카테고리를 찾을 수 없음',
   })
   async 전자공시_카테고리를_삭제한다(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ success: boolean }> {
     const result =
       await this.electronicDisclosureBusinessService.전자공시_카테고리를_삭제한다(

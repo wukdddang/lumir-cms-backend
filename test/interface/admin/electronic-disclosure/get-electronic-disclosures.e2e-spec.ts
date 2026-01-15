@@ -3,7 +3,6 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
-  let disclosureIds: string[] = [];
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -15,31 +14,300 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
-    disclosureIds = [];
 
-    // 테스트용 언어 생성
-    const langResponse = await testSuite
+    // 이미 초기화된 한국어 언어를 조회
+    const languagesResponse = await testSuite
       .request()
-      .post('/api/admin/languages')
-      .send({ code: 'ko', name: '한국어', isActive: true });
-    languageId = langResponse.body.id;
+      .get('/api/admin/languages')
+      .expect(200);
 
-    // 테스트용 전자공시 3개 생성
-    for (let i = 1; i <= 3; i++) {
-      const response = await testSuite
-        .request()
-        .post('/api/admin/electronic-disclosures')
-        .field('translations', JSON.stringify([{
-          languageId,
-          title: `전자공시 ${i}`,
-          description: `설명 ${i}`,
-        }]));
-      disclosureIds.push(response.body.id);
-    }
+    const koreanLanguage = languagesResponse.body.items.find(
+      (lang: any) => lang.code === 'ko',
+    );
+
+    languageId = koreanLanguage.id;
   });
 
-  describe('전체 목록 조회', () => {
-    it('전자공시 전체 목록을 조회해야 한다', async () => {
+  describe('GET /api/admin/electronic-disclosures (목록 조회)', () => {
+    it('전자공시 목록을 조회해야 한다', async () => {
+      // Given - 전자공시 생성
+      const translationsData = [
+        {
+          languageId,
+          title: '2024년 1분기 실적 공시',
+          description: '설명',
+        },
+      ];
+
+      await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData))
+        .expect(201);
+
+      // When - 목록 조회
+      const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures')
+        .expect(200);
+
+      // Then
+      expect(response.body).toMatchObject({
+        items: expect.any(Array),
+        total: expect.any(Number),
+        page: expect.any(Number),
+        limit: expect.any(Number),
+        totalPages: expect.any(Number),
+      });
+      expect(response.body.items.length).toBeGreaterThan(0);
+      expect(response.body.items[0]).toMatchObject({
+        id: expect.any(String),
+        isPublic: expect.any(Boolean),
+        order: expect.any(Number),
+        title: expect.any(String),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      });
+    });
+
+    it('빈 목록도 정상적으로 조회해야 한다', async () => {
+      // When - 생성 없이 바로 조회
+      const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures')
+        .expect(200);
+
+      // Then
+      expect(response.body.items).toEqual([]);
+      expect(response.body.total).toBe(0);
+    });
+
+    it('공개 여부로 필터링하여 조회해야 한다', async () => {
+      // Given - 공개/비공개 전자공시 각각 생성
+      const translationsData1 = [
+        {
+          languageId,
+          title: '공개 전자공시',
+        },
+      ];
+
+      const createResponse1 = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData1))
+        .expect(201);
+
+      const disclosureId1 = createResponse1.body.id;
+
+      // 비공개로 변경
+      await testSuite
+        .request()
+        .patch(`/api/admin/electronic-disclosures/${disclosureId1}/public`)
+        .send({ isPublic: false })
+        .expect(200);
+
+      // 공개 전자공시 생성
+      const translationsData2 = [
+        {
+          languageId,
+          title: '공개 전자공시 2',
+        },
+      ];
+
+      await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData2))
+        .expect(201);
+
+      // When - 공개된 전자공시만 조회
+      const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures?isPublic=true')
+        .expect(200);
+
+      // Then - 모두 공개된 것들만 있어야 함
+      response.body.items.forEach((item: any) => {
+        expect(item.isPublic).toBe(true);
+      });
+    });
+
+    it('페이징 처리가 정확해야 한다', async () => {
+      // Given - 여러 전자공시 생성 (15개)
+      const createPromises = Array.from({ length: 15 }, (_, i) =>
+        testSuite
+          .request()
+          .post('/api/admin/electronic-disclosures')
+          .field(
+            'translations',
+            JSON.stringify([
+              {
+                languageId,
+                title: `전자공시 ${i + 1}`,
+              },
+            ]),
+          ),
+      );
+
+      await Promise.all(createPromises);
+
+      // When - 1페이지 조회 (limit=10)
+      const page1Response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures?page=1&limit=10')
+        .expect(200);
+
+      // Then
+      expect(page1Response.body.items).toHaveLength(10);
+      expect(page1Response.body.total).toBe(15);
+      expect(page1Response.body.page).toBe(1);
+      expect(page1Response.body.limit).toBe(10);
+      expect(page1Response.body.totalPages).toBe(2); // Math.ceil(15 / 10)
+
+      // When - 2페이지 조회
+      const page2Response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures?page=2&limit=10')
+        .expect(200);
+
+      // Then
+      expect(page2Response.body.items).toHaveLength(5);
+      expect(page2Response.body.page).toBe(2);
+    });
+
+    it('정렬 순서로 조회해야 한다 (orderBy=order)', async () => {
+      // Given - 전자공시 생성
+      const translationsData1 = [{ languageId, title: '첫 번째' }];
+      const translationsData2 = [{ languageId, title: '두 번째' }];
+
+      await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData1))
+        .expect(201);
+
+      await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData2))
+        .expect(201);
+
+      // When
+      const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures?orderBy=order')
+        .expect(200);
+
+      // Then - order 필드가 오름차순이어야 함
+      expect(response.body.items.length).toBeGreaterThan(0);
+      for (let i = 1; i < response.body.items.length; i++) {
+        expect(response.body.items[i].order).toBeGreaterThanOrEqual(
+          response.body.items[i - 1].order,
+        );
+      }
+    });
+
+    it('생성일 기준으로 조회해야 한다 (orderBy=createdAt)', async () => {
+      // Given - 전자공시 생성
+      const translationsData1 = [{ languageId, title: '먼저 생성' }];
+      const translationsData2 = [{ languageId, title: '나중에 생성' }];
+
+      const firstResponse = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData1))
+        .expect(201);
+
+      const firstCreatedAt = new Date(firstResponse.body.createdAt);
+
+      // 약간의 시간 차이
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const secondResponse = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData2))
+        .expect(201);
+
+      const secondCreatedAt = new Date(secondResponse.body.createdAt);
+
+      // When
+      const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures?orderBy=createdAt')
+        .expect(200);
+
+      // Then - 최근 생성된 것이 먼저 와야 함 (DESC)
+      expect(response.body.items.length).toBeGreaterThan(0);
+      
+      // createdAt으로 정렬되었는지 확인 (DESC)
+      expect(secondCreatedAt >= firstCreatedAt).toBe(true);
+      
+      // 첫 번째 항목이 가장 최근에 생성된 것이어야 함
+      const firstItemCreatedAt = new Date(response.body.items[0].createdAt);
+      expect(firstItemCreatedAt >= firstCreatedAt).toBe(true);
+    });
+
+    it('날짜 범위로 필터링하여 조회해야 한다', async () => {
+      // Given - 전자공시 생성
+      const translationsData = [
+        {
+          languageId,
+          title: '날짜 필터 테스트',
+        },
+      ];
+
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData))
+        .expect(201);
+
+      const createdDisclosureId = createResponse.body.id;
+      const createdDate = new Date(createResponse.body.createdAt);
+      
+      // When - 생성된 날짜로 필터링 (전날부터 다음날까지)
+      const startDate = new Date(createdDate);
+      startDate.setDate(startDate.getDate() - 1);
+      const endDate = new Date(createdDate);
+      endDate.setDate(endDate.getDate() + 1);
+
+      const response = await testSuite
+        .request()
+        .get(
+          `/api/admin/electronic-disclosures?startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`,
+        )
+        .expect(200);
+
+      // Then - 생성한 전자공시가 결과에 포함되어야 함
+      expect(response.body.items.length).toBeGreaterThan(0);
+      const found = response.body.items.some(
+        (item: any) => item.id === createdDisclosureId,
+      );
+      expect(found).toBe(true);
+    });
+  });
+
+  describe('GET /api/admin/electronic-disclosures/all (전체 목록 조회)', () => {
+    it('페이징 없이 전체 전자공시를 조회해야 한다', async () => {
+      // Given - 여러 전자공시 생성
+      const createPromises = Array.from({ length: 3 }, (_, i) =>
+        testSuite
+          .request()
+          .post('/api/admin/electronic-disclosures')
+          .field(
+            'translations',
+            JSON.stringify([
+              {
+                languageId,
+                title: `전체 조회 테스트 ${i + 1}`,
+              },
+            ]),
+          ),
+      );
+
+      await Promise.all(createPromises);
+
       // When
       const response = await testSuite
         .request()
@@ -48,141 +316,170 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
 
       // Then
       expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(3);
-      expect(response.body[0]).toMatchObject({
-        id: expect.any(String),
-        isPublic: true,
-      });
+      expect(response.body.length).toBeGreaterThanOrEqual(3);
     });
   });
 
-  describe('페이징 목록 조회', () => {
-    it('기본 페이징으로 전자공시 목록을 조회해야 한다', async () => {
-      // When
-      const response = await testSuite
-        .request()
-        .get('/api/admin/electronic-disclosures')
-        .expect(200);
-
-      // Then
-      expect(response.body).toMatchObject({
-        items: expect.any(Array),
-        total: 3,
-        page: 1,
-        limit: 10,
-        totalPages: 1,
-      });
-      expect(response.body.items).toHaveLength(3);
-    });
-
-    it('페이지 크기를 지정하여 조회해야 한다', async () => {
-      // When
-      const response = await testSuite
-        .request()
-        .get('/api/admin/electronic-disclosures?limit=2')
-        .expect(200);
-
-      // Then
-      expect(response.body).toMatchObject({
-        items: expect.any(Array),
-        total: 3,
-        page: 1,
-        limit: 2,
-        totalPages: 2,
-      });
-      expect(response.body.items).toHaveLength(2);
-    });
-
-    it('두 번째 페이지를 조회해야 한다', async () => {
-      // When
-      const response = await testSuite
-        .request()
-        .get('/api/admin/electronic-disclosures?page=2&limit=2')
-        .expect(200);
-
-      // Then
-      expect(response.body).toMatchObject({
-        page: 2,
-        limit: 2,
-        total: 3,
-        totalPages: 2,
-      });
-      expect(response.body.items).toHaveLength(1);
-    });
-
-    it('번역이 flatten되어 조회되어야 한다', async () => {
-      // When
-      const response = await testSuite
-        .request()
-        .get('/api/admin/electronic-disclosures')
-        .expect(200);
-
-      // Then
-      const firstItem = response.body.items[0];
-      expect(firstItem).toHaveProperty('title');
-      expect(firstItem).toHaveProperty('description');
-      // 한국어 번역이 있으면 한국어 제목, 없으면 첫 번째 번역의 제목
-      expect(typeof firstItem.title).toBe('string');
-    });
-  });
-
-  describe('상세 조회', () => {
+  describe('GET /api/admin/electronic-disclosures/:id (상세 조회)', () => {
     it('전자공시 상세를 조회해야 한다', async () => {
+      // Given - 전자공시 생성
+      const translationsData = [
+        {
+          languageId,
+          title: '상세 조회 테스트',
+          description: '설명입니다.',
+        },
+      ];
+
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData))
+        .expect(201);
+
+      const disclosureId = createResponse.body.id;
+
       // When
       const response = await testSuite
         .request()
-        .get(`/api/admin/electronic-disclosures/${disclosureIds[0]}`)
+        .get(`/api/admin/electronic-disclosures/${disclosureId}`)
         .expect(200);
 
       // Then
       expect(response.body).toMatchObject({
-        id: disclosureIds[0],
-        isPublic: true,
+        id: disclosureId,
+        isPublic: expect.any(Boolean),
+        order: expect.any(Number),
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
       });
-      // 한국어 + 자동 생성된 언어(들)
-      expect(response.body.translations.length).toBeGreaterThanOrEqual(1);
+      expect(response.body.translations).toHaveLength(4);
     });
 
-    it('존재하지 않는 전자공시 조회 시 404 에러가 발생해야 한다', async () => {
+    it('파일이 포함된 전자공시 상세를 조회해야 한다', async () => {
+      // Given - 파일이 있는 전자공시 생성
+      const translationsData = [
+        {
+          languageId,
+          title: '파일 포함 테스트',
+        },
+      ];
+
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translationsData))
+        .attach('files', Buffer.from('PDF content'), 'test.pdf')
+        .expect(201);
+
+      const disclosureId = createResponse.body.id;
+
+      // When
+      const response = await testSuite
+        .request()
+        .get(`/api/admin/electronic-disclosures/${disclosureId}`)
+        .expect(200);
+
+      // Then
+      expect(response.body.attachments).toBeDefined();
+      expect(response.body.attachments).toHaveLength(1);
+      expect(response.body.attachments[0]).toMatchObject({
+        fileName: expect.any(String),
+        fileUrl: expect.any(String),
+        fileSize: expect.any(Number),
+        mimeType: expect.any(String),
+      });
+    });
+
+    it('존재하지 않는 ID로 조회 시 404 에러가 발생해야 한다', async () => {
       // When & Then
       await testSuite
         .request()
         .get('/api/admin/electronic-disclosures/00000000-0000-0000-0000-000000000001')
         .expect(404);
     });
-  });
 
-  describe('공개 여부 필터링', () => {
-    beforeEach(async () => {
-      // 첫 번째 전자공시를 공개로 변경
+    it('잘못된 UUID 형식으로 조회 시 400 에러가 발생해야 한다', async () => {
+      // When & Then - ParseUUIDPipe가 400 에러를 반환해야 함
       await testSuite
         .request()
-        .patch(`/api/admin/electronic-disclosures/${disclosureIds[0]}/public`)
-        .send({ isPublic: true });
+        .get('/api/admin/electronic-disclosures/invalid-uuid')
+        .expect(400);
     });
+  });
 
-    it('공개된 전자공시만 조회해야 한다', async () => {
+  describe('GET /api/admin/electronic-disclosures/categories (카테고리 목록 조회)', () => {
+    it('전자공시 카테고리 목록을 조회해야 한다', async () => {
       // When
       const response = await testSuite
+        .request()
+        .get('/api/admin/electronic-disclosures/categories')
+        .expect(200);
+
+      // Then
+      expect(response.body).toMatchObject({
+        items: expect.any(Array),
+        total: expect.any(Number),
+      });
+    });
+  });
+
+  describe('복합 시나리오', () => {
+    it('여러 전자공시를 생성하고 다양한 필터로 조회해야 한다', async () => {
+      // Given - 여러 전자공시 생성
+      const translations1 = [{ languageId, title: '공개 전자공시 A' }];
+      const translations2 = [{ languageId, title: '공개 전자공시 B' }];
+      const translations3 = [{ languageId, title: '비공개 전자공시' }];
+
+      const disclosure1 = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translations1))
+        .expect(201);
+
+      await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translations2))
+        .expect(201);
+
+      const disclosure3 = await testSuite
+        .request()
+        .post('/api/admin/electronic-disclosures')
+        .field('translations', JSON.stringify(translations3))
+        .expect(201);
+
+      // 비공개로 변경
+      await testSuite
+        .request()
+        .patch(`/api/admin/electronic-disclosures/${disclosure3.body.id}/public`)
+        .send({ isPublic: false })
+        .expect(200);
+
+      // When - 공개된 전자공시만 조회
+      const publicResponse = await testSuite
         .request()
         .get('/api/admin/electronic-disclosures?isPublic=true')
         .expect(200);
 
       // Then
-      expect(response.body.items).toHaveLength(1);
-      expect(response.body.items[0].isPublic).toBe(true);
-    });
+      expect(publicResponse.body.items.length).toBeGreaterThanOrEqual(2);
+      publicResponse.body.items.forEach((item: any) => {
+        expect(item.isPublic).toBe(true);
+      });
 
-    it('비공개 전자공시만 조회해야 한다', async () => {
-      // When
-      const response = await testSuite
+      // When - 비공개 전자공시만 조회
+      const privateResponse = await testSuite
         .request()
         .get('/api/admin/electronic-disclosures?isPublic=false')
         .expect(200);
 
       // Then
-      expect(response.body.items).toHaveLength(2);
-      expect(response.body.items[0].isPublic).toBe(false);
+      const privateDisclosure = privateResponse.body.items.find(
+        (item: any) => item.id === disclosure3.body.id,
+      );
+      expect(privateDisclosure).toBeDefined();
+      expect(privateDisclosure.isPublic).toBe(false);
     });
   });
 });

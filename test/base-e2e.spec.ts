@@ -4,6 +4,7 @@ import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
 import { AuthContextService } from '../src/context/auth-context/auth-context.service';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 /**
  * 테스트용 Mock Auth Context Service
@@ -129,6 +130,21 @@ export class BaseE2ETest {
     await this.dataSource.synchronize(true);
 
     await this.app.init();
+
+    // 앱 초기화 후 스케줄러 중지 (테스트 환경에서는 크론 작업 실행 안 함)
+    try {
+      const schedulerRegistry = moduleFixture.get(SchedulerRegistry, { strict: false });
+      if (schedulerRegistry) {
+        const cronJobs = schedulerRegistry.getCronJobs();
+        cronJobs.forEach((job: any) => {
+          job.stop();
+        });
+        console.log(`✅ 크론 작업 ${cronJobs.size}개 중지됨`);
+      }
+    } catch (error) {
+      // 스케줄러가 없으면 무시
+      console.log('⚠️ 스케줄러를 찾을 수 없습니다.');
+    }
 
     // 기본 언어 초기화 (스케줄러에서 언어를 찾는 에러 방지)
     await this.initializeDefaultLanguages();

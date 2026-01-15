@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, QueryFailedError } from 'typeorm';
 import { ElectronicDisclosure } from './electronic-disclosure.entity';
 import { ElectronicDisclosureTranslation } from './electronic-disclosure-translation.entity';
 
@@ -32,11 +32,27 @@ export class ElectronicDisclosureService {
   ): Promise<ElectronicDisclosure> {
     this.logger.log(`전자공시 생성 시작`);
 
-    const disclosure = this.electronicDisclosureRepository.create(data);
-    const saved = await this.electronicDisclosureRepository.save(disclosure);
+    try {
+      const disclosure = this.electronicDisclosureRepository.create(data);
+      const saved = await this.electronicDisclosureRepository.save(disclosure);
 
-    this.logger.log(`전자공시 생성 완료 - ID: ${saved.id}`);
-    return saved;
+      this.logger.log(`전자공시 생성 완료 - ID: ${saved.id}`);
+      return saved;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23502') {
+          throw new BadRequestException(
+            `필수 필드가 누락되었습니다: ${pgError.column || '알 수 없음'}`,
+          );
+        } else if (pgError.code === '23503') {
+          throw new BadRequestException('유효하지 않은 참조 값입니다.');
+        } else if (pgError.code === '23505') {
+          throw new BadRequestException('이미 존재하는 데이터입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -122,10 +138,26 @@ export class ElectronicDisclosureService {
 
     Object.assign(disclosure, data);
 
-    const updated = await this.electronicDisclosureRepository.save(disclosure);
+    try {
+      const updated = await this.electronicDisclosureRepository.save(disclosure);
 
-    this.logger.log(`전자공시 업데이트 완료 - ID: ${id}`);
-    return updated;
+      this.logger.log(`전자공시 업데이트 완료 - ID: ${id}`);
+      return updated;
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23502') {
+          throw new BadRequestException(
+            `필수 필드가 누락되었습니다: ${pgError.column || '알 수 없음'}`,
+          );
+        } else if (pgError.code === '23503') {
+          throw new BadRequestException('유효하지 않은 참조 값입니다.');
+        } else if (pgError.code === '23505') {
+          throw new BadRequestException('이미 존재하는 데이터입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -219,19 +251,41 @@ export class ElectronicDisclosureService {
       `전자공시 번역 생성 시작 - 전자공시 ID: ${electronicDisclosureId}, 번역 수: ${translations.length}`,
     );
 
-    for (const translation of translations) {
-      const newTranslation = this.translationRepository.create({
-        electronicDisclosureId,
-        languageId: translation.languageId,
-        title: translation.title,
-        description: translation.description || null,
-        isSynced: translation.isSynced ?? false,
-        createdBy,
-      });
-      await this.translationRepository.save(newTranslation);
-    }
+    try {
+      for (const translation of translations) {
+        const newTranslation = this.translationRepository.create({
+          electronicDisclosureId,
+          languageId: translation.languageId,
+          title: translation.title,
+          description: translation.description || null,
+          isSynced: translation.isSynced ?? false,
+          createdBy,
+        });
+        await this.translationRepository.save(newTranslation);
+      }
 
-    this.logger.log(`전자공시 번역 생성 완료 - ${translations.length}개`);
+      this.logger.log(`전자공시 번역 생성 완료 - ${translations.length}개`);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        // DB constraint violation 에러를 400 에러로 변환
+        const pgError = error as any;
+        if (pgError.code === '23502') {
+          // NOT NULL constraint violation
+          throw new BadRequestException(
+            `필수 필드가 누락되었습니다: ${pgError.column || '알 수 없음'}`,
+          );
+        } else if (pgError.code === '23503') {
+          // FOREIGN KEY constraint violation
+          throw new BadRequestException(
+            '유효하지 않은 참조 값입니다. 언어 ID를 확인해주세요.',
+          );
+        } else if (pgError.code === '23505') {
+          // UNIQUE constraint violation
+          throw new BadRequestException('이미 존재하는 데이터입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -247,7 +301,23 @@ export class ElectronicDisclosureService {
   ): Promise<void> {
     this.logger.log(`전자공시 번역 업데이트 - ID: ${translationId}`);
 
-    await this.translationRepository.update(translationId, data);
+    try {
+      await this.translationRepository.update(translationId, data);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23502') {
+          throw new BadRequestException(
+            `필수 필드가 누락되었습니다: ${pgError.column || '알 수 없음'}`,
+          );
+        } else if (pgError.code === '23503') {
+          throw new BadRequestException('유효하지 않은 참조 값입니다.');
+        } else if (pgError.code === '23505') {
+          throw new BadRequestException('이미 존재하는 데이터입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
