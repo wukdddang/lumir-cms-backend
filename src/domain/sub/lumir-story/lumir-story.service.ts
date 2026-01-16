@@ -1,6 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { LumirStory } from './lumir-story.entity';
 
 /**
@@ -159,33 +159,57 @@ export class LumirStoryService {
     updatedBy?: string,
   ): Promise<{ success: boolean; updatedCount: number }> {
     this.logger.log(
-      `루미르스토리 오더 일괄 업데이트 시작 - ${items.length}개`,
+      `루미르스토리 일괄 순서 수정 시작 - 수정할 루미르스토리 수: ${items.length}`,
     );
 
-    let updatedCount = 0;
-
-    for (const item of items) {
-      try {
-        await this.루미르스토리를_업데이트한다(item.id, {
-          order: item.order,
-          updatedBy,
-        });
-        updatedCount++;
-      } catch (error) {
-        this.logger.error(
-          `루미르스토리 오더 업데이트 실패 - ID: ${item.id}`,
-          error,
-        );
-      }
+    if (items.length === 0) {
+      throw new BadRequestException('수정할 루미르스토리가 없습니다.');
     }
 
+    // 루미르스토리 ID 목록 추출 (중복 제거)
+    const uniqueStoryIds = [...new Set(items.map((item) => item.id))];
+
+    // 루미르스토리 조회
+    const existingStories = await this.lumirStoryRepository.find({
+      where: { id: In(uniqueStoryIds) },
+    });
+
+    // 존재하지 않는 ID 확인 (unique ID 개수와 비교)
+    if (existingStories.length !== uniqueStoryIds.length) {
+      const foundIds = existingStories.map((s) => s.id);
+      const missingIds = uniqueStoryIds.filter((id) => !foundIds.includes(id));
+      throw new NotFoundException(
+        `일부 루미르스토리를 찾을 수 없습니다. 누락된 ID: ${missingIds.join(', ')}`,
+      );
+    }
+
+    // 순서 업데이트를 위한 맵 생성
+    const orderMap = new Map<string, number>();
+    items.forEach((item) => {
+      orderMap.set(item.id, item.order);
+    });
+
+    // 각 루미르스토리의 순서 업데이트
+    const updatePromises = existingStories.map((story) => {
+      const newOrder = orderMap.get(story.id);
+      if (newOrder !== undefined) {
+        story.order = newOrder;
+        if (updatedBy) {
+          story.updatedBy = updatedBy;
+        }
+      }
+      return this.lumirStoryRepository.save(story);
+    });
+
+    await Promise.all(updatePromises);
+
     this.logger.log(
-      `루미르스토리 오더 일괄 업데이트 완료 - ${updatedCount}/${items.length}개 성공`,
+      `루미르스토리 일괄 순서 수정 완료 - 수정된 루미르스토리 수: ${existingStories.length}`,
     );
 
     return {
-      success: updatedCount === items.length,
-      updatedCount,
+      success: true,
+      updatedCount: existingStories.length,
     };
   }
 }

@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LumirStoryService } from '@domain/sub/lumir-story/lumir-story.service';
 import { LumirStory } from '@domain/sub/lumir-story/lumir-story.entity';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('LumirStoryService', () => {
   let service: LumirStoryService;
@@ -462,7 +462,7 @@ describe('LumirStoryService', () => {
   });
 
   describe('루미르스토리_오더를_일괄_업데이트한다', () => {
-    it('여러 루미르스토리의 오더를 일괄 업데이트해야 한다', async () => {
+    it('여러 루미르스토리의 순서를 업데이트해야 한다', async () => {
       // Given
       const items = [
         { id: 'lumir-story-1', order: 0 },
@@ -471,57 +471,57 @@ describe('LumirStoryService', () => {
       ];
       const updatedBy = 'user-1';
 
-      const mockLumirStory1 = { id: 'lumir-story-1', order: 5 };
-      const mockLumirStory2 = { id: 'lumir-story-2', order: 6 };
-      const mockLumirStory3 = { id: 'lumir-story-3', order: 7 };
+      const mockLumirStories = [
+        { id: 'lumir-story-1', order: 5 },
+        { id: 'lumir-story-2', order: 6 },
+        { id: 'lumir-story-3', order: 7 },
+      ];
 
-      mockLumirStoryRepository.findOne
-        .mockResolvedValueOnce(mockLumirStory1 as any)
-        .mockResolvedValueOnce(mockLumirStory2 as any)
-        .mockResolvedValueOnce(mockLumirStory3 as any);
-      mockLumirStoryRepository.save
-        .mockResolvedValueOnce({ ...mockLumirStory1, order: 0 } as any)
-        .mockResolvedValueOnce({ ...mockLumirStory2, order: 1 } as any)
-        .mockResolvedValueOnce({ ...mockLumirStory3, order: 2 } as any);
+      mockLumirStoryRepository.find.mockResolvedValue(mockLumirStories as any);
+      mockLumirStoryRepository.save.mockResolvedValue({} as any);
 
       // When
-      const result = await service.루미르스토리_오더를_일괄_업데이트한다(
-        items,
-        updatedBy,
-      );
+      const result = await service.루미르스토리_오더를_일괄_업데이트한다(items, updatedBy);
 
       // Then
-      expect(result.success).toBe(true);
-      expect(result.updatedCount).toBe(3);
+      expect(lumirStoryRepository.find).toHaveBeenCalledWith({
+        where: { id: expect.anything() },
+      });
+      expect(lumirStoryRepository.save).toHaveBeenCalledTimes(3);
+      expect(result).toEqual({
+        success: true,
+        updatedCount: 3,
+      });
     });
 
-    it('일부 업데이트가 실패해도 성공한 개수를 반환해야 한다', async () => {
+    it('빈 배열이면 BadRequestException을 던져야 한다', async () => {
+      // Given
+      const items = [];
+
+      // When & Then
+      await expect(
+        service.루미르스토리_오더를_일괄_업데이트한다(items),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.루미르스토리_오더를_일괄_업데이트한다(items),
+      ).rejects.toThrow('수정할 루미르스토리가 없습니다.');
+    });
+
+    it('존재하지 않는 ID가 있으면 NotFoundException을 던져야 한다', async () => {
       // Given
       const items = [
         { id: 'lumir-story-1', order: 0 },
-        { id: 'lumir-story-2', order: 1 },
+        { id: 'non-existent', order: 1 },
       ];
-      const updatedBy = 'user-1';
 
-      const mockLumirStory1 = { id: 'lumir-story-1', order: 5 };
+      mockLumirStoryRepository.find.mockResolvedValue([
+        { id: 'lumir-story-1', order: 0 },
+      ] as any);
 
-      mockLumirStoryRepository.findOne
-        .mockResolvedValueOnce(mockLumirStory1 as any)
-        .mockRejectedValueOnce(new Error('Not found')); // 두 번째는 실패
-      mockLumirStoryRepository.save.mockResolvedValueOnce({
-        ...mockLumirStory1,
-        order: 0,
-      } as any);
-
-      // When
-      const result = await service.루미르스토리_오더를_일괄_업데이트한다(
-        items,
-        updatedBy,
-      );
-
-      // Then
-      expect(result.success).toBe(false);
-      expect(result.updatedCount).toBe(1); // 1개만 성공
+      // When & Then
+      await expect(
+        service.루미르스토리_오더를_일괄_업데이트한다(items),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
