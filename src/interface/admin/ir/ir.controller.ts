@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   BadRequestException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -178,7 +179,11 @@ export class IRController {
     status: 404,
     description: 'IR을 찾을 수 없음',
   })
-  async IR_상세를_조회한다(@Param('id') id: string): Promise<IR> {
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
+  async IR_상세를_조회한다(@Param('id', ParseUUIDPipe) id: string): Promise<IR> {
     return await this.irBusinessService.IR_상세를_조회한다(id);
   }
 
@@ -203,8 +208,9 @@ export class IRController {
         if (allowedMimeTypes.includes(file.mimetype)) {
           callback(null, true);
         } else {
+          // BadRequestException을 사용하여 400 에러로 처리
           callback(
-            new Error(
+            new BadRequestException(
               `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
             ),
             false,
@@ -264,7 +270,7 @@ export class IRController {
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<IRResponseDto> {
     // translations가 JSON 문자열로 전달될 수 있으므로 파싱
-    let translations = body.translations;
+    let translations = body?.translations;
 
     if (!translations) {
       throw new BadRequestException('translations 필드는 필수입니다.');
@@ -286,10 +292,93 @@ export class IRController {
       );
     }
 
+    // 각 translation 항목의 필수 필드 검증
+    for (let i = 0; i < translations.length; i++) {
+      const translation = translations[i];
+      
+      if (!translation.languageId) {
+        throw new BadRequestException(
+          `translations[${i}].languageId는 필수 필드입니다.`,
+        );
+      }
+
+      if (!translation.title || translation.title.trim() === '') {
+        throw new BadRequestException(
+          `translations[${i}].title는 필수 필드입니다.`,
+        );
+      }
+    }
+
     return await this.irBusinessService.IR을_생성한다(
       translations,
       user.id,
       files,
+    );
+  }
+
+  /**
+   * IR 오더를 일괄 수정한다
+   * 
+   * 주의: 이 라우트는 :id 라우트보다 앞에 와야 합니다.
+   */
+  @Put('batch-order')
+  @ApiOperation({
+    summary: 'IR 오더 일괄 수정',
+    description:
+      '여러 IR의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 IR 목록을 전달하면 됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'IR 오더 일괄 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        updatedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (수정할 IR이 없음)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '일부 IR을 찾을 수 없음',
+  })
+  async IR_오더를_일괄_수정한다(
+    @Body() updateDto: UpdateIRBatchOrderDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    // 필수 필드 검증
+    if (!updateDto?.irs || !Array.isArray(updateDto.irs)) {
+      throw new BadRequestException('irs 필드는 배열이어야 합니다.');
+    }
+
+    if (updateDto.irs.length === 0) {
+      throw new BadRequestException('최소 1개 이상의 IR이 필요합니다.');
+    }
+
+    // 각 항목의 필수 필드 검증
+    for (let i = 0; i < updateDto.irs.length; i++) {
+      const item = updateDto.irs[i];
+      
+      if (!item.id || typeof item.id !== 'string') {
+        throw new BadRequestException(
+          `irs[${i}].id는 필수 문자열 필드입니다.`,
+        );
+      }
+
+      if (typeof item.order !== 'number' || item.order < 0) {
+        throw new BadRequestException(
+          `irs[${i}].order는 0 이상의 숫자여야 합니다.`,
+        );
+      }
+    }
+
+    return await this.irBusinessService.IR_오더를_일괄_수정한다(
+      updateDto.irs,
+      user.id,
     );
   }
 
@@ -314,8 +403,9 @@ export class IRController {
         if (allowedMimeTypes.includes(file.mimetype)) {
           callback(null, true);
         } else {
+          // BadRequestException을 사용하여 400 에러로 처리
           callback(
-            new Error(
+            new BadRequestException(
               `지원하지 않는 파일 형식입니다. 허용된 형식: PDF, JPG, PNG, WEBP, XLSX, DOCX (현재: ${file.mimetype})`,
             ),
             false,
@@ -370,14 +460,23 @@ export class IRController {
     status: 404,
     description: 'IR을 찾을 수 없음',
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
   async IR을_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<IRResponseDto> {
     // translations 파싱
-    let translations = body.translations;
+    let translations = body?.translations;
+    
+    if (!translations) {
+      throw new BadRequestException('translations 필드는 필수입니다.');
+    }
+
     if (typeof translations === 'string') {
       try {
         translations = JSON.parse(translations);
@@ -388,49 +487,34 @@ export class IRController {
       }
     }
 
+    if (!Array.isArray(translations) || translations.length === 0) {
+      throw new BadRequestException(
+        'translations는 비어있지 않은 배열이어야 합니다.',
+      );
+    }
+
+    // 각 translation 항목의 필수 필드 검증
+    for (let i = 0; i < translations.length; i++) {
+      const translation = translations[i];
+      
+      if (!translation.languageId) {
+        throw new BadRequestException(
+          `translations[${i}].languageId는 필수 필드입니다.`,
+        );
+      }
+
+      if (!translation.title || translation.title.trim() === '') {
+        throw new BadRequestException(
+          `translations[${i}].title는 필수 필드입니다.`,
+        );
+      }
+    }
+
     return await this.irBusinessService.IR을_수정한다(
       id,
       translations,
       user.id,
       files,
-    );
-  }
-
-  /**
-   * IR 오더를 일괄 수정한다
-   */
-  @Put('batch-order')
-  @ApiOperation({
-    summary: 'IR 오더 일괄 수정',
-    description:
-      '여러 IR의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 IR 목록을 전달하면 됩니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'IR 오더 일괄 수정 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        updatedCount: { type: 'number', example: 5 },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '잘못된 요청 (수정할 IR이 없음)',
-  })
-  @ApiResponse({
-    status: 404,
-    description: '일부 IR을 찾을 수 없음',
-  })
-  async IR_오더를_일괄_수정한다(
-    @Body() updateDto: UpdateIRBatchOrderDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<{ success: boolean; updatedCount: number }> {
-    return await this.irBusinessService.IR_오더를_일괄_수정한다(
-      updateDto.irs,
-      user.id,
     );
   }
 
@@ -451,9 +535,13 @@ export class IRController {
     status: 404,
     description: 'IR을 찾을 수 없음',
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
   async IR_공개를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { isPublic: boolean },
   ): Promise<IR> {
     return await this.irBusinessService.IR_공개를_수정한다(
@@ -479,7 +567,11 @@ export class IRController {
     status: 404,
     description: 'IR을 찾을 수 없음',
   })
-  async IR을_삭제한다(@Param('id') id: string): Promise<{ success: boolean }> {
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
+  async IR을_삭제한다(@Param('id', ParseUUIDPipe) id: string): Promise<{ success: boolean }> {
     const result = await this.irBusinessService.IR을_삭제한다(id);
     return { success: result };
   }
@@ -497,9 +589,18 @@ export class IRController {
     description: 'IR 카테고리 생성 성공',
     type: IRCategoryResponseDto,
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (name 필수 필드 누락)',
+  })
   async IR_카테고리를_생성한다(
     @Body() createDto: { name: string; description?: string },
   ): Promise<IRCategoryResponseDto> {
+    // 필수 필드 검증
+    if (!createDto?.name || createDto.name.trim() === '') {
+      throw new BadRequestException('name 필드는 필수입니다.');
+    }
+
     return await this.irBusinessService.IR_카테고리를_생성한다(createDto);
   }
 
@@ -520,9 +621,13 @@ export class IRController {
     status: 404,
     description: '카테고리를 찾을 수 없음',
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
   async IR_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateIRCategoryDto,
   ): Promise<IRCategoryResponseDto> {
     return await this.irBusinessService.IR_카테고리를_수정한다(id, {
@@ -548,9 +653,13 @@ export class IRController {
     status: 404,
     description: '카테고리를 찾을 수 없음',
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
   async IR_카테고리_오더를_변경한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDto: UpdateIRCategoryOrderDto,
   ): Promise<IRCategoryResponseDto> {
     const result = await this.irBusinessService.IR_카테고리_오더를_변경한다(id, {
@@ -576,8 +685,12 @@ export class IRController {
     status: 404,
     description: '카테고리를 찾을 수 없음',
   })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 UUID 형식',
+  })
   async IR_카테고리를_삭제한다(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ success: boolean }> {
     const result = await this.irBusinessService.IR_카테고리를_삭제한다(id);
     return { success: result };

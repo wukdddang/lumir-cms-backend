@@ -251,7 +251,7 @@ export class IRService {
     this.logger.log(`IR 일괄 순서 수정 시작 - 수정할 IR 수: ${items.length}`);
 
     if (items.length === 0) {
-      throw new Error('수정할 IR이 없습니다.');
+      throw new BadRequestException('수정할 IR이 없습니다.');
     }
 
     // IR ID 목록 추출 (중복 제거)
