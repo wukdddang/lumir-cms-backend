@@ -62,6 +62,7 @@ curl -X POST http://localhost:3000/admin/permission-validation/all \
    - 모든 부서가 `isActive: true`로 복구되었다면 로그를 자동으로 `RESOLVED` 처리
 3. 각 위키의 `permissionDepartmentIds` 검증:
    - SSO API를 통해 부서 정보 일괄 조회
+   - **조회 실패(404 등)**: 로그에 기록하지 않음
    - **조회 성공, `isActive=false`**: 로그에 기록
 4. **하나라도** `isActive=false`인 부서가 있으면:
    - 이미 미해결 로그가 있는지 확인 (중복 방지)
@@ -193,7 +194,7 @@ GET /admin/wiki/permission-logs?resolved=false
 ]
 ```
 
-### 3. 관리자가 부서 ID 교체
+### 3. 관리자가 부서 ID 교체 (로그 자동 해결)
 
 ```http
 PATCH /admin/announcements/:id/replace-permissions
@@ -210,11 +211,8 @@ PATCH /admin/announcements/:id/replace-permissions
 - 이 API는 공지사항/위키의 `permissionDepartmentIds`를 직접 수정합니다
 - 여러 부서 ID를 한 번에 교체할 수 있습니다
 - `oldId`가 실제로 존재하는 경우에만 교체됩니다
-
-### 4. 시스템이 자동으로 RESOLVED 로그 생성
-- 권한 정보 업데이트
-- 새로운 `RESOLVED` 로그 생성 (기존 `DETECTED` 로그는 유지됨)
-- 교체 내역이 `note`에 기록됨
+- **권한 교체와 동시에 자동으로 `RESOLVED` 로그가 생성됩니다** (기존 `DETECTED` 로그는 유지됨)
+- 교체 내역이 `note`에 자동으로 기록됩니다
 
 ## SSO 서비스 연동
 
@@ -252,19 +250,15 @@ SSO_BASE_URL=https://sso.example.com
 # 권한 로그 전체 조회
 GET /admin/announcements/permission-logs?resolved=false
 
-# 권한 ID 교체
+# 권한 ID 교체 및 로그 자동 해결
 PATCH /admin/announcements/:id/replace-permissions
 {
   "departments": [{ "oldId": "DEPT_OLD", "newId": "DEPT_NEW" }],
   "note": "구 마케팅팀을 신 마케팅팀으로 교체"
 }
-
-# 로그 해결 처리
-PATCH /admin/announcements/permission-logs/:logId/resolve
-{
-  "note": "수동으로 해결 완료"
-}
 ```
+
+**참고**: 권한 ID 교체 API를 호출하면 자동으로 `RESOLVED` 로그가 생성되므로, 별도의 로그 해결 처리 API는 필요하지 않습니다.
 
 ### 위키 권한 관리
 
@@ -272,19 +266,15 @@ PATCH /admin/announcements/permission-logs/:logId/resolve
 # 권한 로그 전체 조회
 GET /admin/wiki/permission-logs?resolved=false
 
-# 권한 ID 교체
+# 권한 ID 교체 및 로그 자동 해결
 PATCH /admin/wiki/:id/replace-permissions
 {
   "departments": [{ "oldId": "DEPT_OLD", "newId": "DEPT_NEW" }],
   "note": "구 마케팅팀을 신 마케팅팀으로 교체"
 }
-
-# 로그 해결 처리
-PATCH /admin/wiki/permission-logs/:logId/resolve
-{
-  "note": "수동으로 해결 완료"
-}
 ```
+
+**참고**: 권한 ID 교체 API를 호출하면 자동으로 `RESOLVED` 로그가 생성되므로, 별도의 로그 해결 처리 API는 필요하지 않습니다.
 
 ## 시나리오 예시
 
@@ -316,7 +306,7 @@ PATCH /admin/wiki/permission-logs/:logId/resolve
 1. **초기 상태**: 공지사항 A가 구마케팅팀(DEPT_OLD, `isActive: true`) 권한 설정
 2. **부서 통폐합**: SSO에서 구마케팅팀을 비활성화하고 신마케팅팀 생성
 3. **스케줄러 실행**: 구마케팅팀이 비활성 상태임을 감지, `DETECTED` 로그 생성
-4. **관리자 처리**:
+4. **관리자 처리** (권한 교체와 로그 해결이 동시에 처리됨):
    ```http
    PATCH /admin/announcements/123/replace-permissions
    {
@@ -324,7 +314,9 @@ PATCH /admin/wiki/permission-logs/:logId/resolve
      "note": "구마케팅팀을 신마케팅팀으로 교체"
    }
    ```
-5. **결과**: `RESOLVED` 로그 생성 (`resolvedBy: 관리자ID`)
+5. **결과**: 
+   - 공지사항의 `permissionDepartmentIds` 업데이트
+   - 자동으로 `RESOLVED` 로그 생성 (`resolvedBy: 관리자ID`)
 
 ## 모니터링
 

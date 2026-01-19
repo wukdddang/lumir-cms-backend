@@ -42,7 +42,6 @@ import { ReplaceAnnouncementPermissionsDto } from './dto/replace-announcement-pe
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, IsNull } from 'typeorm';
 import { AnnouncementPermissionLog } from '@domain/core/announcement/announcement-permission-log.entity';
-import { AnnouncementPermissionAction } from '@domain/core/announcement/announcement-permission-action.types';
 
 @ApiTags('A-9. 관리자 - 공지사항')
 @ApiBearerAuth('Bearer')
@@ -854,13 +853,14 @@ export class AnnouncementController {
   }
 
   /**
-   * 공지사항의 무효한 권한 ID를 새로운 ID로 교체한다
+   * 공지사항의 무효한 권한 ID를 새로운 ID로 교체하고 관련 로그를 자동으로 해결 처리한다
    */
   @Patch(':id/replace-permissions')
   @ApiOperation({
-    summary: '공지사항 권한 ID 교체',
+    summary: '공지사항 권한 ID 교체 및 로그 해결',
     description:
-      '비활성화된 부서/직원 ID를 새로운 ID로 교체합니다. 예: 구 마케팅팀(DEPT_001) → 신 마케팅팀(DEPT_002)',
+      '비활성화된 부서/직원 ID를 새로운 ID로 교체합니다. 예: 구 마케팅팀(DEPT_001) → 신 마케팅팀(DEPT_002)\n\n' +
+      '권한 교체가 완료되면 자동으로 RESOLVED 로그가 생성됩니다.',
   })
   @ApiParam({
     name: 'id',
@@ -869,7 +869,7 @@ export class AnnouncementController {
   })
   @ApiResponse({
     status: 200,
-    description: '권한 ID 교체 성공',
+    description: '권한 ID 교체 성공 및 로그 해결 완료',
   })
   @ApiResponse({
     status: 404,
@@ -885,45 +885,5 @@ export class AnnouncementController {
       dto,
       user.id,
     );
-  }
-
-  /**
-   * 권한 로그를 해결 상태로 변경한다
-   */
-  @Patch('permission-logs/:logId/resolve')
-  @ApiOperation({
-    summary: '권한 로그 해결 처리',
-    description:
-      '권한 로그를 해결 완료 상태로 변경합니다. 관리자가 수동으로 권한을 교체한 후 호출합니다.',
-  })
-  @ApiParam({
-    name: 'logId',
-    description: '권한 로그 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '권한 로그 해결 완료',
-  })
-  @ApiResponse({
-    status: 404,
-    description: '권한 로그를 찾을 수 없음',
-  })
-  async 권한_로그를_해결한다(
-    @Param('logId') logId: string,
-    @Body() body: { note?: string },
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    await this.permissionLogRepository.update(logId, {
-      action: AnnouncementPermissionAction.RESOLVED,
-      resolvedAt: new Date(),
-      resolvedBy: user.id,
-      note: body.note || '관리자가 수동으로 해결함',
-    });
-
-    return {
-      success: true,
-      message: '권한 로그가 해결되었습니다.',
-    };
   }
 }
