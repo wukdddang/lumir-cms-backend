@@ -78,6 +78,9 @@ export class AnnouncementPermissionScheduler {
       return false;
     }
 
+    // 1단계: 기존 미해결 로그가 있는지 확인하고, 부서가 다시 활성화되었는지 검증
+    await this.기존_로그를_재검증한다(announcement);
+
     let invalidDepartments: Array<{ id: string; name: string | null }> = [];
     let validDepartments: Array<{ id: string; name: string | null }> = [];
 
@@ -158,6 +161,62 @@ export class AnnouncementPermissionScheduler {
     this.관리자에게_알림을_전송한다(announcement, invalidDepartments, []);
 
     return true;
+  }
+
+  /**
+   * 기존 미해결 로그를 재검증하여 부서가 다시 활성화되었는지 확인한다
+   */
+  private async 기존_로그를_재검증한다(
+    announcement: Announcement,
+  ): Promise<void> {
+    // 미해결 로그 조회
+    const existingLogs = await this.permissionLogRepository.find({
+      where: {
+        announcementId: announcement.id,
+        action: AnnouncementPermissionAction.DETECTED,
+        resolvedAt: IsNull(),
+      },
+    });
+
+    if (existingLogs.length === 0) {
+      return;
+    }
+
+    for (const log of existingLogs) {
+      if (!log.invalidDepartments || log.invalidDepartments.length === 0) {
+        continue;
+      }
+
+      // 로그에 기록된 비활성 부서들이 현재 활성 상태인지 확인
+      const departmentIds = log.invalidDepartments.map((d) => d.id);
+      const departmentInfoMap =
+        await this.ssoService.부서_정보_목록을_조회한다(departmentIds);
+
+      let allReactivated = true;
+      for (const departmentId of departmentIds) {
+        const info = departmentInfoMap.get(departmentId);
+        // 부서가 존재하고 활성화되어 있어야 함
+        if (!info || !info.isActive) {
+          allReactivated = false;
+          break;
+        }
+      }
+
+      // 모든 부서가 다시 활성화되었다면 로그를 자동 해결 처리
+      if (allReactivated) {
+        await this.permissionLogRepository.update(log.id, {
+          action: AnnouncementPermissionAction.RESOLVED,
+          resolvedAt: new Date(),
+          resolvedBy: 'system',
+          note: '부서가 다시 활성화되어 자동으로 해결됨',
+        });
+
+        this.logger.log(
+          `공지사항 "${announcement.title}" (ID: ${announcement.id})의 ` +
+            `권한 로그가 자동으로 해결되었습니다. (부서 재활성화)`,
+        );
+      }
+    }
   }
 
   /**

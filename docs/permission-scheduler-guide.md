@@ -12,9 +12,10 @@ SSO 시스템에서 부서나 직원 정보가 비활성화(`isActive=false`)될
 3. **공지사항**: 부서 권한만 검증 (직원 권한은 검증하지 않음)
 4. `permissionDepartmentIds` 중 **하나라도** `isActive=false`인 부서가 있으면 로그 생성
 5. **SSO에서 조회 실패한 경우(404 등)는 로그에 기록하지 않습니다** (시드 데이터 등 임시 ID 고려)
-6. **로그는 영구 보관**되며 삭제되지 않습니다
-7. 관리자가 로그를 확인하고 **수동으로 부서 ID를 교체**해야 합니다
-8. ID 교체 시 `RESOLVED` 로그가 추가로 생성됩니다
+6. **부서가 다시 활성화(`isActive: true`)되면 로그가 자동으로 해결(`RESOLVED`)됩니다**
+7. **로그는 영구 보관**되며 삭제되지 않습니다 (해결된 로그도 보관)
+8. 관리자가 로그를 확인하고 **수동으로 부서 ID를 교체**해야 합니다
+9. ID 교체 시 `RESOLVED` 로그가 추가로 생성됩니다
 
 ## 스케줄러 실행 시간
 
@@ -105,11 +106,13 @@ SSO_BASE_URL=https://sso.example.com
 **동작 방식**:
 1. 모든 위키 항목 조회 (매일 새벽 2시)
 2. 각 위키의 `permissionDepartmentIds` 검증
-3. 이미 미해결 로그가 있는지 확인 (중복 방지)
+3. **기존 미해결 로그 재검증**: 로그에 있는 부서가 다시 활성화되었는지 확인
+   - 모든 부서가 `isActive: true`로 복구되었다면 로그를 자동으로 `RESOLVED` 처리
 4. SSO API를 통해 각 부서 ID의 활성화 상태(`isActive`) 확인
    - **SSO에서 조회 실패(404 등)**: 로그에 기록하지 않음 (시드 데이터 등 임시 ID 고려)
    - **SSO에서 조회 성공, `isActive=false`**: 로그에 기록
 5. **하나라도** `isActive=false`인 부서가 있으면:
+   - 이미 미해결 로그가 있는지 확인 (중복 방지)
    - 비활성 부서 ID와 이름을 `invalidDepartments`에 저장
    - 전체 부서 정보를 `snapshotPermissions`에 스냅샷으로 저장
    - `DETECTED` 로그를 `wiki_permission_logs` 테이블에 영구 저장
@@ -130,11 +133,13 @@ SSO_BASE_URL=https://sso.example.com
 **동작 방식**:
 1. 모든 공지사항 조회 (매일 새벽 3시)
 2. 각 공지사항의 `permissionDepartmentIds` 검증 (직원은 검증 안 함)
-3. 이미 미해결 로그가 있는지 확인 (중복 방지)
+3. **기존 미해결 로그 재검증**: 로그에 있는 부서가 다시 활성화되었는지 확인
+   - 모든 부서가 `isActive: true`로 복구되었다면 로그를 자동으로 `RESOLVED` 처리
 4. SSO API를 통해 각 부서 ID의 활성화 상태(`isActive`) 확인
    - **SSO에서 조회 실패(404 등)**: 로그에 기록하지 않음 (시드 데이터 등 임시 ID 고려)
    - **SSO에서 조회 성공, `isActive=false`**: 로그에 기록
 5. **하나라도** `isActive=false`인 부서가 있으면:
+   - 이미 미해결 로그가 있는지 확인 (중복 방지)
    - 비활성 부서 ID와 이름을 `invalidDepartments`에 저장
    - 전체 권한 정보를 `snapshotPermissions`에 스냅샷으로 저장
    - `DETECTED` 로그를 `announcement_permission_logs` 테이블에 영구 저장
@@ -235,9 +240,19 @@ SSO_BASE_URL=https://sso.example.com
 ```typescript
 enum PermissionAction {
   DETECTED = 'detected',   // 무효한 코드 감지됨 (스케줄러가 자동 생성)
-  RESOLVED = 'resolved',   // 관리자가 권한을 교체하여 해결함
+  RESOLVED = 'resolved',   // 해결됨 (관리자 교체 또는 부서 재활성화)
 }
 ```
+
+### `RESOLVED` 로그 생성 시나리오
+
+1. **관리자가 수동으로 권한 교체**:
+   - `resolvedBy`: 관리자 사용자 ID
+   - `note`: "구 마케팅팀을 신 마케팅팀으로 교체" (사용자 입력)
+
+2. **부서가 다시 활성화되어 자동 해결**:
+   - `resolvedBy`: `"system"`
+   - `note`: `"부서가 다시 활성화되어 자동으로 해결됨"`
 
 ### 로그 생성 정책
 
@@ -256,9 +271,12 @@ enum PermissionAction {
 
 ## 권한 교체 프로세스
 
-### 1. 스케줄러가 비활성 부서 감지
+### 1. 스케줄러가 비활성 부서 감지 및 재활성화 확인
 - 매일 새벽에 자동 실행
-- `permissionDepartmentIds` 중 **하나라도** `isActive=false`이면 감지
+- **먼저 기존 미해결 로그를 재검증**: 로그에 있는 부서가 다시 활성화되었는지 확인
+  - 모든 부서가 `isActive: true`로 복구되었다면 로그를 자동으로 `RESOLVED` 처리
+  - `resolvedBy: "system"`, `note: "부서가 다시 활성화되어 자동으로 해결됨"`
+- `permissionDepartmentIds` 중 **하나라도** `isActive=false`이면 새 로그 생성
 - **공지사항은 부서만 검증** (직원은 검증하지 않음)
 - `DETECTED` 로그를 `permission_logs` 테이블에 저장 (영구 보관)
 - 관리자에게 알림
@@ -714,6 +732,51 @@ Content-Type: application/json
 - 슬랙/디스코드 알림
 - 시스템 내부 알림
 - SMS 알림
+
+## 시나리오 예시
+
+### 시나리오 1: 부서가 비활성화된 경우
+
+1. **초기 상태**: 공지사항 A가 마케팅팀(DEPT_MKT, `isActive: true`) 권한 설정
+2. **부서 비활성화**: SSO에서 마케팅팀을 `isActive: false`로 변경
+3. **스케줄러 실행** (다음 날 새벽 3시):
+   - 마케팅팀이 비활성 상태임을 감지
+   - `DETECTED` 로그 생성
+   - 관리자에게 알림 전송
+4. **관리자 확인**: `/admin/announcements/permission-logs?resolved=false` 조회
+5. **관리자 처리**: 
+   - 옵션 A: `/admin/announcements/:id/replace-permissions`로 새 부서로 교체
+   - 옵션 B: SSO에서 부서를 다시 활성화하고 다음 스케줄러 실행 대기
+
+### 시나리오 2: 부서가 다시 활성화된 경우
+
+1. **초기 상태**: 공지사항 A에 대한 미해결 `DETECTED` 로그 존재 (마케팅팀 비활성)
+2. **부서 재활성화**: SSO에서 마케팅팀을 `isActive: true`로 변경
+3. **스케줄러 실행** (다음 날 새벽 3시):
+   - 기존 미해결 로그 재검증
+   - 마케팅팀이 활성 상태임을 확인
+   - 로그를 자동으로 `RESOLVED` 처리 (`resolvedBy: "system"`)
+   - 로그 메시지: "부서가 다시 활성화되어 자동으로 해결됨"
+4. **결과**: 관리자가 별도 조치 없이 자동으로 해결됨
+
+### 시나리오 3: 부서 통폐합 (수동 교체 필요)
+
+1. **초기 상태**: 공지사항 A가 구마케팅팀(DEPT_OLD, `isActive: true`) 권한 설정
+2. **부서 통폐합**: SSO에서 구마케팅팀을 비활성화하고 신마케팅팀 생성
+3. **스케줄러 실행**:
+   - 구마케팅팀이 비활성 상태임을 감지
+   - `DETECTED` 로그 생성
+4. **관리자 처리**:
+   ```http
+   PATCH /admin/announcements/123/replace-permissions
+   {
+     "departments": [
+       { "oldId": "DEPT_OLD", "newId": "DEPT_NEW" }
+     ],
+     "note": "구마케팅팀을 신마케팅팀으로 교체"
+   }
+   ```
+5. **결과**: `RESOLVED` 로그 생성 (`resolvedBy: 관리자ID`)
 
 ## 테스트
 
