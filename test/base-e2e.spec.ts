@@ -106,10 +106,7 @@ export class BaseE2ETest {
     // ValidationPipe 설정 (실제 애플리케이션과 동일하게)
     this.app.useGlobalPipes(
       new ValidationPipe({
-        transform: true,
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
+        transform: false, // 타입 자동 변환 비활성화 (정확한 타입만 허용)
         whitelist: true,
         forbidNonWhitelisted: false,
       }),

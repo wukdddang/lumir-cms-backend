@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFiles,
 } from '@nestjs/common';
+import { QueryFailedError } from 'typeorm';
 import {
   ApiTags,
   ApiOperation,
@@ -30,6 +31,7 @@ import { WikiPermissionScheduler } from '@context/wiki-context/wiki-permission.s
 import { WikiFileSystem } from '@domain/sub/wiki-file-system/wiki-file-system.entity';
 import {
   CreateFolderDto,
+  CreateFileDto,
   CreateEmptyFileDto,
   UpdateFolderDto,
   UpdateFolderNameDto,
@@ -236,17 +238,29 @@ export class WikiController {
     @Body() dto: CreateFolderDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WikiResponseDto> {
-    const folder = await this.wikiBusinessService.폴더를_생성한다({
-      name: dto.name,
-      parentId: dto.parentId,
-      isPublic: true, // 기본적으로 전사공개
-      permissionRankIds: null,
-      permissionPositionIds: null,
-      permissionDepartmentIds: null,
-      order: dto.order,
-      createdBy: user.id,
-    });
-    return WikiResponseDto.from(folder);
+    try {
+      const folder = await this.wikiBusinessService.폴더를_생성한다({
+        name: dto.name,
+        parentId: dto.parentId,
+        isPublic: true, // 기본적으로 전사공개
+        permissionRankIds: null,
+        permissionPositionIds: null,
+        permissionDepartmentIds: null,
+        order: dto.order,
+        createdBy: user.id,
+      });
+      return WikiResponseDto.from(folder);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23503') {
+          throw new BadRequestException('존재하지 않는 부모 폴더입니다.');
+        } else if (pgError.code === '22P02') {
+          throw new BadRequestException('유효하지 않은 UUID 형식입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -287,8 +301,17 @@ export class WikiController {
   async 폴더만_삭제한다(
     @Param('id') id: string,
   ): Promise<{ success: boolean }> {
-    const success = await this.wikiBusinessService.폴더만_삭제한다(id);
-    return { success };
+    try {
+      const success = await this.wikiBusinessService.폴더만_삭제한다(id);
+      return { success };
+    } catch (error) {
+      // BadRequestException은 그대로 전달 (400 에러)
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      // 기타 에러는 500으로 처리
+      throw error;
+    }
   }
 
   /**
@@ -564,13 +587,35 @@ export class WikiController {
     @Body() dto: CreateEmptyFileDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WikiResponseDto> {
-    const file = await this.wikiBusinessService.빈_파일을_생성한다(
-      dto.name,
-      dto.parentId || null,
-      user.id,
-      dto.isPublic,
-    );
-    return WikiResponseDto.from(file);
+    // name이 문자열이 아닌 경우 검증
+    if (typeof dto.name !== 'string') {
+      throw new BadRequestException('name 필드는 문자열이어야 합니다.');
+    }
+
+    // isPublic이 boolean이 아닌 경우 검증
+    if (dto.isPublic !== undefined && typeof dto.isPublic !== 'boolean') {
+      throw new BadRequestException('isPublic 필드는 boolean 값이어야 합니다.');
+    }
+
+    try {
+      const file = await this.wikiBusinessService.빈_파일을_생성한다(
+        dto.name,
+        dto.parentId || null,
+        user.id,
+        dto.isPublic,
+      );
+      return WikiResponseDto.from(file);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23503') {
+          throw new BadRequestException('존재하지 않는 부모 폴더입니다.');
+        } else if (pgError.code === '22P02') {
+          throw new BadRequestException('유효하지 않은 UUID 형식입니다.');
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -649,25 +694,31 @@ export class WikiController {
   })
   async 파일을_생성한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() body: any,
+    @Body() dto: CreateFileDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<WikiResponseDto> {
-    const { name, parentId, title, content, isPublic } = body;
-
-    if (!name) {
-      throw new BadRequestException('name 필드는 필수입니다.');
+    try {
+      const file = await this.wikiBusinessService.파일을_생성한다(
+        dto.name,
+        dto.parentId || null,
+        dto.title || null,
+        dto.content || null,
+        user.id,
+        files,
+        dto.isPublic,
+      );
+      return WikiResponseDto.from(file);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '23503') {
+          throw new BadRequestException('존재하지 않는 부모 폴더입니다.');
+        } else if (pgError.code === '22P02') {
+          throw new BadRequestException('유효하지 않은 UUID 형식입니다.');
+        }
+      }
+      throw error;
     }
-
-    const file = await this.wikiBusinessService.파일을_생성한다(
-      name,
-      parentId || null,
-      title || null,
-      content || null,
-      user.id,
-      files,
-      isPublic !== undefined ? isPublic === 'true' : undefined,
-    );
-    return WikiResponseDto.from(file);
   }
 
   /**

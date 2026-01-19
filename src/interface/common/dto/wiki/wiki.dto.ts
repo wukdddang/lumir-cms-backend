@@ -7,7 +7,10 @@ import {
   IsNumber,
   IsUUID,
   IsEnum,
+  IsNotEmpty,
+  MinLength,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { WikiFileSystem } from '@domain/sub/wiki-file-system/wiki-file-system.entity';
 import { WikiFileSystemType } from '@domain/sub/wiki-file-system/wiki-file-system-type.types';
 
@@ -19,7 +22,9 @@ import { WikiFileSystemType } from '@domain/sub/wiki-file-system/wiki-file-syste
  */
 export class CreateFolderDto {
   @ApiProperty({ description: '폴더명', example: '회의록' })
-  @IsString()
+  @IsString({ message: 'name은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: 'name은 비어있을 수 없습니다.' })
+  @MinLength(1, { message: 'name은 최소 1자 이상이어야 합니다.' })
   name: string;
 
   @ApiPropertyOptional({
@@ -32,6 +37,7 @@ export class CreateFolderDto {
 
   @ApiPropertyOptional({ description: '정렬 순서', example: 0, default: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   order?: number;
 }
@@ -41,7 +47,9 @@ export class CreateFolderDto {
  */
 export class CreateFileDto {
   @ApiProperty({ description: '파일명', example: '2024년 전사 회의록' })
-  @IsString()
+  @IsString({ message: 'name은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: 'name은 비어있을 수 없습니다.' })
+  @MinLength(1, { message: 'name은 최소 1자 이상이어야 합니다.' })
   name: string;
 
   @ApiPropertyOptional({
@@ -74,7 +82,7 @@ export class CreateFileDto {
     default: true,
   })
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'isPublic은 boolean 값이어야 합니다.' })
   isPublic?: boolean;
 
   @ApiPropertyOptional({
@@ -109,6 +117,7 @@ export class CreateFileDto {
 
   @ApiPropertyOptional({ description: '정렬 순서', example: 0, default: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   order?: number;
 }
@@ -118,7 +127,9 @@ export class CreateFileDto {
  */
 export class CreateEmptyFileDto {
   @ApiProperty({ description: '파일명', example: '새 문서' })
-  @IsString()
+  @IsString({ message: 'name은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: 'name은 비어있을 수 없습니다.' })
+  @MinLength(1, { message: 'name은 최소 1자 이상이어야 합니다.' })
   name: string;
 
   @ApiPropertyOptional({
@@ -135,7 +146,7 @@ export class CreateEmptyFileDto {
     default: true,
   })
   @IsOptional()
-  @IsBoolean()
+  @IsBoolean({ message: 'isPublic은 boolean 값이어야 합니다.' })
   isPublic?: boolean;
 }
 
@@ -188,6 +199,7 @@ export class UpdateFolderDto {
 
   @ApiPropertyOptional({ description: '정렬 순서', example: 0 })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   order?: number;
 }

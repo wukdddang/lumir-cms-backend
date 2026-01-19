@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, In } from 'typeorm';
 import { WikiFileSystem } from './wiki-file-system.entity';
@@ -342,12 +342,12 @@ export class WikiFileSystemService {
     const wiki = await this.ID로_조회한다(id);
 
     if (wiki.type !== WikiFileSystemType.FOLDER) {
-      throw new Error('Not a folder');
+      throw new BadRequestException('폴더가 아닙니다.');
     }
 
     const children = await this.부모_ID로_자식_목록을_조회한다(id);
     if (children.length > 0) {
-      throw new Error('Folder is not empty');
+      throw new BadRequestException('폴더가 비어있지 않습니다. 하위 항목이 있습니다.');
     }
 
     await this.wikiRepository.softRemove(wiki);

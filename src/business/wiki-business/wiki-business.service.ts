@@ -1,6 +1,6 @@
-import { Injectable, Logger, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, QueryFailedError } from 'typeorm';
 import { WikiContextService } from '@context/wiki-context/wiki-context.service';
 import { WikiFileSystem } from '@domain/sub/wiki-file-system/wiki-file-system.entity';
 import { WikiPermissionLog } from '@domain/sub/wiki-file-system/wiki-permission-log.entity';
@@ -530,22 +530,40 @@ export class WikiBusinessService {
     });
 
     // RESOLVED 로그 생성
-    await this.permissionLogRepository.save({
-      wikiFileSystemId: wiki.id,
-      invalidDepartments: null,
-      invalidRankCodes: null,
-      invalidPositionCodes: null,
-      snapshotPermissions: {
-        permissionRankIds: wiki.permissionRankIds,
-        permissionPositionIds: wiki.permissionPositionIds,
-        permissionDepartments: [],
-      },
-      action: WikiPermissionAction.RESOLVED,
-      note: dto.note || `관리자가 권한 교체 완료: ${changes.join(', ')}`,
-      detectedAt: new Date(),
-      resolvedAt: new Date(),
-      resolvedBy: userId,
-    });
+    // resolvedBy는 UUID 형식이어야 하므로, UUID 형식이 아닌 경우 null로 설정
+    let resolvedByValue: string | null = userId;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (userId && !uuidRegex.test(userId)) {
+      this.logger.warn(`사용자 ID가 UUID 형식이 아닙니다: ${userId}. resolvedBy를 null로 설정합니다.`);
+      resolvedByValue = null;
+    }
+
+    try {
+      await this.permissionLogRepository.save({
+        wikiFileSystemId: wiki.id,
+        invalidDepartments: null,
+        invalidRankCodes: null,
+        invalidPositionCodes: null,
+        snapshotPermissions: {
+          permissionRankIds: wiki.permissionRankIds,
+          permissionPositionIds: wiki.permissionPositionIds,
+          permissionDepartments: [],
+        },
+        action: WikiPermissionAction.RESOLVED,
+        note: dto.note || `관리자가 권한 교체 완료: ${changes.join(', ')}`,
+        detectedAt: new Date(),
+        resolvedAt: new Date(),
+        resolvedBy: resolvedByValue,
+      });
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        const pgError = error as any;
+        if (pgError.code === '22P02') {
+          throw new BadRequestException('유효하지 않은 사용자 ID 형식입니다. UUID 형식이어야 합니다.');
+        }
+      }
+      throw error;
+    }
 
     this.logger.log(`위키 권한 교체 완료 - 부서: ${replacedDepartments}개`);
 

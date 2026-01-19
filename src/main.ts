@@ -30,10 +30,7 @@ async function bootstrap() {
   // 전역 Validation Pipe 설정
   app.useGlobalPipes(
     new ValidationPipe({
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      transform: false, // 타입 자동 변환 비활성화 (정확한 타입만 허용)
       whitelist: true, // DTO에 정의되지 않은 속성 제거
       forbidNonWhitelisted: false, // 정의되지 않은 속성이 있어도 에러 발생 안 함
     }),
