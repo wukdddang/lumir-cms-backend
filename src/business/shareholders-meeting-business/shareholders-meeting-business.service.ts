@@ -191,7 +191,7 @@ export class ShareholdersMeetingBusinessService {
     files?: Express.Multer.File[],
   ): Promise<ShareholdersMeeting> {
     this.logger.log(
-      `주주총회 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`,
+      `주주총회 수정 시작 - ID: ${id}, 번역 수: ${translations?.length || 0}`,
     );
 
     // 1. 기존 주주총회 조회
