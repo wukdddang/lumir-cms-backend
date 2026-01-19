@@ -91,7 +91,7 @@ export function setupSwagger(
       'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
       'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.css',
     ],
-    customfavIcon: 'https://swagger.io/favicon.ico',
+    customfavIcon: 'https://nestjs.com/img/logo-small.svg',
     customSiteTitle: options.title,
   });
 }

@@ -628,6 +628,13 @@ export class AnnouncementController {
     description: '공지사항 ID',
     type: String,
   })
+  @ApiQuery({
+    name: 'path',
+    required: false,
+    description: '알림 클릭 시 리다이렉트할 전체 URL (http/https로 시작)',
+    type: String,
+    example: 'https://cms.example.com/announcements/123',
+  })
   @ApiResponse({
     status: 200,
     description: '알림 전송 성공',
@@ -646,6 +653,7 @@ export class AnnouncementController {
   })
   async 공지사항에_포함된_전체직원에게_알림을보낸다(
     @Param('id') id: string,
+    @Query('path') path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -654,6 +662,7 @@ export class AnnouncementController {
   }> {
     return await this.announcementBusinessService.공지사항에_포함된_전체직원에게_알림을보낸다(
       id,
+      path,
     );
   }
 
@@ -670,6 +679,13 @@ export class AnnouncementController {
     name: 'id',
     description: '공지사항 ID',
     type: String,
+  })
+  @ApiQuery({
+    name: 'path',
+    required: false,
+    description: '알림 클릭 시 리다이렉트할 전체 URL (http/https로 시작)',
+    type: String,
+    example: 'https://cms.example.com/announcements/123',
   })
   @ApiResponse({
     status: 200,
@@ -693,6 +709,7 @@ export class AnnouncementController {
   })
   async 공지사항에_포함된_직원중_미답변자들에게_알림을보낸다(
     @Param('id') id: string,
+    @Query('path') path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -701,6 +718,7 @@ export class AnnouncementController {
   }> {
     return await this.announcementBusinessService.공지사항에_포함된_직원중_미답변자들에게_알림을보낸다(
       id,
+      path,
     );
   }
 
@@ -717,6 +735,13 @@ export class AnnouncementController {
     name: 'id',
     description: '공지사항 ID',
     type: String,
+  })
+  @ApiQuery({
+    name: 'path',
+    required: false,
+    description: '알림 클릭 시 리다이렉트할 전체 URL (http/https로 시작)',
+    type: String,
+    example: 'https://cms.example.com/announcements/123',
   })
   @ApiResponse({
     status: 200,
@@ -736,6 +761,7 @@ export class AnnouncementController {
   })
   async 공지사항에_포함된_미열람자들에게_알림을보낸다(
     @Param('id') id: string,
+    @Query('path') path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -744,6 +770,7 @@ export class AnnouncementController {
   }> {
     return await this.announcementBusinessService.공지사항에_포함된_미열람자들에게_알림을보낸다(
       id,
+      path,
     );
   }
 

@@ -482,6 +482,7 @@ export class AnnouncementBusinessService {
    */
   async 공지사항에_포함된_전체직원에게_알림을보낸다(
     announcementId: string,
+    path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -510,12 +511,13 @@ export class AnnouncementBusinessService {
       };
     }
 
-    // 3. 알림 전송
+    // 3. 알림 전송 (path가 제공되면 사용, 아니면 기본 경로)
+    const linkUrl = path || `/announcements/${announcementId}`;
     const result = await this.알림을_전송한다({
       title: `공지사항: ${announcement.title}`,
       content: announcement.content,
       employeeNumbers: targetEmployees,
-      linkUrl: `/announcements/${announcementId}`,
+      linkUrl,
       metadata: {
         type: 'announcement',
         announcementId,
@@ -534,6 +536,7 @@ export class AnnouncementBusinessService {
    */
   async 공지사항에_포함된_직원중_미답변자들에게_알림을보낸다(
     announcementId: string,
+    path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -598,12 +601,13 @@ export class AnnouncementBusinessService {
       };
     }
 
-    // 5. 알림 전송
+    // 5. 알림 전송 (path가 제공되면 사용, 아니면 기본 경로)
+    const linkUrl = path || `/announcements/${announcementId}`;
     const result = await this.알림을_전송한다({
       title: `설문 미답변 알림: ${announcement.title}`,
       content: `아직 응답하지 않으신 설문이 있습니다. 설문에 참여해주세요.`,
       employeeNumbers: unansweredEmployees,
-      linkUrl: `/announcements/${announcementId}`,
+      linkUrl,
       metadata: {
         type: 'announcement_survey_reminder',
         announcementId,
@@ -623,6 +627,7 @@ export class AnnouncementBusinessService {
    */
   async 공지사항에_포함된_미열람자들에게_알림을보낸다(
     announcementId: string,
+    path?: string,
   ): Promise<{
     success: boolean;
     sentCount: number;
@@ -671,12 +676,13 @@ export class AnnouncementBusinessService {
       };
     }
 
-    // 4. 알림 전송
+    // 4. 알림 전송 (path가 제공되면 사용, 아니면 기본 경로)
+    const linkUrl = path || `/announcements/${announcementId}`;
     const result = await this.알림을_전송한다({
       title: `미열람 공지사항: ${announcement.title}`,
       content: `아직 확인하지 않으신 공지사항이 있습니다.`,
       employeeNumbers: unreadEmployees,
-      linkUrl: `/announcements/${announcementId}`,
+      linkUrl,
       metadata: {
         type: 'announcement_unread_reminder',
         announcementId,
