@@ -92,6 +92,35 @@ export class AnnouncementBusinessService {
   }
 
   /**
+   * 고정 공지사항 목록을 조회한다 (isFixed=true만)
+   */
+  async 고정_공지사항_목록을_조회한다(params: {
+    isPublic?: boolean;
+    orderBy?: 'order' | 'createdAt';
+    page?: number;
+    limit?: number;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<{
+    items: Announcement[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    this.logger.log('고정 공지사항 목록 조회 시작');
+
+    const result =
+      await this.announcementContextService.공지사항_목록을_조회한다({
+        ...params,
+        isFixed: true, // 고정 공지만 조회
+      });
+
+    this.logger.log(`고정 공지사항 목록 조회 완료 - 총 ${result.total}개`);
+
+    return result;
+  }
+
+  /**
    * 공지사항 전체 목록을 조회한다 (페이지네이션 없음)
    */
   async 공지사항_전체_목록을_조회한다(): Promise<Announcement[]> {

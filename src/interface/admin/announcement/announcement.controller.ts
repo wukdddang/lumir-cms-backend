@@ -56,12 +56,12 @@ export class AnnouncementController {
   ) {}
 
   /**
-   * 공지사항 목록을 조회한다
+   * 공지사항 목록을 조회한다 (비고정 공지만)
    */
   @Get()
   @ApiOperation({
-    summary: '공지사항 목록 조회',
-    description: '공지사항 목록을 조회합니다.',
+    summary: '공지사항 목록 조회 (비고정 공지)',
+    description: '비고정 공지사항 목록을 조회합니다. isFixed=false인 공지사항만 반환됩니다.',
   })
   @ApiResponse({
     status: 200,
@@ -72,12 +72,6 @@ export class AnnouncementController {
     name: 'isPublic',
     required: false,
     description: '공개 여부 필터',
-    type: Boolean,
-  })
-  @ApiQuery({
-    name: 'isFixed',
-    required: false,
-    description: '고정 여부 필터',
     type: Boolean,
   })
   @ApiQuery({
@@ -116,7 +110,6 @@ export class AnnouncementController {
   })
   async 공지사항_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
-    @Query('isFixed') isFixed?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
     @Query('page') page?: string,
     @Query('limit') limit?: string,
@@ -125,15 +118,13 @@ export class AnnouncementController {
   ): Promise<AnnouncementListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
-    const isFixedFilter =
-      isFixed === 'true' ? true : isFixed === 'false' ? false : undefined;
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
 
     const result =
       await this.announcementBusinessService.공지사항_목록을_조회한다({
         isPublic: isPublicFilter,
-        isFixed: isFixedFilter,
+        isFixed: false, // 비고정 공지만 조회
         orderBy: orderBy || 'order',
         page: pageNum,
         limit: limitNum,
@@ -157,6 +148,94 @@ export class AnnouncementController {
           console.error('권한 검증 배치 실행 중 오류:', error);
         });
     }
+
+    return {
+      items: result.items.map((item) => ({
+        ...item,
+        hasSurvey: !!item.survey,
+      })),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: Math.ceil(result.total / result.limit),
+    };
+  }
+
+  /**
+   * 고정 공지사항 목록을 조회한다
+   */
+  @Get('fixed')
+  @ApiOperation({
+    summary: '고정 공지사항 목록 조회',
+    description: '고정 공지사항 목록을 조회합니다. isFixed=true인 공지사항만 반환됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '고정 공지사항 목록 조회 성공',
+    type: AnnouncementListResponseDto,
+  })
+  @ApiQuery({
+    name: 'isPublic',
+    required: false,
+    description: '공개 여부 필터',
+    type: Boolean,
+  })
+  @ApiQuery({
+    name: 'orderBy',
+    required: false,
+    description: '정렬 기준 (order: 정렬순서, createdAt: 생성일시)',
+    enum: ['order', 'createdAt'],
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호 (기본값: 1)',
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '페이지당 개수 (기본값: 10)',
+    type: Number,
+    example: 10,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: '시작일 (YYYY-MM-DD 형식)',
+    type: String,
+    example: '2024-01-01',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: '종료일 (YYYY-MM-DD 형식)',
+    type: String,
+    example: '2024-12-31',
+  })
+  async 고정_공지사항_목록을_조회한다(
+    @Query('isPublic') isPublic?: string,
+    @Query('orderBy') orderBy?: 'order' | 'createdAt',
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<AnnouncementListResponseDto> {
+    const isPublicFilter =
+      isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+
+    const result =
+      await this.announcementBusinessService.고정_공지사항_목록을_조회한다({
+        isPublic: isPublicFilter,
+        orderBy: orderBy || 'order',
+        page: pageNum,
+        limit: limitNum,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+      });
 
     return {
       items: result.items.map((item) => ({
