@@ -207,6 +207,7 @@ erDiagram
         uuid languageId UK "FK"
         varchar title
         text description "간단한 설명"
+        boolean isSynced "동기화 여부 (기본값: true) - 한국어 원본과 자동 동기화 여부"
         timestamp createdAt
         timestamp updatedAt
         timestamp deletedAt "nullable"
