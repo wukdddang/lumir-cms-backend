@@ -134,10 +134,27 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
         id: brochureId,
         isPublic: true, // 기본값 확인
       });
-      expect(response.body.translations).toHaveLength(1);
-      expect(response.body.translations[0]).toMatchObject({
+      // 정책: 입력한 언어(ko) + 자동 생성된 언어들(en, ja, zh) = 총 4개
+      expect(response.body.translations).toHaveLength(4);
+      
+      // 입력한 한국어 번역 확인 (isSynced=false)
+      const koTranslation = response.body.translations.find(
+        (t: any) => t.language.code === 'ko'
+      );
+      expect(koTranslation).toMatchObject({
         title: '회사 소개 브로슈어',
         description: '상세 설명',
+        isSynced: false, // 수동 입력
+      });
+      
+      // 자동 생성된 번역들 확인 (isSynced=true)
+      const autoTranslations = response.body.translations.filter(
+        (t: any) => t.language.code !== 'ko'
+      );
+      expect(autoTranslations).toHaveLength(3); // en, ja, zh
+      autoTranslations.forEach((t: any) => {
+        expect(t.isSynced).toBe(true); // 자동 동기화
+        expect(t.title).toBe('회사 소개 브로슈어'); // 한국어 원본 복사
       });
     });
   });
