@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { promises as fs } from 'fs';
 import { join } from 'path';
@@ -132,11 +132,17 @@ export class LocalStorageService implements IStorageService {
 
       this.logger.log(`파일 삭제 성공: ${fileUrl}`);
     } catch (error) {
-      this.logger.error(`파일 삭제 실패: ${fileUrl}`, error);
-      // 파일이 없어도 에러를 던지지 않음 (이미 삭제된 경우)
-      if (error.code !== 'ENOENT') {
-        throw new Error(`파일 삭제에 실패했습니다: ${error.message}`);
+      // 파일이 존재하지 않는 경우
+      if (error.code === 'ENOENT') {
+        this.logger.warn(`파일을 찾을 수 없음: ${fileUrl}`);
+        throw new NotFoundException(
+          `삭제하려는 파일을 찾을 수 없습니다: ${fileUrl}`
+        );
       }
+      
+      // 그 외의 에러
+      this.logger.error(`파일 삭제 실패: ${fileUrl}`, error);
+      throw new Error(`파일 삭제에 실패했습니다: ${error.message}`);
     }
   }
 

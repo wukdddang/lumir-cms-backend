@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { NotFoundException } from '@nestjs/common';
 import { STORAGE_SERVICE, StorageModule } from '../../../libs/storage/storage.module';
 import { IStorageService } from '../../../libs/storage/interfaces/storage.interface';
 import { LocalStorageService } from '../../../libs/storage/local-storage.service';
@@ -223,13 +224,17 @@ describe('[Integration] Storage Service', () => {
       expect(existsSync(filePath)).toBe(false);
     });
 
-    it('존재하지 않는 파일을 삭제해도 에러가 발생하지 않아야 한다', async () => {
+    it('존재하지 않는 파일을 삭제하면 NotFoundException이 발생해야 한다', async () => {
       const fakeUrl = 'http://localhost:4001/uploads/test-folder/non-existent.txt';
 
-      // 에러 없이 실행되어야 함
+      // NotFoundException이 발생해야 함
       await expect(
         storageService.deleteFile(fakeUrl)
-      ).resolves.not.toThrow();
+      ).rejects.toThrow(NotFoundException);
+      
+      await expect(
+        storageService.deleteFile(fakeUrl)
+      ).rejects.toThrow('삭제하려는 파일을 찾을 수 없습니다');
     });
   });
 
