@@ -174,6 +174,12 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
       // 파일 추가 확인 - PUT 응답은 translations 배열을 반환
       expect(Array.isArray(updateResponse.body)).toBe(true);
       
+      // 수정 시 isSynced가 false로 설정되었는지 확인
+      expect(updateResponse.body[0]).toMatchObject({
+        title: '파일 추가 테스트 브로슈어',
+        isSynced: false, // 수정 시 동기화 중단
+      });
+      
       // 브로슈어 다시 조회하여 파일 확인
       const getResponse = await testHelper
         .request()
@@ -219,6 +225,10 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
         }]))
         // files를 전송하지 않으면 기존 파일이 모두 삭제됨
         .expect(200);
+
+      // 수정 시 isSynced가 false로 설정되었는지 확인
+      expect(Array.isArray(updateResponse.body)).toBe(true);
+      expect(updateResponse.body[0].isSynced).toBe(false);
 
       // 파일 삭제 확인 - 브로슈어 다시 조회
       const getResponse = await testHelper

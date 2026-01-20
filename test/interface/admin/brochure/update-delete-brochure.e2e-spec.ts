@@ -67,6 +67,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
       expect(response.body[0]).toMatchObject({
         title: '수정된 제목',
         description: '수정된 설명',
+        isSynced: false, // 수정 시 동기화 중단 확인
       });
     });
 
@@ -88,6 +89,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
 
       // Then
       expect(response.body[0].title).toBe('제목만 수정');
+      expect(response.body[0].isSynced).toBe(false); // 수정 시 동기화 중단
     });
 
     it('존재하지 않는 브로슈어를 수정하면 404 에러가 발생해야 한다', async () => {
@@ -258,6 +260,109 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
 
       // Then
       expect(response.body.success).toBe(true);
+    });
+  });
+
+  describe('브로슈어 isSynced 정책 검증 (ERD 정책)', () => {
+    it('생성 시: 입력 언어는 isSynced=false, 미입력 언어는 isSynced=true', async () => {
+      // Given - 한국어만 입력하여 브로슈어 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/brochures')
+        .send({
+          translations: [
+            {
+              languageId,
+              title: 'isSynced 정책 테스트',
+              description: '정책 검증용 브로슈어',
+            },
+          ],
+        })
+        .expect(201);
+
+      const newBrochureId = createResponse.body.id;
+
+      // When - 브로슈어 상세 조회
+      const detailResponse = await testSuite
+        .request()
+        .get(`/api/admin/brochures/${newBrochureId}`)
+        .expect(200);
+
+      // Then - 입력한 한국어는 isSynced=false
+      const koTranslation = detailResponse.body.translations.find(
+        (t: any) => t.language.code === 'ko',
+      );
+      expect(koTranslation).toBeDefined();
+      expect(koTranslation.isSynced).toBe(false);
+
+      // Then - 나머지 언어들은 isSynced=true (자동 동기화 대상)
+      const otherTranslations = detailResponse.body.translations.filter(
+        (t: any) => t.language.code !== 'ko',
+      );
+      expect(otherTranslations.length).toBeGreaterThan(0);
+      otherTranslations.forEach((t: any) => {
+        expect(t.isSynced).toBe(true);
+      });
+
+      // 정리
+      await testSuite
+        .request()
+        .delete(`/api/admin/brochures/${newBrochureId}`)
+        .expect(200);
+    });
+
+    it('수정 시: isSynced가 false로 변경되어 자동 동기화에서 제외됨', async () => {
+      // Given - 브로슈어 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/brochures')
+        .send({
+          translations: [
+            {
+              languageId,
+              title: '원본 제목',
+            },
+          ],
+        })
+        .expect(201);
+
+      const newBrochureId = createResponse.body.id;
+
+      // When - 브로슈어 수정
+      const updateResponse = await testSuite
+        .request()
+        .put(`/api/admin/brochures/${newBrochureId}`)
+        .field(
+          'translations',
+          JSON.stringify([
+            {
+              languageId,
+              title: '수정된 제목',
+            },
+          ]),
+        )
+        .expect(200);
+
+      // Then - 수정된 번역의 isSynced가 false인지 확인
+      expect(updateResponse.body[0].isSynced).toBe(false);
+
+      // Then - 상세 조회로도 확인
+      const detailResponse = await testSuite
+        .request()
+        .get(`/api/admin/brochures/${newBrochureId}`)
+        .expect(200);
+
+      const koTranslation = detailResponse.body.translations.find(
+        (t: any) => t.language.code === 'ko',
+      );
+      expect(koTranslation.isSynced).toBe(false);
+      expect(koTranslation.title).toBe('수정된 제목');
+
+      // 정리
+      await testSuite
+        .request()
+        .delete(`/api/admin/brochures/${newBrochureId}`)
+        .expect(200);
     });
   });
 });

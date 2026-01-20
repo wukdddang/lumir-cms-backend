@@ -60,14 +60,16 @@ export class UpdateBrochureHandler implements ICommandHandler<UpdateBrochureComm
       // 기존 번역 삭제
       await this.brochureTranslationRepository.delete({ brochureId: id });
 
-      // 새 번역 생성
+      // 새 번역 생성 (isSynced: false - 수정 시 동기화 중단)
       const translations = data.translations.map((trans) =>
         this.brochureTranslationRepository.create({
           brochureId: id,
           languageId: trans.languageId,
           title: trans.title,
           description: trans.description,
+          isSynced: false, // 수정 시 동기화 중단 (ERD 정책)
           createdBy: data.updatedBy,
+          updatedBy: data.updatedBy,
         }),
       );
 
