@@ -125,8 +125,8 @@ describe('CreateAnnouncementHandler', () => {
           isPublic: false,
           isFixed: false,
           mustRead: true,
-          permissionDepartmentCodes: ['경영지원-경지'],
-          permissionRankCodes: ['매니저'],
+          permissionDepartmentIds: ['dept-1'],
+          permissionRankIds: ['rank-1'],
           createdBy: 'user-1',
         },
       };
@@ -149,8 +149,8 @@ describe('CreateAnnouncementHandler', () => {
         expect.objectContaining({
           title: command.data.title,
           content: command.data.content,
-          permissionDepartmentCodes: command.data.permissionDepartmentCodes,
-          permissionRankCodes: command.data.permissionRankCodes,
+          permissionDepartmentIds: command.data.permissionDepartmentIds,
+          permissionRankIds: command.data.permissionRankIds,
         }),
       );
       expect(result.isPublic).toBe(false);

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { AnnouncementContextService } from '@context/announcement-context/announcement-context.service';
+import { AnnouncementService } from '@domain/core/announcement/announcement.service';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
 
 describe('AnnouncementContextService', () => {
@@ -16,6 +17,14 @@ describe('AnnouncementContextService', () => {
     execute: jest.fn(),
   };
 
+  const mockAnnouncementService = {
+    공지사항을_생성한다: jest.fn(),
+    공지사항을_수정한다: jest.fn(),
+    공지사항을_삭제한다: jest.fn(),
+    공지사항을_조회한다: jest.fn(),
+    공지사항_목록을_조회한다: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -27,6 +36,10 @@ describe('AnnouncementContextService', () => {
         {
           provide: QueryBus,
           useValue: mockQueryBus,
+        },
+        {
+          provide: AnnouncementService,
+          useValue: mockAnnouncementService,
         },
       ],
     }).compile();

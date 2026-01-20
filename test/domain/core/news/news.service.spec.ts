@@ -138,7 +138,7 @@ describe('NewsService', () => {
       expect(repository.createQueryBuilder).toHaveBeenCalledWith('news');
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
         'news.order',
-        'DESC',
+        'ASC',
       );
       expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith(
         'news.createdAt',
@@ -420,7 +420,7 @@ describe('NewsService', () => {
       // Then
       expect(repository.find).toHaveBeenCalledWith({
         where: { isPublic: true },
-        order: { order: 'DESC', createdAt: 'DESC' },
+        order: { order: 'ASC', createdAt: 'DESC' },
       });
       expect(result).toEqual(mockNews);
     });

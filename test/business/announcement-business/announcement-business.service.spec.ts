@@ -8,6 +8,7 @@ import { SsoService } from '@domain/common/sso/sso.service';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AnnouncementRead } from '@domain/core/announcement/announcement-read.entity';
+import { AnnouncementPermissionLog } from '@domain/core/announcement/announcement-permission-log.entity';
 import { Survey } from '@domain/sub/survey/survey.entity';
 import { SurveyCompletion } from '@domain/sub/survey/survey-completion.entity';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
@@ -66,6 +67,14 @@ describe('AnnouncementBusinessService', () => {
     count: jest.fn(),
   };
 
+  const mockAnnouncementPermissionLogRepository = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    save: jest.fn(),
+    delete: jest.fn(),
+    count: jest.fn(),
+  };
+
   const mockSurveyRepository = {
     findOne: jest.fn(),
     find: jest.fn(),
@@ -114,6 +123,10 @@ describe('AnnouncementBusinessService', () => {
         {
           provide: getRepositoryToken(AnnouncementRead),
           useValue: mockAnnouncementReadRepository,
+        },
+        {
+          provide: getRepositoryToken(AnnouncementPermissionLog),
+          useValue: mockAnnouncementPermissionLogRepository,
         },
         {
           provide: getRepositoryToken(Survey),

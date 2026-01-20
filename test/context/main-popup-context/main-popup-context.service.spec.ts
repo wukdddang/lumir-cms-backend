@@ -464,6 +464,7 @@ describe('MainPopupContextService', () => {
       ).toHaveBeenCalledWith('trans-1', {
         title: '수정된 제목',
         description: '수정된 설명',
+        isSynced: false,
         updatedBy: 'user-1',
       });
       expect(result).toEqual(mockPopup);
