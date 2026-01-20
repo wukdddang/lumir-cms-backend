@@ -69,3 +69,6 @@ scripts/backup/dumps/*.sql
 # Local file uploads (로컬 개발 환경)
 /uploads/
 !/uploads/.gitkeep
+
+# test
+/test/coverage
