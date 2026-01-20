@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsNumber, ValidateNested } from 'class-validator';
+import { IsArray, IsString, IsNumber, ValidateNested, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -35,6 +35,7 @@ export class UpdateVideoGalleryBatchOrderDto {
     ],
   })
   @IsArray()
+  @ArrayMinSize(1, { message: '최소 1개 이상의 비디오갤러리가 필요합니다.' })
   @ValidateNested({ each: true })
   @Type(() => VideoGalleryOrderItemDto)
   videoGalleries: VideoGalleryOrderItemDto[];

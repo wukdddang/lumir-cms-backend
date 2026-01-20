@@ -11,6 +11,8 @@ import {
   Patch,
   UseInterceptors,
   UploadedFiles,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -263,7 +265,72 @@ export class VideoGalleryController {
   }
 
   /**
+   * 비디오갤러리 카테고리 목록을 조회한다
+   * 주의: 정적 라우트는 :id 라우트보다 앞에 와야 합니다.
+   */
+  @Get('categories')
+  @ApiOperation({
+    summary: '비디오갤러리 카테고리 목록 조회',
+    description: '비디오갤러리 카테고리 목록을 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '비디오갤러리 카테고리 목록 조회 성공',
+    type: VideoGalleryCategoryListResponseDto,
+  })
+  async 비디오갤러리_카테고리_목록을_조회한다(): Promise<VideoGalleryCategoryListResponseDto> {
+    const items =
+      await this.videoGalleryBusinessService.비디오갤러리_카테고리_목록을_조회한다();
+
+    return {
+      items,
+      total: items.length,
+    };
+  }
+
+  /**
+   * 비디오갤러리 오더를 일괄 수정한다
+   * 주의: 정적 라우트는 :id 라우트보다 앞에 와야 합니다.
+   */
+  @Put('batch-order')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  @ApiOperation({
+    summary: '비디오갤러리 오더 일괄 수정',
+    description:
+      '여러 비디오갤러리의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 비디오갤러리 목록을 전달하면 됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '비디오갤러리 오더 일괄 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: true },
+        updatedCount: { type: 'number', example: 5 },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: '잘못된 요청 (수정할 비디오갤러리가 없음)',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '일부 비디오갤러리를 찾을 수 없음',
+  })
+  async 비디오갤러리_오더를_일괄_수정한다(
+    @Body() updateDto: UpdateVideoGalleryBatchOrderDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{ success: boolean; updatedCount: number }> {
+    return await this.videoGalleryBusinessService.비디오갤러리_오더를_일괄_수정한다(
+      updateDto.videoGalleries,
+      user.id,
+    );
+  }
+
+  /**
    * 비디오갤러리를 수정한다 (파일 포함)
+   * 주의: 동적 라우트(:id)는 정적 라우트 뒤에 와야 합니다.
    */
   @Put(':id')
   @UseInterceptors(
@@ -385,33 +452,10 @@ export class VideoGalleryController {
   }
 
   /**
-   * 비디오갤러리 카테고리 목록을 조회한다
-   */
-  @Get('categories')
-  @ApiOperation({
-    summary: '비디오갤러리 카테고리 목록 조회',
-    description: '비디오갤러리 카테고리 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '비디오갤러리 카테고리 목록 조회 성공',
-    type: VideoGalleryCategoryListResponseDto,
-  })
-  async 비디오갤러리_카테고리_목록을_조회한다(): Promise<VideoGalleryCategoryListResponseDto> {
-    const items =
-      await this.videoGalleryBusinessService.비디오갤러리_카테고리_목록을_조회한다();
-
-    return {
-      items,
-      total: items.length,
-    };
-  }
-
-  /**
    * 비디오갤러리 상세 조회한다
    *
-   * 주의: 이 라우트는 categories 라우트보다 뒤에 와야 합니다.
-   * 그렇지 않으면 /categories가 :id로 매칭됩니다.
+   * 주의: 이 라우트는 categories, batch-order 라우트보다 뒤에 와야 합니다.
+   * 그렇지 않으면 /categories, /batch-order가 :id로 매칭됩니다.
    */
   @Get(':id')
   @ApiOperation({
@@ -459,44 +503,6 @@ export class VideoGalleryController {
     return await this.videoGalleryBusinessService.비디오갤러리_공개를_수정한다(
       id,
       updateDto,
-    );
-  }
-
-  /**
-   * 비디오갤러리 오더를 일괄 수정한다
-   */
-  @Put('batch-order')
-  @ApiOperation({
-    summary: '비디오갤러리 오더 일괄 수정',
-    description:
-      '여러 비디오갤러리의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 비디오갤러리 목록을 전달하면 됩니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '비디오갤러리 오더 일괄 수정 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        success: { type: 'boolean', example: true },
-        updatedCount: { type: 'number', example: 5 },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: '잘못된 요청 (수정할 비디오갤러리가 없음)',
-  })
-  @ApiResponse({
-    status: 404,
-    description: '일부 비디오갤러리를 찾을 수 없음',
-  })
-  async 비디오갤러리_오더를_일괄_수정한다(
-    @Body() updateDto: UpdateVideoGalleryBatchOrderDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<{ success: boolean; updatedCount: number }> {
-    return await this.videoGalleryBusinessService.비디오갤러리_오더를_일괄_수정한다(
-      updateDto.videoGalleries,
-      user.id,
     );
   }
 

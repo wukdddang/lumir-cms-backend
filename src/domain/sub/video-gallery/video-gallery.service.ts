@@ -172,10 +172,18 @@ export class VideoGalleryService {
         });
         updatedCount++;
       } catch (error) {
-        this.logger.error(
-          `비디오갤러리 오더 업데이트 실패 - ID: ${item.id}`,
-          error,
-        );
+        // NotFoundException은 정상적인 비즈니스 로직(존재하지 않는 ID 건너뛰기)이므로 경고 레벨로 처리
+        if (error instanceof NotFoundException) {
+          this.logger.warn(
+            `비디오갤러리를 찾을 수 없어 건너뜁니다 - ID: ${item.id}`,
+          );
+        } else {
+          // 다른 예외는 에러로 기록
+          this.logger.error(
+            `비디오갤러리 오더 업데이트 중 예상치 못한 오류 발생 - ID: ${item.id}`,
+            error,
+          );
+        }
       }
     }
 
