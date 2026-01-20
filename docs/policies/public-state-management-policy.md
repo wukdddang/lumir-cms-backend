@@ -1213,9 +1213,9 @@ A: 예, Feature Flag나 환경 변수를 사용하여 엔티티별로 활성화/
 ## 13. 참고 자료
 
 ### 관련 문서
-- [데이터 상태 흐름](./data-state-flow.md)
-- [Announcement Context 흐름](./context-flows/announcement-context-flow.md)
-- [News Context 흐름](./context-flows/ir-news-context-flow.md)
+- [데이터 상태 흐름](../state-flow/data-state-flow.md)
+- [Announcement Context 흐름](../state-flow/context-flows/announcement-context-flow.md)
+- [News Context 흐름](../state-flow/context-flows/ir-news-context-flow.md)
 - [ER 다이어그램](../erd/er-diagram.md)
 
 ### 외부 참고

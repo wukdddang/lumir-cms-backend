@@ -152,6 +152,36 @@ export class WikiController {
   }
 
   /**
+   * 경로로 폴더를 조회한다 (하위 항목 포함)
+   */
+  @Get('folders/by-path')
+  @ApiOperation({
+    summary: '경로로 폴더 조회',
+    description:
+      '폴더 경로로 폴더를 조회합니다. 폴더 상세 정보와 하위 폴더/파일 목록을 반환합니다.\n\n' +
+      '**경로 형식**:\n' +
+      '- `/루트폴더/하위폴더` 또는 `루트폴더/하위폴더` 형식으로 입력\n' +
+      '- 각 폴더 이름은 `/`로 구분\n' +
+      '- 예: `/회의록/2024년` 또는 `회의록/2024년`',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '폴더 조회 성공 (하위 항목 포함)',
+    type: WikiResponseDto,
+  })
+  @ApiQuery({
+    name: 'path',
+    description: '폴더 경로 (예: /루트폴더/하위폴더)',
+    example: '/회의록/2024년',
+    required: true,
+  })
+  async 경로로_폴더를_조회한다(@Query('path') path: string): Promise<WikiResponseDto> {
+    const folder = await this.wikiBusinessService.경로로_폴더를_조회한다(path);
+    const children = await this.wikiBusinessService.폴더_하위_항목을_조회한다(folder.id);
+    return WikiResponseDto.from(folder, children);
+  }
+
+  /**
    * 폴더를 조회한다 (하위 항목 포함)
    */
   @Get('folders/:id')

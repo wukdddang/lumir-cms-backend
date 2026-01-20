@@ -465,4 +465,73 @@ export class WikiFileSystemService {
     return results;
   }
 
+  /**
+   * 경로로 폴더를 조회한다
+   * 
+   * @param path - 폴더 경로 문자열 (예: "/루트폴더/하위폴더" 또는 "루트폴더/하위폴더")
+   * @returns 찾은 폴더 엔티티
+   * @throws NotFoundException - 경로상의 폴더가 없을 경우
+   */
+  async 경로로_폴더를_조회한다(path: string): Promise<WikiFileSystem> {
+    this.logger.log(`경로로 폴더 조회 시작 - 경로: ${path}`);
+
+    // path가 undefined, null, 빈 문자열인 경우 에러
+    if (!path || typeof path !== 'string') {
+      throw new BadRequestException('폴더 경로가 필요합니다.');
+    }
+
+    // 경로 파싱: 앞뒤 슬래시 제거 및 빈 문자열 제거
+    const trimmedPath = path.trim().replace(/^\/+|\/+$/g, '');
+    
+    // 빈 경로인 경우 에러
+    if (!trimmedPath) {
+      throw new BadRequestException('폴더 경로가 비어있습니다.');
+    }
+
+    const folderNames = trimmedPath.split('/').filter(name => name.length > 0);
+    
+    if (folderNames.length === 0) {
+      throw new BadRequestException('유효한 폴더 경로가 아닙니다.');
+    }
+
+    this.logger.log(`파싱된 경로: [${folderNames.join(' > ')}]`);
+
+    // 루트부터 순차적으로 폴더 찾기
+    let currentParentId: string | null = null;
+    let currentFolder: WikiFileSystem | null = null;
+
+    for (let i = 0; i < folderNames.length; i++) {
+      const folderName = folderNames[i];
+      this.logger.log(`폴더 검색 중: "${folderName}" (부모 ID: ${currentParentId || '루트'})`);
+
+      // 현재 레벨에서 해당 이름의 폴더 찾기
+      const folder = await this.wikiRepository.findOne({
+        where: {
+          name: folderName,
+          type: WikiFileSystemType.FOLDER,
+          parentId: currentParentId === null ? IsNull() : currentParentId,
+          deletedAt: IsNull(),
+        },
+      });
+
+      if (!folder) {
+        const pathSoFar = folderNames.slice(0, i + 1).join('/');
+        throw new NotFoundException(
+          `경로 '${pathSoFar}'에서 폴더 '${folderName}'를 찾을 수 없습니다.`
+        );
+      }
+
+      currentFolder = folder;
+      currentParentId = folder.id;
+      this.logger.log(`폴더 찾음: ${folder.name} (ID: ${folder.id})`);
+    }
+
+    if (!currentFolder) {
+      throw new NotFoundException(`경로 '${path}'에 해당하는 폴더를 찾을 수 없습니다.`);
+    }
+
+    this.logger.log(`경로로 폴더 조회 완료 - ID: ${currentFolder.id}, 이름: ${currentFolder.name}`);
+    return currentFolder;
+  }
+
 }

@@ -42,6 +42,19 @@ export class WikiBusinessService {
   }
 
   /**
+   * 경로로 폴더를 조회한다
+   */
+  async 경로로_폴더를_조회한다(path: string): Promise<WikiFileSystem> {
+    this.logger.log(`경로로 폴더 조회 시작 - 경로: ${path}`);
+
+    const wiki = await this.wikiContextService.경로로_폴더를_조회한다(path);
+
+    this.logger.log(`경로로 폴더 조회 완료 - 경로: ${path}, ID: ${wiki.id}`);
+
+    return wiki;
+  }
+
+  /**
    * 폴더의 하위 항목을 조회한다
    */
   async 폴더_하위_항목을_조회한다(folderId: string): Promise<WikiFileSystem[]> {

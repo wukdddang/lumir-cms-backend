@@ -163,12 +163,29 @@ WHERE c.id = 'category-uuid-456' AND c.entity_type = 'announcement';
 
 ```mermaid
 erDiagram
+    AnnouncementPermissionLog ||--o{ DismissedPermissionLog : "can be dismissed"
+    WikiPermissionLog ||--o{ DismissedPermissionLog : "can be dismissed"
+    
     DismissedPermissionLog {
         uuid id PK
         varchar logType "announcement|wiki"
         uuid permissionLogId "권한 로그 ID"
         uuid dismissedBy "무시한 관리자 ID (SSO)"
         timestamp dismissedAt
+    }
+    
+    AnnouncementPermissionLog {
+        uuid id PK
+        uuid announcementId FK
+        varchar action
+        timestamp resolvedAt
+    }
+    
+    WikiPermissionLog {
+        uuid id PK
+        uuid wikiFileSystemId FK
+        varchar action
+        timestamp resolvedAt
     }
 ```
 

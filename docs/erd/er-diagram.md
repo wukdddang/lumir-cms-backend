@@ -616,6 +616,7 @@ erDiagram
     Announcement ||--o{ AnnouncementRead : "has reads (lazy)"
     Announcement ||--o{ AnnouncementPermissionLog : "has permission logs"
     Announcement ||--o| Survey : "has survey (optional)"
+    AnnouncementPermissionLog ||--o{ DismissedPermissionLog : "can be dismissed"
     
     %% ==========================================
     %% Relationships - Sub Domain
@@ -647,6 +648,7 @@ erDiagram
     WikiFileSystem ||--o{ WikiFileSystemClosure : "ancestor"
     WikiFileSystem ||--o{ WikiFileSystemClosure : "descendant"
     WikiFileSystem ||--o{ WikiPermissionLog : "has permission logs"
+    WikiPermissionLog ||--o{ DismissedPermissionLog : "can be dismissed"
 ```
 
 ---
