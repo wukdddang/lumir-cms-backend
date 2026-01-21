@@ -1,6 +1,6 @@
 import { Injectable, Logger, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, QueryFailedError } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, QueryFailedError, DataSource } from 'typeorm';
 import { WikiContextService } from '@context/wiki-context/wiki-context.service';
 import { WikiFileSystem } from '@domain/sub/wiki-file-system/wiki-file-system.entity';
 import { WikiPermissionLog } from '@domain/sub/wiki-file-system/wiki-permission-log.entity';
@@ -26,6 +26,8 @@ export class WikiBusinessService {
     private readonly storageService: IStorageService,
     @InjectRepository(WikiPermissionLog)
     private readonly permissionLogRepository: Repository<WikiPermissionLog>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -497,6 +499,10 @@ export class WikiBusinessService {
 
   /**
    * 위키의 무효한 권한 ID를 새로운 ID로 교체한다
+   * 
+   * 트랜잭션과 비관적 잠금을 사용하여 동시성 문제 방지:
+   * - SELECT ... FOR UPDATE로 row-level 잠금 획득
+   * - 권한 교체와 로그 생성이 원자적으로 수행
    */
   async 위키_권한을_교체한다(
     wikiId: string,
@@ -507,83 +513,92 @@ export class WikiBusinessService {
     message: string;
     replacedDepartments: number;
   }> {
-    this.logger.log(`위키 권한 교체 시작 - ID: ${wikiId}`);
+    this.logger.log(`위키 권한 교체 시작 (트랜잭션) - ID: ${wikiId}`);
 
-    // 위키 조회
-    const wiki = await this.wikiContextService.위키_상세를_조회한다(wikiId);
+    // 트랜잭션 내에서 모든 작업 수행
+    return await this.dataSource.transaction(async (manager) => {
+      // 1. SELECT ... FOR UPDATE로 배타적 잠금 획득
+      const wiki = await manager
+        .getRepository(WikiFileSystem)
+        .createQueryBuilder('wiki')
+        .where('wiki.id = :id', { id: wikiId })
+        .andWhere('wiki.deletedAt IS NULL')
+        .setLock('pessimistic_write') // Row-level exclusive lock
+        .getOne();
 
-    if (!wiki) {
-      throw new NotFoundException('위키를 찾을 수 없습니다');
-    }
-
-    let replacedDepartments = 0;
-    const changes: string[] = [];
-
-    // 부서 ID 교체
-    if (dto.departments && dto.departments.length > 0) {
-      const currentDepartmentIds = wiki.permissionDepartmentIds || [];
-      const newDepartmentIds = [...currentDepartmentIds];
-
-      for (const mapping of dto.departments) {
-        const index = newDepartmentIds.indexOf(mapping.oldId);
-        if (index !== -1) {
-          newDepartmentIds[index] = mapping.newId;
-          replacedDepartments++;
-          changes.push(`부서 ${mapping.oldId} → ${mapping.newId}`);
-          this.logger.log(`부서 교체: ${mapping.oldId} → ${mapping.newId}`);
-        }
+      if (!wiki) {
+        throw new NotFoundException('위키를 찾을 수 없습니다');
       }
 
-      wiki.permissionDepartmentIds = newDepartmentIds;
-    }
+      this.logger.log(`위키 잠금 획득 완료 - ID: ${wikiId}`);
 
-    // 위키 업데이트
-    await this.wikiContextService.위키를_수정한다(wikiId, {
-      permissionDepartmentIds: wiki.permissionDepartmentIds,
+      let replacedDepartments = 0;
+      const changes: string[] = [];
+
+      // 2. 부서 ID 교체
+      if (dto.departments && dto.departments.length > 0) {
+        const currentDepartmentIds = wiki.permissionDepartmentIds || [];
+        const newDepartmentIds = [...currentDepartmentIds];
+
+        for (const mapping of dto.departments) {
+          const index = newDepartmentIds.indexOf(mapping.oldId);
+          if (index !== -1) {
+            newDepartmentIds[index] = mapping.newId;
+            replacedDepartments++;
+            changes.push(`부서 ${mapping.oldId} → ${mapping.newId}`);
+            this.logger.log(`부서 교체: ${mapping.oldId} → ${mapping.newId}`);
+          }
+        }
+
+        wiki.permissionDepartmentIds = newDepartmentIds;
+      }
+
+      // 3. 위키 업데이트 (트랜잭션 내에서)
+      wiki.updatedAt = new Date();
+      await manager.save(WikiFileSystem, wiki);
+
+      // 4. RESOLVED 로그 생성 (트랜잭션 내에서)
+      let resolvedByValue: string | null = userId;
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (userId && !uuidRegex.test(userId)) {
+        this.logger.warn(`사용자 ID가 UUID 형식이 아닙니다: ${userId}. resolvedBy를 null로 설정합니다.`);
+        resolvedByValue = null;
+      }
+
+      try {
+        await manager.save(WikiPermissionLog, {
+          wikiFileSystemId: wiki.id,
+          invalidDepartments: null,
+          invalidRankCodes: null,
+          invalidPositionCodes: null,
+          snapshotPermissions: {
+            permissionRankIds: wiki.permissionRankIds,
+            permissionPositionIds: wiki.permissionPositionIds,
+            permissionDepartments: [],
+          },
+          action: WikiPermissionAction.RESOLVED,
+          note: dto.note || `관리자가 권한 교체 완료: ${changes.join(', ')}`,
+          detectedAt: new Date(),
+          resolvedAt: new Date(),
+          resolvedBy: resolvedByValue,
+        });
+      } catch (error) {
+        if (error instanceof QueryFailedError) {
+          const pgError = error as any;
+          if (pgError.code === '22P02') {
+            throw new BadRequestException('유효하지 않은 사용자 ID 형식입니다. UUID 형식이어야 합니다.');
+          }
+        }
+        throw error;
+      }
+
+      this.logger.log(`위키 권한 교체 완료 (트랜잭션 커밋) - 부서: ${replacedDepartments}개`);
+
+      return {
+        success: true,
+        message: '권한 ID가 성공적으로 교체되었습니다',
+        replacedDepartments,
+      };
     });
-
-    // RESOLVED 로그 생성
-    // resolvedBy는 UUID 형식이어야 하므로, UUID 형식이 아닌 경우 null로 설정
-    let resolvedByValue: string | null = userId;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (userId && !uuidRegex.test(userId)) {
-      this.logger.warn(`사용자 ID가 UUID 형식이 아닙니다: ${userId}. resolvedBy를 null로 설정합니다.`);
-      resolvedByValue = null;
-    }
-
-    try {
-      await this.permissionLogRepository.save({
-        wikiFileSystemId: wiki.id,
-        invalidDepartments: null,
-        invalidRankCodes: null,
-        invalidPositionCodes: null,
-        snapshotPermissions: {
-          permissionRankIds: wiki.permissionRankIds,
-          permissionPositionIds: wiki.permissionPositionIds,
-          permissionDepartments: [],
-        },
-        action: WikiPermissionAction.RESOLVED,
-        note: dto.note || `관리자가 권한 교체 완료: ${changes.join(', ')}`,
-        detectedAt: new Date(),
-        resolvedAt: new Date(),
-        resolvedBy: resolvedByValue,
-      });
-    } catch (error) {
-      if (error instanceof QueryFailedError) {
-        const pgError = error as any;
-        if (pgError.code === '22P02') {
-          throw new BadRequestException('유효하지 않은 사용자 ID 형식입니다. UUID 형식이어야 합니다.');
-        }
-      }
-      throw error;
-    }
-
-    this.logger.log(`위키 권한 교체 완료 - 부서: ${replacedDepartments}개`);
-
-    return {
-      success: true,
-      message: '권한 ID가 성공적으로 교체되었습니다',
-      replacedDepartments,
-    };
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, In } from 'typeorm';
 import { Announcement } from '@domain/core/announcement/announcement.entity';
 import { AnnouncementPermissionLog } from '@domain/core/announcement/announcement-permission-log.entity';
 import { AnnouncementPermissionAction } from '@domain/core/announcement/announcement-permission-action.types';
@@ -29,33 +29,82 @@ export class AnnouncementPermissionScheduler {
    * 매일 새벽 3시에 모든 공지사항의 권한을 검증한다
    *
    * 수동 실행이 필요한 경우 관리자 API를 통해 즉시 실행 가능
+   * 
+   * 성능 최적화:
+   * - SSO API 일괄 호출 (중복 제거)
+   * - 병렬 처리 (배치 단위)
    */
   @Cron('0 3 * * *') // 매일 새벽 3시
   async 모든_공지사항_권한을_검증한다() {
     this.logger.log('공지사항 권한 검증 스케줄러 시작');
 
     try {
-      // 모든 공지사항 조회 (Soft Delete되지 않은 것만)
+      const startTime = Date.now();
+
+      // 1. 모든 공지사항 조회 (Soft Delete되지 않은 것만)
       const announcements = await this.announcementRepository.find({
         where: { deletedAt: IsNull() },
       });
 
       this.logger.log(`검증 대상 공지사항: ${announcements.length}개`);
 
+      if (announcements.length === 0) {
+        this.logger.log('검증 대상 공지사항이 없습니다.');
+        return;
+      }
+
+      // 2. 모든 부서 ID 수집 (중복 제거)
+      const allDepartmentIds = new Set<string>();
+      announcements.forEach(announcement => {
+        if (announcement.permissionDepartmentIds && announcement.permissionDepartmentIds.length > 0) {
+          announcement.permissionDepartmentIds.forEach(id => allDepartmentIds.add(id));
+        }
+      });
+
+      this.logger.log(`검증 대상 부서 ID: ${allDepartmentIds.size}개 (중복 제거 후)`);
+
+      // 3. SSO API 한 번만 호출 (일괄 조회)
+      let departmentInfoMap = new Map<string, any>();
+      if (allDepartmentIds.size > 0) {
+        this.logger.log('SSO API 일괄 호출 중...');
+        departmentInfoMap = await this.ssoService.부서_정보_목록을_조회한다(
+          Array.from(allDepartmentIds)
+        );
+        this.logger.log(`SSO API 호출 완료 - ${departmentInfoMap.size}개 부서 정보 조회됨`);
+      }
+
+      // 4. 기존 미해결 로그 재검증 (병렬 처리)
+      await this.모든_기존_로그를_재검증한다(announcements, departmentInfoMap);
+
+      // 5. 병렬 처리로 공지사항 권한 검증 (배치 단위)
+      const BATCH_SIZE = 10; // 한 번에 10개씩 병렬 처리
       let processedCount = 0;
       let invalidCount = 0;
 
-      // 각 공지사항의 권한 검증
-      for (const announcement of announcements) {
-        const hasInvalid = await this.공지사항_권한을_검증한다(announcement);
-        if (hasInvalid) {
-          invalidCount++;
+      for (let i = 0; i < announcements.length; i += BATCH_SIZE) {
+        const batch = announcements.slice(i, i + BATCH_SIZE);
+        
+        const results = await Promise.all(
+          batch.map(announcement => this.공지사항_권한을_검증한다(announcement, departmentInfoMap))
+        );
+        
+        results.forEach(hasInvalid => {
+          if (hasInvalid) {
+            invalidCount++;
+          }
+          processedCount++;
+        });
+
+        // 진행 상황 로그 (10% 단위)
+        const progressPercent = Math.floor((processedCount / announcements.length) * 100);
+        if (progressPercent % 10 === 0 && i > 0) {
+          this.logger.log(`진행률: ${progressPercent}% (${processedCount}/${announcements.length})`);
         }
-        processedCount++;
       }
 
+      const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(2);
       this.logger.log(
-        `공지사항 권한 검증 완료 - 처리: ${processedCount}개, 무효 발견: ${invalidCount}개`,
+        `공지사항 권한 검증 완료 - 처리: ${processedCount}개, 무효 발견: ${invalidCount}개, 소요 시간: ${elapsedTime}초`,
       );
     } catch (error) {
       // 데이터베이스 연결 종료 에러는 무시 (테스트 환경에서 정상)
@@ -71,9 +120,13 @@ export class AnnouncementPermissionScheduler {
 
   /**
    * 개별 공지사항의 권한을 검증한다
+   * 
+   * @param announcement 검증할 공지사항
+   * @param departmentInfoMap 부서 정보 캐시 (성능 최적화용)
    */
   private async 공지사항_권한을_검증한다(
     announcement: Announcement,
+    departmentInfoMap: Map<string, any>,
   ): Promise<boolean> {
     try {
       const hasDepartments =
@@ -85,17 +138,10 @@ export class AnnouncementPermissionScheduler {
         return false;
       }
 
-      // 1단계: 기존 미해결 로그가 있는지 확인하고, 부서가 다시 활성화되었는지 검증
-      await this.기존_로그를_재검증한다(announcement);
-
       let invalidDepartments: Array<{ id: string; name: string | null }> = [];
       let validDepartments: Array<{ id: string; name: string | null }> = [];
 
-      // 부서 정보 검증
-      // SSO에서 조회 후 isActive: false인 부서만 invalid로 처리
-      const departmentInfoMap = await this.ssoService.부서_정보_목록을_조회한다(
-        announcement.permissionDepartmentIds!,
-      );
+      // 캐시된 부서 정보로 검증
 
       for (const departmentId of announcement.permissionDepartmentIds!) {
         const info = departmentInfoMap.get(departmentId);
@@ -183,38 +229,44 @@ export class AnnouncementPermissionScheduler {
   }
 
   /**
-   * 기존 미해결 로그를 재검증하여 부서가 다시 활성화되었는지 확인한다
+   * 모든 공지사항의 기존 미해결 로그를 재검증한다 (성능 최적화)
+   * 
+   * @param announcements 검증할 공지사항 목록
+   * @param departmentInfoMap 부서 정보 캐시
    */
-  private async 기존_로그를_재검증한다(
-    announcement: Announcement,
+  private async 모든_기존_로그를_재검증한다(
+    announcements: Announcement[],
+    departmentInfoMap: Map<string, any>,
   ): Promise<void> {
     try {
-      // 미해결 로그 조회
+      // 모든 공지사항의 미해결 로그 조회
+      const announcementIds = announcements.map(a => a.id);
       const existingLogs = await this.permissionLogRepository.find({
         where: {
-          announcementId: announcement.id,
+          announcementId: In(announcementIds),
           action: AnnouncementPermissionAction.DETECTED,
           resolvedAt: IsNull(),
         },
       });
 
       if (existingLogs.length === 0) {
+        this.logger.log('재검증할 미해결 로그가 없습니다.');
         return;
       }
+
+      this.logger.log(`재검증할 미해결 로그: ${existingLogs.length}개`);
+
+      let resolvedCount = 0;
 
       for (const log of existingLogs) {
         if (!log.invalidDepartments || log.invalidDepartments.length === 0) {
           continue;
         }
 
-        // 로그에 기록된 비활성 부서들이 현재 활성 상태인지 확인
-        const departmentIds = log.invalidDepartments.map((d) => d.id);
-        const departmentInfoMap =
-          await this.ssoService.부서_정보_목록을_조회한다(departmentIds);
-
+        // 캐시된 부서 정보로 재검증
         let allReactivated = true;
-        for (const departmentId of departmentIds) {
-          const info = departmentInfoMap.get(departmentId);
+        for (const dept of log.invalidDepartments) {
+          const info = departmentInfoMap.get(dept.id);
           // 부서가 존재하고 활성화되어 있어야 함
           if (!info || !info.isActive) {
             allReactivated = false;
@@ -231,11 +283,19 @@ export class AnnouncementPermissionScheduler {
             note: '부서가 다시 활성화되어 시스템에서 자동으로 해결됨',
           });
 
-          this.logger.log(
-            `공지사항 "${announcement.title}" (ID: ${announcement.id})의 ` +
-              `권한 로그가 자동으로 해결되었습니다. (부서 재활성화)`,
-          );
+          resolvedCount++;
+
+          const announcement = announcements.find(a => a.id === log.announcementId);
+          if (announcement) {
+            this.logger.log(
+              `공지사항 "${announcement.title}" (ID: ${announcement.id})의 권한 로그가 자동으로 해결되었습니다. (부서 재활성화)`,
+            );
+          }
         }
+      }
+
+      if (resolvedCount > 0) {
+        this.logger.log(`기존 로그 재검증 완료 - 자동 해결: ${resolvedCount}개`);
       }
     } catch (error) {
       // 데이터베이스 연결 종료 에러는 무시 (테스트 환경에서 정상)
@@ -245,7 +305,7 @@ export class AnnouncementPermissionScheduler {
       }
       
       this.logger.error(
-        `기존 로그 재검증 실패 - ID: ${announcement.id}, 에러: ${error.message}`,
+        `기존 로그 재검증 실패 - 에러: ${error.message}`,
       );
     }
   }
