@@ -32,7 +32,8 @@ beforeAll(async () => {
   process.env.DB_LOGGING = 'false';
   process.env.LOG_LEVEL = 'silent';
   process.env.PORT = '4001';
-  process.env.DEFAULT_LANGUAGE_CODE = process.env.DEFAULT_LANGUAGE_CODE || 'en';
+  // 기본 언어를 한국어로 설정 (번역 동기화 테스트는 한국어 기준)
+  process.env.DEFAULT_LANGUAGE_CODE = 'ko';
 }, 60000);
 
 afterAll(async () => {

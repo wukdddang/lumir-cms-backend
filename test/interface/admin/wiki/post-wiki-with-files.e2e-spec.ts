@@ -87,16 +87,25 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
 
       const attachment = file.attachments[0];
       expect(attachment.fileName).toBe(testFileName);
-      expect(attachment.fileUrl).toContain('/uploads/wiki/');
+      
+      // URL에 환경별 prefix(test)와 폴더(wiki)가 포함되어 있는지 확인
+      // 로컬 스토리지: http://localhost:4001/uploads/test/wiki/uuid.pdf
+      // S3 (USE_REAL_S3_IN_TEST=true): https://bucket.s3.region.amazonaws.com/test/wiki/uuid.pdf
+      expect(attachment.fileUrl).toContain('test/wiki/');
+      expect(attachment.fileUrl).toMatch(/\.pdf$/); // .pdf로 끝나는지 확인
+      
       expect(attachment.fileSize).toBe(pdfBuffer.length);
       expect(attachment.mimeType).toBe('application/pdf');
 
-      // Then - 로컬 스토리지에 파일이 실제로 존재하는지 확인
-      const urlParts = attachment.fileUrl.split('/uploads/');
-      if (urlParts.length === 2) {
-        const filePath = join(process.cwd(), 'uploads', urlParts[1]);
-        const fileExists = existsSync(filePath);
-        expect(fileExists).toBe(true);
+      // Then - 로컬 스토리지 사용 시에만 파일 존재 확인
+      // S3 사용 시에는 파일 존재 확인을 스킵 (S3 API 호출 비용 절약)
+      if (attachment.fileUrl.includes('localhost')) {
+        const urlParts = attachment.fileUrl.split('/uploads/');
+        if (urlParts.length === 2) {
+          const filePath = join(process.cwd(), 'uploads', urlParts[1]);
+          const fileExists = existsSync(filePath);
+          expect(fileExists).toBe(true);
+        }
       }
 
       // 정리
@@ -152,7 +161,8 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
 
       // 각 파일의 URL과 크기 검증
       file.attachments.forEach((attachment: any) => {
-        expect(attachment.fileUrl).toContain('/uploads/wiki/');
+        // URL에 환경별 prefix(test)와 폴더(wiki)가 포함되어 있는지 확인
+        expect(attachment.fileUrl).toContain('test/wiki/');
         expect(attachment.fileSize).toBeGreaterThan(0);
         expect(attachment.mimeType).toBe('application/pdf');
       });

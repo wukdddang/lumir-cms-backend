@@ -313,7 +313,7 @@ describe('전자공시 번역 동기화 API', () => {
 
       // When - Repository에서 직접 조회
       const translationRepository = testSuite.getRepository(
-        ElectronicDisclosureTranslation,
+        ElectronicDisclosureTranslation as any,
       );
 
       const translations = await translationRepository.find({
@@ -372,7 +372,7 @@ describe('전자공시 번역 동기화 API', () => {
 
       // Then - DB에서 확인
       const translationRepository = testSuite.getRepository(
-        ElectronicDisclosureTranslation,
+        ElectronicDisclosureTranslation as any,
       );
 
       const translations = await translationRepository.find({
