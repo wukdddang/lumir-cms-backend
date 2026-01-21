@@ -475,10 +475,13 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
       const fileId = createResponse.body.id;
       const attachmentUrl = createResponse.body.attachments[0].fileUrl;
 
-      // 첨부파일이 로컬 스토리지에 존재하는지 확인
-      const urlParts = attachmentUrl.split('/uploads/');
-      const filePath = join(process.cwd(), 'uploads', urlParts[1]);
-      expect(existsSync(filePath)).toBe(true);
+      // 로컬 스토리지 사용 시에만 파일 존재 확인
+      let filePath: string | undefined;
+      if (attachmentUrl.includes('localhost')) {
+        const urlParts = attachmentUrl.split('/uploads/');
+        filePath = join(process.cwd(), 'uploads', urlParts[1]);
+        expect(existsSync(filePath)).toBe(true);
+      }
 
       // When - 위키 파일 삭제
       await testHelper
@@ -492,9 +495,11 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
         .get(`/api/admin/wiki/files/${fileId}`)
         .expect(404);
 
-      // 첨부파일도 삭제되었는지 확인
-      const fileExists = existsSync(filePath);
-      expect(fileExists).toBe(false);
+      // 로컬 스토리지 사용 시에만 첨부파일 삭제 확인
+      if (filePath) {
+        const fileExists = existsSync(filePath);
+        expect(fileExists).toBe(false);
+      }
     });
 
     it('여러 첨부파일을 가진 위키 파일 삭제 시 모든 첨부파일이 삭제되어야 한다', async () => {
@@ -516,15 +521,18 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
       const fileId = createResponse.body.id;
       const attachmentUrls = createResponse.body.attachments.map((a: any) => a.fileUrl);
 
-      // 모든 첨부파일이 존재하는지 확인
-      const filePaths = attachmentUrls.map((url: string) => {
-        const urlParts = url.split('/uploads/');
-        return join(process.cwd(), 'uploads', urlParts[1]);
-      });
+      // 로컬 스토리지 사용 시에만 파일 존재 확인
+      let filePaths: string[] = [];
+      if (attachmentUrls[0].includes('localhost')) {
+        filePaths = attachmentUrls.map((url: string) => {
+          const urlParts = url.split('/uploads/');
+          return join(process.cwd(), 'uploads', urlParts[1]);
+        });
 
-      filePaths.forEach((path: string) => {
-        expect(existsSync(path)).toBe(true);
-      });
+        filePaths.forEach((path: string) => {
+          expect(existsSync(path)).toBe(true);
+        });
+      }
 
       // When - 위키 파일 삭제
       await testHelper
@@ -532,10 +540,12 @@ describe('[E2E] POST /api/admin/wiki/files - 첨부파일 업로드', () => {
         .delete(`/api/admin/wiki/files/${fileId}`)
         .expect(200);
 
-      // Then - 모든 첨부파일이 삭제되었는지 확인
-      filePaths.forEach((path: string) => {
-        expect(existsSync(path)).toBe(false);
-      });
+      // Then - 로컬 스토리지 사용 시에만 모든 첨부파일 삭제 확인
+      if (filePaths.length > 0) {
+        filePaths.forEach((path: string) => {
+          expect(existsSync(path)).toBe(false);
+        });
+      }
     });
   });
 
