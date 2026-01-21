@@ -22,10 +22,10 @@
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
     "test:e2e:cov": "jest --config ./test/jest-e2e.json --coverage",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migration:generate": "npm run typeorm -- migration:generate -d src/migration.datasource.ts",
-    "migration:run": "npm run typeorm -- migration:run -d src/migration.datasource.ts",
-    "migration:revert": "npm run typeorm -- migration:revert -d src/migration.datasource.ts",
-    "migration:show": "npm run typeorm -- migration:show -d src/migration.datasource.ts"
+    "migration:generate": "npm run build && npm run typeorm -- migration:generate -d dist/src/migration.datasource.js",
+    "migration:run": "npm run build && npm run typeorm -- migration:run -d dist/src/migration.datasource.js",
+    "migration:revert": "npm run build && npm run typeorm -- migration:revert -d dist/src/migration.datasource.js",
+    "migration:show": "npm run build && npm run typeorm -- migration:show -d dist/src/migration.datasource.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
