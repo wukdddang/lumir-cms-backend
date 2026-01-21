@@ -1,8 +1,10 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventBus } from '@nestjs/cqrs';
 import { MainPopupService } from '@domain/sub/main-popup/main-popup.service';
 import { LanguageService } from '@domain/common/language/language.service';
 import { MainPopup } from '@domain/sub/main-popup/main-popup.entity';
+import { MainPopupTranslationUpdatedEvent } from './events/main-popup-translation-updated.event';
 
 /**
  * MainPopup 컨텍스트 서비스
@@ -17,6 +19,7 @@ export class MainPopupContextService {
     private readonly mainPopupService: MainPopupService,
     private readonly languageService: LanguageService,
     private readonly configService: ConfigService,
+    private readonly eventBus: EventBus,
   ) {}
 
   /**
@@ -200,6 +203,9 @@ export class MainPopupContextService {
       await this.mainPopupService.메인_팝업을_업데이트한다(id, updateData);
     }
 
+    // 기본 언어 조회 (이벤트 발행용)
+    const baseLanguage = await this.languageService.기본_언어를_조회한다();
+
     // 번역 업데이트 (제공된 경우)
     if (data.translations && data.translations.length > 0) {
       // 기존 번역 조회 (한 번만)
@@ -225,6 +231,22 @@ export class MainPopupContextService {
               updatedBy: data.updatedBy,
             },
           );
+
+          // 기본 언어 번역이 수정된 경우 이벤트 발행 (동기화 트리거)
+          if (baseLanguage && translation.languageId === baseLanguage.id) {
+            this.logger.debug(
+              '기본 언어 번역 수정 감지 - 동기화 이벤트 발행',
+            );
+            this.eventBus.publish(
+              new MainPopupTranslationUpdatedEvent(
+                id,
+                translation.languageId,
+                translation.title,
+                translation.description,
+                data.updatedBy,
+              ),
+            );
+          }
         } else {
           // 새 번역 생성
           await this.mainPopupService.메인_팝업_번역을_생성한다(

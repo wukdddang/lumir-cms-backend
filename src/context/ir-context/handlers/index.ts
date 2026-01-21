@@ -4,3 +4,6 @@
 
 // Jobs
 export * from './jobs/sync-ir-translations.handler';
+
+// Events
+export * from './events/ir-translation-updated.handler';

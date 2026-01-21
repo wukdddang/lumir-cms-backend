@@ -18,3 +18,6 @@ export * from './queries/get-brochure-detail.handler';
 
 // Jobs
 export * from './jobs/sync-brochure-translations.handler';
+
+// Events
+export * from './events/brochure-translation-updated.handler';

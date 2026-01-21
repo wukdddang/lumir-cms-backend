@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShareholdersMeetingModule } from '@domain/core/shareholders-meeting/shareholders-meeting.module';
 import { LanguageModule } from '@domain/common/language/language.module';
 import { ShareholdersMeetingContextService } from './shareholders-meeting-context.service';
 import { ShareholdersMeetingTranslation } from '@domain/core/shareholders-meeting/shareholders-meeting-translation.entity';
 import { VoteResultTranslation } from '@domain/core/shareholders-meeting/vote-result-translation.entity';
-import { SyncShareholdersMeetingTranslationsHandler } from './handlers';
+import {
+  SyncShareholdersMeetingTranslationsHandler,
+  ShareholdersMeetingTranslationUpdatedHandler,
+} from './handlers';
 import { ShareholdersMeetingSyncScheduler } from './shareholders-meeting-sync.scheduler';
 
 /**
@@ -13,6 +17,7 @@ import { ShareholdersMeetingSyncScheduler } from './shareholders-meeting-sync.sc
  */
 @Module({
   imports: [
+    CqrsModule,
     TypeOrmModule.forFeature([
       ShareholdersMeetingTranslation,
       VoteResultTranslation,
@@ -23,6 +28,7 @@ import { ShareholdersMeetingSyncScheduler } from './shareholders-meeting-sync.sc
   providers: [
     ShareholdersMeetingContextService,
     SyncShareholdersMeetingTranslationsHandler,
+    ShareholdersMeetingTranslationUpdatedHandler,
     ShareholdersMeetingSyncScheduler,
   ],
   exports: [ShareholdersMeetingContextService],

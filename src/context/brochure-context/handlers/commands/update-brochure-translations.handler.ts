@@ -1,9 +1,11 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { Logger, NotFoundException } from '@nestjs/common';
+import { BrochureTranslationUpdatedEvent } from '../../events/brochure-translation-updated.event';
+import { LanguageService } from '@domain/common/language/language.service';
 
 /**
  * 브로슈어 번역 수정 DTO
@@ -46,6 +48,8 @@ export class UpdateBrochureTranslationsHandler
     private readonly brochureRepository: Repository<Brochure>,
     @InjectRepository(BrochureTranslation)
     private readonly brochureTranslationRepository: Repository<BrochureTranslation>,
+    private readonly eventBus: EventBus,
+    private readonly languageService: LanguageService,
   ) {}
 
   async execute(
@@ -74,6 +78,9 @@ export class UpdateBrochureTranslationsHandler
       await this.brochureRepository.save(brochure);
     }
 
+    // 기본 언어 조회
+    const baseLanguage = await this.languageService.기본_언어를_조회한다();
+
     const updatedTranslations: BrochureTranslation[] = [];
 
     // 각 번역 업데이트 (isSynced를 false로 설정하여 동기화 중단)
@@ -98,6 +105,22 @@ export class UpdateBrochureTranslationsHandler
         this.logger.log(
           `번역 수정 완료 - 언어 ID: ${translationData.languageId}, isSynced: false`,
         );
+
+        // 기본 언어 번역이 수정된 경우 이벤트 발행 (동기화 트리거)
+        if (baseLanguage && translationData.languageId === baseLanguage.id) {
+          this.logger.debug(
+            `기본 언어 번역 수정 감지 - 동기화 이벤트 발행`,
+          );
+          this.eventBus.publish(
+            new BrochureTranslationUpdatedEvent(
+              brochureId,
+              translationData.languageId,
+              translationData.title,
+              translationData.description || null,
+              data.updatedBy,
+            ),
+          );
+        }
       } else {
         this.logger.warn(
           `번역을 찾을 수 없습니다 - 브로슈어 ID: ${brochureId}, 언어 ID: ${translationData.languageId}`,

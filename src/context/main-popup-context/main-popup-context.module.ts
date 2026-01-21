@@ -1,14 +1,19 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MainPopupContextService } from './main-popup-context.service';
 import { MainPopupModule } from '@domain/sub/main-popup/main-popup.module';
 import { LanguageModule } from '@domain/common/language/language.module';
 import { MainPopupTranslation } from '@domain/sub/main-popup/main-popup-translation.entity';
-import { SyncMainPopupTranslationsHandler } from './handlers';
+import {
+  SyncMainPopupTranslationsHandler,
+  MainPopupTranslationUpdatedHandler,
+} from './handlers';
 import { MainPopupSyncScheduler } from './main-popup-sync.scheduler';
 
 @Module({
   imports: [
+    CqrsModule,
     TypeOrmModule.forFeature([MainPopupTranslation]),
     MainPopupModule,
     LanguageModule,
@@ -16,6 +21,7 @@ import { MainPopupSyncScheduler } from './main-popup-sync.scheduler';
   providers: [
     MainPopupContextService,
     SyncMainPopupTranslationsHandler,
+    MainPopupTranslationUpdatedHandler,
     MainPopupSyncScheduler,
   ],
   exports: [MainPopupContextService],

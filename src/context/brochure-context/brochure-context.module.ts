@@ -18,6 +18,7 @@ import {
   InitializeDefaultBrochuresHandler,
   UpdateBrochureTranslationsHandler,
   SyncBrochureTranslationsHandler,
+  BrochureTranslationUpdatedHandler,
 } from './handlers';
 import { BrochureSyncScheduler } from './brochure-sync.scheduler';
 
@@ -46,6 +47,7 @@ import { BrochureSyncScheduler } from './brochure-sync.scheduler';
     InitializeDefaultBrochuresHandler,
     UpdateBrochureTranslationsHandler,
     SyncBrochureTranslationsHandler,
+    BrochureTranslationUpdatedHandler,
     BrochureSyncScheduler,
   ],
   exports: [BrochureContextService],

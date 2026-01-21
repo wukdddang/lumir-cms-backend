@@ -149,6 +149,7 @@ export class LanguageService {
   /**
    * 기본 언어를 조회한다
    * 환경 변수(DEFAULT_LANGUAGE_CODE)에서 설정한 기본 언어를 반환합니다.
+   * 예: DEFAULT_LANGUAGE_CODE=ko (한국어), DEFAULT_LANGUAGE_CODE=en (영어)
    */
   async 기본_언어를_조회한다(): Promise<Language> {
     const defaultCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en') as LanguageCode;

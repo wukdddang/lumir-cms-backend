@@ -1,10 +1,12 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventBus } from '@nestjs/cqrs';
 import { ShareholdersMeetingService } from '@domain/core/shareholders-meeting/shareholders-meeting.service';
 import { LanguageService } from '@domain/common/language/language.service';
 import { ShareholdersMeeting } from '@domain/core/shareholders-meeting/shareholders-meeting.entity';
 import { VoteResult } from '@domain/core/shareholders-meeting/vote-result.entity';
 import { VoteResultType } from '@domain/core/shareholders-meeting/vote-result-type.types';
+import { ShareholdersMeetingTranslationUpdatedEvent } from './events/shareholders-meeting-translation-updated.event';
 
 /**
  * 주주총회 컨텍스트 서비스
@@ -19,6 +21,7 @@ export class ShareholdersMeetingContextService {
     private readonly shareholdersMeetingService: ShareholdersMeetingService,
     private readonly languageService: LanguageService,
     private readonly configService: ConfigService,
+    private readonly eventBus: EventBus,
   ) {}
 
   /**
@@ -305,6 +308,9 @@ export class ShareholdersMeetingContextService {
       );
     }
 
+    // 기본 언어 조회 (이벤트 발행용)
+    const baseLanguage = await this.languageService.기본_언어를_조회한다();
+
     // 번역 업데이트 (제공된 경우)
     if (data.translations && data.translations.length > 0) {
       for (const translation of data.translations) {
@@ -319,6 +325,22 @@ export class ShareholdersMeetingContextService {
               updatedBy: data.updatedBy,
             },
           );
+
+          // 기본 언어 번역이 수정된 경우 이벤트 발행 (동기화 트리거)
+          if (baseLanguage && translation.languageId === baseLanguage.id) {
+            this.logger.debug(
+              '기본 언어 번역 수정 감지 - 동기화 이벤트 발행',
+            );
+            this.eventBus.publish(
+              new ShareholdersMeetingTranslationUpdatedEvent(
+                id,
+                translation.languageId,
+                translation.title,
+                translation.description,
+                data.updatedBy,
+              ),
+            );
+          }
         } else {
           // 해당 언어의 번역이 이미 있는지 확인
           const existingTranslations =
@@ -338,6 +360,22 @@ export class ShareholdersMeetingContextService {
                 updatedBy: data.updatedBy,
               },
             );
+
+            // 기본 언어 번역이 수정된 경우 이벤트 발행 (동기화 트리거)
+            if (baseLanguage && translation.languageId === baseLanguage.id) {
+              this.logger.debug(
+                '기본 언어 번역 수정 감지 - 동기화 이벤트 발행',
+              );
+              this.eventBus.publish(
+                new ShareholdersMeetingTranslationUpdatedEvent(
+                  id,
+                  translation.languageId,
+                  translation.title,
+                  translation.description,
+                  data.updatedBy,
+                ),
+              );
+            }
           } else {
             // 새 번역 생성
             await this.shareholdersMeetingService.주주총회_번역을_생성한다(
