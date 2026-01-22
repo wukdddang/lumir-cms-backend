@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { EventBus } from '@nestjs/cqrs';
 import { MainPopupContextService } from '@context/main-popup-context/main-popup-context.service';
 import { MainPopupService } from '@domain/sub/main-popup/main-popup.service';
 import { LanguageService } from '@domain/common/language/language.service';
@@ -31,6 +32,7 @@ describe('MainPopupContextService', () => {
   const mockLanguageService = {
     ID로_언어를_조회한다: jest.fn(),
     모든_언어를_조회한다: jest.fn(),
+    기본_언어를_조회한다: jest.fn(),
   };
 
   const mockConfigService = {
@@ -38,6 +40,11 @@ describe('MainPopupContextService', () => {
       if (key === 'DEFAULT_LANGUAGE_CODE') return 'en';
       return defaultValue;
     }),
+  };
+
+  const mockEventBus = {
+    publish: jest.fn(),
+    publishAll: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -55,6 +62,10 @@ describe('MainPopupContextService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: EventBus,
+          useValue: mockEventBus,
         },
       ],
     }).compile();

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { EventBus } from '@nestjs/cqrs';
 import { IRContextService } from '@context/ir-context/ir-context.service';
 import { IRService } from '@domain/core/ir/ir.service';
 import { LanguageService } from '@domain/common/language/language.service';
@@ -31,6 +32,7 @@ describe('IRContextService', () => {
   const mockLanguageService = {
     ID로_언어를_조회한다: jest.fn(),
     모든_언어를_조회한다: jest.fn(),
+    기본_언어를_조회한다: jest.fn(),
   };
 
   const mockConfigService = {
@@ -38,6 +40,11 @@ describe('IRContextService', () => {
       if (key === 'DEFAULT_LANGUAGE_CODE') return 'en';
       return defaultValue;
     }),
+  };
+
+  const mockEventBus = {
+    publish: jest.fn(),
+    publishAll: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -55,6 +62,10 @@ describe('IRContextService', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: EventBus,
+          useValue: mockEventBus,
         },
       ],
     }).compile();
