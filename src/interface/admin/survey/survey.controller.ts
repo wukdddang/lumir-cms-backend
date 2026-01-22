@@ -2,8 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Put,
-  Delete,
   Body,
   Param,
   Query,
@@ -22,15 +20,13 @@ import type { AuthenticatedUser } from '@interface/common/decorators/current-use
 import { JwtAuthGuard, RolesGuard } from '@interface/common/guards';
 import { Roles } from '@interface/common/decorators';
 import { SurveyBusinessService } from '@business/survey-business/survey-business.service';
-import { CreateSurveyDto } from '@interface/common/dto/survey/create-survey.dto';
-import { UpdateSurveyDto } from '@interface/common/dto/survey/update-survey.dto';
 import {
   SurveyResponseDto,
   SurveyListResponseDto,
   CompleteSurveyDto,
 } from '@interface/common/dto/survey/survey-response.dto';
 
-@ApiTags('A-10. 관리자 - 설문조사')
+@ApiTags('공통. 관리자 - 설문조사 (조회)')
 @ApiBearerAuth('Bearer')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
@@ -148,94 +144,97 @@ export class SurveyController {
 
   /**
    * 설문조사를 생성한다
+   * ⚠️ 비활성화됨: 설문조사는 공지사항을 통해서만 생성 가능합니다.
    */
-  @Post()
-  @ApiOperation({
-    summary: '설문조사 생성',
-    description: '새로운 설문조사를 생성합니다.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '설문조사 생성 성공',
-    type: SurveyResponseDto,
-  })
-  async 설문조사를_생성한다(
-    @Body() dto: CreateSurveyDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<SurveyResponseDto> {
-    // 날짜 변환
-    const data = {
-      ...dto,
-      startDate: dto.startDate ? new Date(dto.startDate) : null,
-      endDate: dto.endDate ? new Date(dto.endDate) : null,
-    };
+  // @Post()
+  // @ApiOperation({
+  //   summary: '설문조사 생성 (비활성화)',
+  //   description: '⚠️ 이 엔드포인트는 비활성화되었습니다. 설문조사는 공지사항 생성 시 함께 생성됩니다.',
+  // })
+  // @ApiResponse({
+  //   status: 201,
+  //   description: '설문조사 생성 성공',
+  //   type: SurveyResponseDto,
+  // })
+  // async 설문조사를_생성한다(
+  //   @Body() dto: CreateSurveyDto,
+  //   @CurrentUser() user: AuthenticatedUser,
+  // ): Promise<SurveyResponseDto> {
+  //   // 날짜 변환
+  //   const data = {
+  //     ...dto,
+  //     startDate: dto.startDate ? new Date(dto.startDate) : null,
+  //     endDate: dto.endDate ? new Date(dto.endDate) : null,
+  //   };
 
-    const survey = await this.surveyBusinessService.설문조사를_생성한다(data);
-    return SurveyResponseDto.from(survey);
-  }
+  //   const survey = await this.surveyBusinessService.설문조사를_생성한다(data);
+  //   return SurveyResponseDto.from(survey);
+  // }
 
   /**
    * 설문조사를 수정한다
+   * ⚠️ 비활성화됨: 설문조사는 공지사항을 통해서만 수정 가능합니다.
    */
-  @Put(':id')
-  @ApiOperation({
-    summary: '설문조사 수정',
-    description: '설문조사를 수정합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '설문조사 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '설문조사 수정 성공',
-    type: SurveyResponseDto,
-  })
-  async 설문조사를_수정한다(
-    @Param('id') id: string,
-    @Body() dto: UpdateSurveyDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<SurveyResponseDto> {
-    // 날짜 변환
-    const data: any = { ...dto };
-    if (dto.startDate) {
-      data.startDate = new Date(dto.startDate);
-    }
-    if (dto.endDate) {
-      data.endDate = new Date(dto.endDate);
-    }
+  // @Put(':id')
+  // @ApiOperation({
+  //   summary: '설문조사 수정 (비활성화)',
+  //   description: '⚠️ 이 엔드포인트는 비활성화되었습니다. 설문조사는 공지사항 수정 시 함께 수정됩니다.',
+  // })
+  // @ApiParam({
+  //   name: 'id',
+  //   description: '설문조사 ID',
+  //   type: String,
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: '설문조사 수정 성공',
+  //   type: SurveyResponseDto,
+  // })
+  // async 설문조사를_수정한다(
+  //   @Param('id') id: string,
+  //   @Body() dto: UpdateSurveyDto,
+  //   @CurrentUser() user: AuthenticatedUser,
+  // ): Promise<SurveyResponseDto> {
+  //   // 날짜 변환
+  //   const data: any = { ...dto };
+  //   if (dto.startDate) {
+  //     data.startDate = new Date(dto.startDate);
+  //   }
+  //   if (dto.endDate) {
+  //     data.endDate = new Date(dto.endDate);
+  //   }
 
-    const survey = await this.surveyBusinessService.설문조사를_수정한다(
-      id,
-      data,
-    );
-    return SurveyResponseDto.from(survey);
-  }
+  //   const survey = await this.surveyBusinessService.설문조사를_수정한다(
+  //     id,
+  //     data,
+  //   );
+  //   return SurveyResponseDto.from(survey);
+  // }
 
   /**
    * 설문조사를 삭제한다
+   * ⚠️ 비활성화됨: 설문조사는 공지사항을 통해서만 삭제 가능합니다.
    */
-  @Delete(':id')
-  @ApiOperation({
-    summary: '설문조사 삭제',
-    description: '설문조사를 삭제합니다.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: '설문조사 ID',
-    type: String,
-  })
-  @ApiResponse({
-    status: 200,
-    description: '설문조사 삭제 성공',
-  })
-  async 설문조사를_삭제한다(@Param('id') id: string): Promise<{
-    success: boolean;
-  }> {
-    const result = await this.surveyBusinessService.설문조사를_삭제한다(id);
-    return { success: result };
-  }
+  // @Delete(':id')
+  // @ApiOperation({
+  //   summary: '설문조사 삭제 (비활성화)',
+  //   description: '⚠️ 이 엔드포인트는 비활성화되었습니다. 설문조사는 공지사항 삭제 시 함께 삭제됩니다.',
+  // })
+  // @ApiParam({
+  //   name: 'id',
+  //   description: '설문조사 ID',
+  //   type: String,
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: '설문조사 삭제 성공',
+  // })
+  // async 설문조사를_삭제한다(@Param('id') id: string): Promise<{
+  //   success: boolean;
+  // }> {
+  //   const result = await this.surveyBusinessService.설문조사를_삭제한다(id);
+  //   return { success: result };
+  // }
 
   /**
    * 설문 완료를 기록한다
