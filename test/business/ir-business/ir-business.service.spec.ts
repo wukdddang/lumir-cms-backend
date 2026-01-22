@@ -28,6 +28,7 @@ describe('IRBusinessService', () => {
 
   const mockCategoryService = {
     엔티티_타입별_카테고리를_조회한다: jest.fn(),
+    엔티티의_카테고리_매핑을_조회한다: jest.fn(),
     카테고리를_생성한다: jest.fn(),
     카테고리를_업데이트한다: jest.fn(),
     카테고리를_삭제한다: jest.fn(),
@@ -82,7 +83,7 @@ describe('IRBusinessService', () => {
   });
 
   describe('IR_전체_목록을_조회한다', () => {
-    it('컨텍스트 서비스를 호출하여 전체 목록을 조회해야 한다', async () => {
+    it('컨텍스트 서비스를 호출하여 전체 목록을 조회하고 카테고리를 포함해야 한다', async () => {
       // Given
       const mockIRs = [
         {
@@ -97,19 +98,28 @@ describe('IRBusinessService', () => {
         } as IR,
       ];
 
+      const mockCategories1 = [{ id: 'category-1', name: '재무제표' }];
+      const mockCategories2 = [];
+
       mockIRContextService.IR_전체_목록을_조회한다.mockResolvedValue(mockIRs);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다
+        .mockResolvedValueOnce(mockCategories1)
+        .mockResolvedValueOnce(mockCategories2);
 
       // When
       const result = await service.IR_전체_목록을_조회한다();
 
       // Then
       expect(irContextService.IR_전체_목록을_조회한다).toHaveBeenCalled();
-      expect(result).toEqual(mockIRs);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledTimes(2);
+      expect(result).toHaveLength(2);
+      expect(result[0]).toHaveProperty('categories');
+      expect(result[0].categories).toEqual(mockCategories1);
     });
   });
 
   describe('IR_상세를_조회한다', () => {
-    it('컨텍스트 서비스를 호출하여 상세 정보를 조회해야 한다', async () => {
+    it('컨텍스트 서비스를 호출하여 상세 정보와 카테고리를 조회해야 한다', async () => {
       // Given
       const irId = 'ir-1';
       const mockIR = {
@@ -118,14 +128,19 @@ describe('IRBusinessService', () => {
         translations: [],
       } as any as IR;
 
+      const mockCategories = [{ id: 'category-1', name: '재무제표' }];
+
       mockIRContextService.IR_상세를_조회한다.mockResolvedValue(mockIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
       const result = await service.IR_상세를_조회한다(irId);
 
       // Then
       expect(irContextService.IR_상세를_조회한다).toHaveBeenCalledWith(irId);
-      expect(result).toEqual(mockIR);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith(irId);
+      expect(result).toHaveProperty('categories');
+      expect(result.categories).toEqual(mockCategories);
     });
   });
 
@@ -145,7 +160,7 @@ describe('IRBusinessService', () => {
   });
 
   describe('IR_공개를_수정한다', () => {
-    it('컨텍스트 서비스를 호출하여 공개 상태를 수정해야 한다', async () => {
+    it('컨텍스트 서비스를 호출하여 공개 상태와 카테고리를 수정해야 한다', async () => {
       // Given
       const irId = 'ir-1';
       const isPublic = false;
@@ -156,7 +171,10 @@ describe('IRBusinessService', () => {
         isPublic,
       } as IR;
 
+      const mockCategories = [{ id: 'category-1', name: '재무제표' }];
+
       mockIRContextService.IR_공개를_수정한다.mockResolvedValue(mockIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
       const result = await service.IR_공개를_수정한다(
@@ -171,12 +189,14 @@ describe('IRBusinessService', () => {
         isPublic,
         updatedBy,
       );
-      expect(result).toEqual(mockIR);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith(irId);
+      expect(result).toHaveProperty('categories');
+      expect(result.categories).toEqual(mockCategories);
     });
   });
 
   describe('IR을_생성한다', () => {
-    it('파일 없이 IR을 생성해야 한다', async () => {
+    it('파일 없이 IR을 생성하고 카테고리를 포함해야 한다', async () => {
       // Given
       const translations = [
         {
@@ -186,6 +206,7 @@ describe('IRBusinessService', () => {
         },
       ];
       const createdBy = 'user-1';
+      const categoryId = 'category-1';
 
       const mockIR = {
         id: 'ir-1',
@@ -195,21 +216,27 @@ describe('IRBusinessService', () => {
         translations: [],
       } as any as IR;
 
+      const mockCategories = [{ id: categoryId, name: '재무제표' }];
+
       mockIRContextService.IR을_생성한다.mockResolvedValue(mockIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
-      const result = await service.IR을_생성한다(translations, createdBy, undefined);
+      const result = await service.IR을_생성한다(translations, createdBy, undefined, categoryId);
 
       // Then
       expect(irContextService.IR을_생성한다).toHaveBeenCalledWith(
         translations,
         createdBy,
         undefined,
+        categoryId,
       );
-      expect(result).toEqual(mockIR);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith('ir-1');
+      expect(result).toHaveProperty('categories');
+      expect((result as any).categories).toEqual(mockCategories);
     });
 
-    it('파일과 함께 IR을 생성해야 한다', async () => {
+    it('파일과 함께 IR을 생성하고 카테고리를 포함해야 한다', async () => {
       // Given
       const translations = [
         {
@@ -218,6 +245,7 @@ describe('IRBusinessService', () => {
         },
       ];
       const createdBy = 'user-1';
+      const categoryId = 'category-1';
       const files = [
         {
           originalname: 'ir.pdf',
@@ -244,11 +272,14 @@ describe('IRBusinessService', () => {
         translations: [],
       } as any as IR;
 
+      const mockCategories = [{ id: categoryId, name: '재무제표' }];
+
       mockStorageService.uploadFiles.mockResolvedValue(mockUploadedFiles);
       mockIRContextService.IR을_생성한다.mockResolvedValue(mockIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
-      const result = await service.IR을_생성한다(translations, createdBy, files);
+      const result = await service.IR을_생성한다(translations, createdBy, files, categoryId);
 
       // Then
       expect(storageService.uploadFiles).toHaveBeenCalledWith(files, 'irs');
@@ -261,13 +292,16 @@ describe('IRBusinessService', () => {
             fileUrl: 'https://s3.aws.com/ir.pdf',
           }),
         ]),
+        categoryId,
       );
-      expect(result.attachments).toEqual(mockUploadedFiles);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith('ir-1');
+      expect(result).toHaveProperty('categories');
+      expect((result as any).categories).toEqual(mockCategories);
     });
   });
 
   describe('IR을_수정한다', () => {
-    it('파일을 포함하여 IR을 수정해야 한다', async () => {
+    it('파일을 포함하여 IR을 수정하고 카테고리를 포함해야 한다', async () => {
       // Given
       const irId = 'ir-1';
       const translations = [
@@ -313,11 +347,14 @@ describe('IRBusinessService', () => {
         attachments: mockUploadedFiles,
       } as any as IR;
 
+      const mockCategories = [{ id: 'category-1', name: '재무제표' }];
+
       mockIRContextService.IR_상세를_조회한다.mockResolvedValue(mockExistingIR);
       mockStorageService.deleteFiles.mockResolvedValue(undefined);
       mockStorageService.uploadFiles.mockResolvedValue(mockUploadedFiles);
       mockIRContextService.IR_파일을_수정한다.mockResolvedValue({} as any);
       mockIRContextService.IR을_수정한다.mockResolvedValue(mockUpdatedIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
       const result = await service.IR을_수정한다(
@@ -346,10 +383,11 @@ describe('IRBusinessService', () => {
         translations,
         updatedBy,
       });
-      expect(result).toEqual(mockUpdatedIR);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith(irId);
+      expect(result).toHaveProperty('categories');
     });
 
-    it('파일 없이 IR을 수정해야 한다 (기존 파일 삭제)', async () => {
+    it('파일 없이 IR을 수정하고 카테고리를 포함해야 한다 (기존 파일 삭제)', async () => {
       // Given
       const irId = 'ir-1';
       const translations = [
@@ -377,10 +415,13 @@ describe('IRBusinessService', () => {
         attachments: [],
       } as any as IR;
 
+      const mockCategories = [];
+
       mockIRContextService.IR_상세를_조회한다.mockResolvedValue(mockExistingIR);
       mockStorageService.deleteFiles.mockResolvedValue(undefined);
       mockIRContextService.IR_파일을_수정한다.mockResolvedValue({} as any);
       mockIRContextService.IR을_수정한다.mockResolvedValue(mockUpdatedIR);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
       const result = await service.IR을_수정한다(
@@ -400,7 +441,8 @@ describe('IRBusinessService', () => {
         [],
         updatedBy,
       );
-      expect(result.attachments).toEqual([]);
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith(irId);
+      expect(result).toHaveProperty('categories');
     });
   });
 
@@ -429,7 +471,7 @@ describe('IRBusinessService', () => {
   });
 
   describe('IR_목록을_조회한다', () => {
-    it('컨텍스트 서비스를 호출하여 목록을 조회하고 DTO로 변환해야 한다', async () => {
+    it('컨텍스트 서비스를 호출하여 목록을 조회하고 카테고리를 포함한 DTO로 변환해야 한다', async () => {
       // Given
       const mockResult = {
         items: [
@@ -453,7 +495,10 @@ describe('IRBusinessService', () => {
         limit: 10,
       };
 
+      const mockCategories = [{ id: 'category-1', name: '재무제표' }];
+
       mockIRContextService.IR_목록을_조회한다.mockResolvedValue(mockResult);
+      mockCategoryService.엔티티의_카테고리_매핑을_조회한다.mockResolvedValue(mockCategories);
 
       // When
       const result = await service.IR_목록을_조회한다(true, 'order', 1, 10);
@@ -467,8 +512,11 @@ describe('IRBusinessService', () => {
         undefined,
         undefined,
       );
+      expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith('ir-1');
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('2024년 1분기 IR 자료');
+      expect(result.items[0]).toHaveProperty('categories');
+      expect(result.items[0].categories).toEqual(mockCategories);
       expect(result.totalPages).toBe(1);
     });
 

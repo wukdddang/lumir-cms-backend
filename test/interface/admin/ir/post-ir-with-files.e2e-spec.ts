@@ -15,6 +15,7 @@ import { existsSync } from 'fs';
 describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
   let testHelper: BaseE2ETest;
   let languageId: string;
+  let categoryId: string;
   let createdIRId: string;
 
   // 간단한 PDF 파일 생성 (최소 PDF 헤더)
@@ -43,6 +44,18 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
     }
 
     languageId = koreanLanguage.id;
+
+    // IR 카테고리 생성
+    const categoryResponse = await testHelper
+      .request()
+      .post('/api/admin/irs/categories')
+      .send({
+        name: '재무제표',
+        description: '재무제표 카테고리',
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   afterAll(async () => {
@@ -74,6 +87,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
           title: '파일 테스트 IR',
           description: '파일 업로드 테스트용 IR입니다',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', pdfBuffer, { filename: testFileName, contentType: 'application/pdf' })
         .expect(201);
 
@@ -126,6 +140,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
           title: '다중 파일 테스트 IR',
           description: '여러 파일 업로드 테스트',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', file1Buffer, { filename: file1Name, contentType: 'application/pdf' })
         .attach('files', file2Buffer, { filename: file2Name, contentType: 'application/pdf' })
         .expect(201);
@@ -158,6 +173,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
           languageId,
           title: '파일 추가 테스트 IR',
         }]))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -213,6 +229,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
           languageId,
           title: '파일 삭제 테스트 IR',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', pdfBuffer, { filename: fileName, contentType: 'application/pdf' })
         .expect(201);
 
@@ -259,6 +276,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
           languageId,
           title: '잘못된 파일 테스트',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', executableContent, 'malicious.exe')
         .expect(400); // 클라이언트 검증 에러
 

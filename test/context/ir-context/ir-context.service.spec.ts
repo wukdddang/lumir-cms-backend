@@ -4,6 +4,7 @@ import { EventBus } from '@nestjs/cqrs';
 import { IRContextService } from '@context/ir-context/ir-context.service';
 import { IRService } from '@domain/core/ir/ir.service';
 import { LanguageService } from '@domain/common/language/language.service';
+import { CategoryService } from '@domain/common/category/category.service';
 import { IR } from '@domain/core/ir/ir.entity';
 import { IRTranslation } from '@domain/core/ir/ir-translation.entity';
 import { Language } from '@domain/common/language/language.entity';
@@ -35,6 +36,12 @@ describe('IRContextService', () => {
     기본_언어를_조회한다: jest.fn(),
   };
 
+  const mockCategoryService = {
+    ID로_카테고리를_조회한다: jest.fn(),
+    엔티티에_카테고리를_매핑한다: jest.fn(),
+    엔티티의_카테고리_매핑을_조회한다: jest.fn(),
+  };
+
   const mockConfigService = {
     get: jest.fn((key: string, defaultValue?: any) => {
       if (key === 'DEFAULT_LANGUAGE_CODE') return 'en';
@@ -58,6 +65,10 @@ describe('IRContextService', () => {
         {
           provide: LanguageService,
           useValue: mockLanguageService,
+        },
+        {
+          provide: CategoryService,
+          useValue: mockCategoryService,
         },
         {
           provide: ConfigService,
@@ -263,8 +274,12 @@ describe('IRContextService', () => {
       mockIRService.IR_번역을_생성한다.mockResolvedValue(undefined);
       mockIRService.ID로_IR을_조회한다.mockResolvedValue(mockIR);
 
+      // Given - 카테고리 mock
+      const categoryId = 'category-1';
+      mockCategoryService.ID로_카테고리를_조회한다.mockResolvedValue({ id: categoryId } as any);
+
       // When
-      const result = await service.IR을_생성한다(translations, createdBy, attachments);
+      const result = await service.IR을_생성한다(translations, createdBy, attachments, categoryId);
 
       // Then
       expect(languageService.ID로_언어를_조회한다).toHaveBeenCalledWith('language-1');
@@ -292,6 +307,7 @@ describe('IRContextService', () => {
           title: '제목2',
         },
       ];
+      const categoryId = 'category-1';
 
       const mockLanguage = {
         id: 'language-1',
@@ -301,11 +317,54 @@ describe('IRContextService', () => {
       mockLanguageService.ID로_언어를_조회한다.mockResolvedValue(mockLanguage);
 
       // When & Then
-      await expect(service.IR을_생성한다(translations)).rejects.toThrow(
+      await expect(service.IR을_생성한다(translations, undefined, undefined, categoryId)).rejects.toThrow(
         BadRequestException,
       );
-      await expect(service.IR을_생성한다(translations)).rejects.toThrow(
+      await expect(service.IR을_생성한다(translations, undefined, undefined, categoryId)).rejects.toThrow(
         '중복된 언어 ID가 있습니다.',
+      );
+    });
+
+    it('categoryId가 제공되면 카테고리 매핑을 생성해야 한다', async () => {
+      // Given
+      const translations = [
+        {
+          languageId: 'language-1',
+          title: 'IR 제목',
+        },
+      ];
+      const createdBy = 'user-1';
+      const categoryId = 'category-1';
+
+      const mockLanguage = {
+        id: 'language-1',
+        code: 'ko',
+      } as Language;
+
+      const mockIR = {
+        id: 'ir-1',
+        isPublic: true,
+        order: 0,
+      } as any as IR;
+
+      mockLanguageService.ID로_언어를_조회한다.mockResolvedValue(mockLanguage);
+      mockLanguageService.모든_언어를_조회한다.mockResolvedValue([mockLanguage]);
+      mockCategoryService.ID로_카테고리를_조회한다.mockResolvedValue({ id: categoryId });
+      mockIRService.다음_순서를_계산한다.mockResolvedValue(0);
+      mockIRService.IR을_생성한다.mockResolvedValue(mockIR);
+      mockIRService.IR_번역을_생성한다.mockResolvedValue(undefined);
+      mockCategoryService.엔티티에_카테고리를_매핑한다.mockResolvedValue({});
+      mockIRService.ID로_IR을_조회한다.mockResolvedValue(mockIR);
+
+      // When
+      await service.IR을_생성한다(translations, createdBy, undefined, categoryId);
+
+      // Then
+      expect(mockCategoryService.ID로_카테고리를_조회한다).toHaveBeenCalledWith(categoryId);
+      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).toHaveBeenCalledWith(
+        'ir-1',
+        categoryId,
+        createdBy,
       );
     });
 
@@ -318,6 +377,7 @@ describe('IRContextService', () => {
           description: '설명',
         },
       ];
+      const categoryId = 'category-1';
 
       const mockKoreanLanguage = {
         id: 'language-1',
@@ -352,13 +412,15 @@ describe('IRContextService', () => {
         mockEnglishLanguage,
         mockJapaneseLanguage,
       ]);
+      mockCategoryService.ID로_카테고리를_조회한다.mockResolvedValue({ id: categoryId } as any);
+      mockCategoryService.엔티티에_카테고리를_매핑한다.mockResolvedValue({} as any);
       mockIRService.다음_순서를_계산한다.mockResolvedValue(0);
       mockIRService.IR을_생성한다.mockResolvedValue(mockIR);
       mockIRService.IR_번역을_생성한다.mockResolvedValue(undefined);
       mockIRService.ID로_IR을_조회한다.mockResolvedValue(mockIR);
 
       // When
-      await service.IR을_생성한다(translations);
+      await service.IR을_생성한다(translations, undefined, undefined, categoryId);
 
       // Then
       // 첫 번째 호출: 수동 입력 번역 (isSynced: false)

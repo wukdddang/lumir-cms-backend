@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventBus } from '@nestjs/cqrs';
 import { IRService } from '@domain/core/ir/ir.service';
 import { LanguageService } from '@domain/common/language/language.service';
+import { CategoryService } from '@domain/common/category/category.service';
 import { IR } from '@domain/core/ir/ir.entity';
 import { IRTranslationUpdatedEvent } from './events/ir-translation-updated.event';
 
@@ -18,6 +19,7 @@ export class IRContextService {
   constructor(
     private readonly irService: IRService,
     private readonly languageService: LanguageService,
+    private readonly categoryService: CategoryService,
     private readonly configService: ConfigService,
     private readonly eventBus: EventBus,
   ) {}
@@ -92,13 +94,14 @@ export class IRContextService {
       title: string;
       description?: string;
     }>,
-    createdBy?: string,
-    attachments?: Array<{
+    createdBy: string | undefined,
+    attachments: Array<{
       fileName: string;
       fileUrl: string;
       fileSize: number;
       mimeType: string;
-    }>,
+    }> | undefined,
+    categoryId: string,
   ): Promise<IR> {
     this.logger.log(`IR 생성 시작 - 번역 수: ${translations.length}`);
 
@@ -114,13 +117,16 @@ export class IRContextService {
       throw new BadRequestException('중복된 언어 ID가 있습니다.');
     }
 
-    // 3. 모든 활성 언어 조회 (자동 동기화용)
+    // 3. 카테고리 ID 검증 (필수)
+    await this.categoryService.ID로_카테고리를_조회한다(categoryId);
+
+    // 4. 모든 활성 언어 조회 (자동 동기화용)
     const allLanguages = await this.languageService.모든_언어를_조회한다(false);
 
-    // 4. 다음 순서 계산
+    // 5. 다음 순서 계산
     const nextOrder = await this.irService.다음_순서를_계산한다();
 
-    // 5. IR 생성 (기본값: 공개)
+    // 6. IR 생성 (기본값: 공개)
     const ir = await this.irService.IR을_생성한다({
       isPublic: true,
       order: nextOrder,
@@ -128,7 +134,15 @@ export class IRContextService {
       createdBy,
     });
 
-    // 6. 전달받은 언어들에 대한 번역 생성 (isSynced: false, 개별 설정됨)
+    // 7. 카테고리 매핑 생성
+    await this.categoryService.엔티티에_카테고리를_매핑한다(
+      ir.id,
+      categoryId,
+      createdBy,
+    );
+    this.logger.log(`IR에 카테고리 매핑 완료 - 카테고리 ID: ${categoryId}`);
+
+    // 8. 전달받은 언어들에 대한 번역 생성 (isSynced: false, 개별 설정됨)
     await this.irService.IR_번역을_생성한다(
       ir.id,
       translations.map((t) => ({
@@ -140,14 +154,14 @@ export class IRContextService {
       createdBy,
     );
 
-    // 7. 기준 번역 선정 (기본 언어 우선, 없으면 첫 번째)
+    // 9. 기준 번역 선정 (기본 언어 우선, 없으면 첫 번째)
     const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
     const defaultLang = languages.find((l) => l.code === defaultLanguageCode);
     const baseTranslation =
       translations.find((t) => t.languageId === defaultLang?.id) ||
       translations[0];
 
-    // 8. 전달되지 않은 나머지 활성 언어들에 대한 번역 생성 (isSynced: true, 자동 동기화)
+    // 10. 전달되지 않은 나머지 활성 언어들에 대한 번역 생성 (isSynced: true, 자동 동기화)
     const remainingLanguages = allLanguages.filter(
       (lang) => !languageIds.includes(lang.id),
     );
@@ -170,7 +184,7 @@ export class IRContextService {
       `IR 생성 완료 - ID: ${ir.id}, 전체 번역 수: ${totalTranslations} (개별: ${translations.length}, 자동: ${remainingLanguages.length})`,
     );
 
-    // 9. 번역 포함하여 재조회
+    // 11. 번역 포함하여 재조회
     return await this.irService.ID로_IR을_조회한다(ir.id);
   }
 

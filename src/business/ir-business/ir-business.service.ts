@@ -29,27 +29,44 @@ export class IRBusinessService {
   /**
    * IR 전체 목록을 조회한다
    */
-  async IR_전체_목록을_조회한다(): Promise<IR[]> {
+  async IR_전체_목록을_조회한다(): Promise<any[]> {
     this.logger.log('IR 전체 목록 조회 시작');
 
     const irs = await this.irContextService.IR_전체_목록을_조회한다();
 
+    // 모든 IR의 카테고리 매핑 조회
+    const irsWithCategories = await Promise.all(
+      irs.map(async (ir) => {
+        const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(ir.id);
+        return {
+          ...ir,
+          categories,
+        };
+      })
+    );
+
     this.logger.log(`IR 전체 목록 조회 완료 - 총 ${irs.length}개`);
 
-    return irs;
+    return irsWithCategories;
   }
 
   /**
    * IR 상세를 조회한다
    */
-  async IR_상세를_조회한다(id: string): Promise<IR> {
+  async IR_상세를_조회한다(id: string): Promise<any> {
     this.logger.log(`IR 상세 조회 시작 - ID: ${id}`);
 
     const ir = await this.irContextService.IR_상세를_조회한다(id);
 
+    // 카테고리 매핑 조회
+    const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(id);
+
     this.logger.log(`IR 상세 조회 완료 - ID: ${id}`);
 
-    return ir;
+    return {
+      ...ir,
+      categories,
+    };
   }
 
   /**
@@ -72,7 +89,7 @@ export class IRBusinessService {
     id: string,
     isPublic: boolean,
     updatedBy?: string,
-  ): Promise<IR> {
+  ): Promise<any> {
     this.logger.log(`IR 공개 수정 시작 - ID: ${id}, 공개: ${isPublic}`);
 
     const ir = await this.irContextService.IR_공개를_수정한다(
@@ -81,9 +98,15 @@ export class IRBusinessService {
       updatedBy,
     );
 
+    // 카테고리 매핑 조회
+    const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(id);
+
     this.logger.log(`IR 공개 수정 완료 - ID: ${id}`);
 
-    return ir;
+    return {
+      ...ir,
+      categories,
+    };
   }
 
   /**
@@ -95,8 +118,9 @@ export class IRBusinessService {
       title: string;
       description?: string;
     }>,
-    createdBy?: string,
-    files?: Express.Multer.File[],
+    createdBy: string | undefined,
+    files: Express.Multer.File[] | undefined,
+    categoryId: string,
   ): Promise<IR> {
     this.logger.log(`IR 생성 시작 - 번역 수: ${translations.length}`);
 
@@ -127,11 +151,18 @@ export class IRBusinessService {
       translations,
       createdBy,
       attachments,
+      categoryId,
     );
+
+    // 카테고리 매핑 조회
+    const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(result.id);
 
     this.logger.log(`IR 생성 완료 - ID: ${result.id}`);
 
-    return result;
+    return {
+      ...result,
+      categories,
+    } as any;
   }
 
   /**
@@ -147,7 +178,7 @@ export class IRBusinessService {
     }>,
     updatedBy?: string,
     files?: Express.Multer.File[],
-  ): Promise<IR> {
+  ): Promise<any> {
     this.logger.log(`IR 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`);
 
     // 1. 기존 IR 조회
@@ -198,9 +229,15 @@ export class IRBusinessService {
       updatedBy,
     });
 
+    // 6. 카테고리 매핑 조회
+    const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(id);
+
     this.logger.log(`IR 수정 완료 - ID: ${id}`);
 
-    return result;
+    return {
+      ...result,
+      categories,
+    };
   }
 
   /**
@@ -256,8 +293,22 @@ export class IRBusinessService {
 
     const totalPages = Math.ceil(result.total / limit);
 
-    // IR 엔티티를 IRListItemDto로 변환
+    // IR 엔티티를 IRListItemDto로 변환 (카테고리 포함)
     const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
+    
+    // 모든 IR의 카테고리 매핑 조회
+    const irIds = result.items.map(ir => ir.id);
+    const categoryPromises = irIds.map(id => 
+      this.categoryService.엔티티의_카테고리_매핑을_조회한다(id)
+    );
+    const categoriesResults = await Promise.all(categoryPromises);
+    
+    // IR ID별 카테고리 맵 생성
+    const categoryMap = new Map<string, any[]>();
+    irIds.forEach((id, index) => {
+      categoryMap.set(id, categoriesResults[index]);
+    });
+    
     const items: IRListItemDto[] = result.items.map((ir) => {
       const defaultTranslation =
         ir.translations?.find((t) => t.language?.code === defaultLanguageCode) ||
@@ -269,6 +320,7 @@ export class IRBusinessService {
         order: ir.order,
         title: defaultTranslation?.title || '',
         description: defaultTranslation?.description || null,
+        categories: categoryMap.get(ir.id) || [],
         createdAt: ir.createdAt,
         updatedAt: ir.updatedAt,
       };

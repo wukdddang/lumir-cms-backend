@@ -3,6 +3,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('GET /api/admin/irs (IR 조회)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -26,6 +27,18 @@ describe('GET /api/admin/irs (IR 조회)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // IR 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/irs/categories')
+      .send({
+        name: '재무제표',
+        description: '재무제표 카테고리',
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/irs (목록 조회)', () => {
@@ -43,6 +56,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // When - 목록 조회
@@ -95,6 +109,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData1))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId1 = createResponse1.body.id;
@@ -118,6 +133,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData2))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // When - 공개된 IR만 조회
@@ -146,7 +162,8 @@ describe('GET /api/admin/irs (IR 조회)', () => {
                 title: `IR ${i + 1}`,
               },
             ]),
-          ),
+          )
+          .field('categoryId', categoryId),
       );
 
       await Promise.all(createPromises);
@@ -184,12 +201,14 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData1))
+        .field('categoryId', categoryId)
         .expect(201);
 
       await testSuite
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData2))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // When
@@ -216,6 +235,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData1))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const firstCreatedAt = new Date(firstResponse.body.createdAt);
@@ -227,6 +247,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData2))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const secondCreatedAt = new Date(secondResponse.body.createdAt);
@@ -261,6 +282,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const createdIRId = createResponse.body.id;
@@ -303,7 +325,8 @@ describe('GET /api/admin/irs (IR 조회)', () => {
                 title: `전체 조회 테스트 ${i + 1}`,
               },
             ]),
-          ),
+          )
+          .field('categoryId', categoryId),
       );
 
       await Promise.all(createPromises);
@@ -335,6 +358,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -369,6 +393,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('PDF content'), 'test.pdf')
         .expect(201);
 
@@ -435,18 +460,21 @@ describe('GET /api/admin/irs (IR 조회)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations1))
+        .field('categoryId', categoryId)
         .expect(201);
 
       await testSuite
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations2))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const ir3 = await testSuite
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations3))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // 비공개로 변경

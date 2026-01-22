@@ -84,4 +84,11 @@ export class CreateIRDto {
   @ValidateNested({ each: true })
   @Type(() => CreateIRTranslationDto)
   translations: CreateIRTranslationDto[];
+
+  @ApiProperty({
+    description: 'IR 카테고리 ID (필수)',
+    example: 'uuid-category',
+  })
+  @IsString()
+  categoryId: string;
 }

@@ -4,6 +4,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
   let englishLanguageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -31,6 +32,18 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
 
     languageId = koreanLanguage.id;
     englishLanguageId = englishLanguage.id;
+
+    // IR 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/irs/categories')
+      .send({
+        name: '재무제표',
+        description: '재무제표 카테고리',
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('PUT /api/admin/irs/:id (IR 수정)', () => {
@@ -48,6 +61,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -88,6 +102,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('Old PDF'), 'old.pdf')
         .expect(201);
 
@@ -130,6 +145,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('PDF'), 'test.pdf')
         .expect(201);
 
@@ -170,6 +186,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -224,6 +241,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -250,6 +268,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -287,6 +306,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -329,18 +349,21 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations1))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const ir2 = await testSuite
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations2))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const ir3 = await testSuite
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translations3))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // When - 순서 변경 (역순으로)
@@ -415,6 +438,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -448,6 +472,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('PDF'), 'test.pdf')
         .expect(201);
 
@@ -491,6 +516,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;
@@ -523,6 +549,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
         .request()
         .post('/api/admin/irs')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const irId = createResponse.body.id;

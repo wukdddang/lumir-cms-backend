@@ -1,6 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
+ * IR 카테고리 응답 DTO
+ */
+export class IRCategoryResponseDto {
+  @ApiProperty({ description: '카테고리 ID' })
+  id: string;
+
+  @ApiProperty({ description: '카테고리 이름', example: '재무정보' })
+  name: string;
+
+  @ApiProperty({
+    description: '카테고리 설명',
+    example: '재무 관련 IR',
+    required: false,
+  })
+  description?: string | null;
+
+  @ApiProperty({ description: '활성화 여부', example: true })
+  isActive: boolean;
+
+  @ApiProperty({ description: '정렬 순서', example: 0 })
+  order: number;
+
+  @ApiProperty({ description: '생성일시' })
+  createdAt: Date;
+
+  @ApiProperty({ description: '수정일시' })
+  updatedAt: Date;
+}
+
+/**
  * IR 번역 응답 DTO
  */
 export class IRTranslationResponseDto {
@@ -64,6 +94,13 @@ export class IRResponseDto {
   })
   translations: IRTranslationResponseDto[];
 
+  @ApiProperty({
+    description: '카테고리 목록',
+    type: [IRCategoryResponseDto],
+    required: false,
+  })
+  categories?: IRCategoryResponseDto[];
+
   @ApiProperty({ description: '생성 일시' })
   createdAt: Date;
 
@@ -101,6 +138,13 @@ export class IRListItemDto {
   })
   description: string | null;
 
+  @ApiProperty({
+    description: '카테고리 목록',
+    type: [IRCategoryResponseDto],
+    required: false,
+  })
+  categories?: IRCategoryResponseDto[];
+
   @ApiProperty({ description: '생성 일시' })
   createdAt: Date;
 
@@ -129,36 +173,6 @@ export class IRListResponseDto {
 
   @ApiProperty({ description: '총 페이지 수', example: 2 })
   totalPages: number;
-}
-
-/**
- * IR 카테고리 응답 DTO
- */
-export class IRCategoryResponseDto {
-  @ApiProperty({ description: '카테고리 ID' })
-  id: string;
-
-  @ApiProperty({ description: '카테고리 이름', example: '재무정보' })
-  name: string;
-
-  @ApiProperty({
-    description: '카테고리 설명',
-    example: '재무 관련 IR',
-    required: false,
-  })
-  description?: string | null;
-
-  @ApiProperty({ description: '활성화 여부', example: true })
-  isActive: boolean;
-
-  @ApiProperty({ description: '정렬 순서', example: 0 })
-  order: number;
-
-  @ApiProperty({ description: '생성일시' })
-  createdAt: Date;
-
-  @ApiProperty({ description: '수정일시' })
-  updatedAt: Date;
 }
 
 /**

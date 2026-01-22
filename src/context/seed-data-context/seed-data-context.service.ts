@@ -193,6 +193,10 @@ export class SeedDataContextService {
       const electronicDisclosureCount = await this.전자공시_시드_데이터를_생성한다(10);
       results.electronicDisclosures = electronicDisclosureCount;
 
+      // IR 카테고리
+      const irCategoryCount = await this.IR_카테고리_시드_데이터를_생성한다();
+      results.irCategories = irCategoryCount;
+
       const irCount = await this.IR_시드_데이터를_생성한다(10);
       results.irs = irCount;
 
@@ -352,6 +356,39 @@ export class SeedDataContextService {
 
     this.logger.log(
       `전자공시 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
+    );
+    return created;
+  }
+
+  /**
+   * IR 카테고리 시드 데이터를 생성한다
+   */
+  private async IR_카테고리_시드_데이터를_생성한다(): Promise<number> {
+    this.logger.log(`IR 카테고리 시드 데이터 생성 시작`);
+
+    const categories = [
+      { name: '재무제표', description: '재무제표 관련 자료' },
+      { name: '사업보고서', description: '사업보고서 관련 자료' },
+      { name: '경영설명회', description: '경영설명회 자료' },
+      { name: '애널리스트 리포트', description: '애널리스트 리포트' },
+    ];
+
+    let created = 0;
+
+    for (let i = 0; i < categories.length; i++) {
+      await this.categoryService.카테고리를_생성한다({
+        entityType: CategoryEntityType.IR,
+        name: categories[i].name,
+        description: categories[i].description,
+        isActive: true,
+        order: i,
+        createdBy: 'seed',
+      });
+      created++;
+    }
+
+    this.logger.log(
+      `IR 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
     );
     return created;
   }
@@ -1147,6 +1184,16 @@ export class SeedDataContextService {
       return 0;
     }
 
+    // IR 카테고리 조회
+    const categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+      CategoryEntityType.IR,
+    );
+    
+    if (categories.length === 0) {
+      this.logger.warn('IR 카테고리가 없습니다. IR 생성을 건너뜁니다.');
+      return 0;
+    }
+
     const irTypes = [
       '사업보고서',
       '분기보고서',
@@ -1159,6 +1206,8 @@ export class SeedDataContextService {
 
     for (let i = 0; i < count; i++) {
       const type = irTypes[i % irTypes.length];
+      const category = categories[i % categories.length];
+      
       await this.irContextService.IR을_생성한다(
         [
           {
@@ -1176,6 +1225,7 @@ export class SeedDataContextService {
             mimeType: 'application/pdf',
           },
         ],
+        category.id,
       );
 
       created++;
