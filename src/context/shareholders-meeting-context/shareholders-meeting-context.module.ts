@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShareholdersMeetingModule } from '@domain/core/shareholders-meeting/shareholders-meeting.module';
 import { LanguageModule } from '@domain/common/language/language.module';
 import { ShareholdersMeetingContextService } from './shareholders-meeting-context.service';
+import { ShareholdersMeeting } from '@domain/core/shareholders-meeting/shareholders-meeting.entity';
 import { ShareholdersMeetingTranslation } from '@domain/core/shareholders-meeting/shareholders-meeting-translation.entity';
 import { VoteResultTranslation } from '@domain/core/shareholders-meeting/vote-result-translation.entity';
 import {
@@ -19,6 +20,7 @@ import { ShareholdersMeetingSyncScheduler } from './shareholders-meeting-sync.sc
   imports: [
     CqrsModule,
     TypeOrmModule.forFeature([
+      ShareholdersMeeting,
       ShareholdersMeetingTranslation,
       VoteResultTranslation,
     ]),

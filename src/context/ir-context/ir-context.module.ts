@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { IRContextService } from './ir-context.service';
 import { IRModule } from '@domain/core/ir/ir.module';
 import { LanguageModule } from '@domain/common/language/language.module';
+import { IR } from '@domain/core/ir/ir.entity';
 import { IRTranslation } from '@domain/core/ir/ir-translation.entity';
 import {
   SyncIRTranslationsHandler,
@@ -14,7 +15,7 @@ import { IRSyncScheduler } from './ir-sync.scheduler';
 @Module({
   imports: [
     CqrsModule,
-    TypeOrmModule.forFeature([IRTranslation]),
+    TypeOrmModule.forFeature([IR, IRTranslation]),
     IRModule,
     LanguageModule,
   ],
