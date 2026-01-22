@@ -358,7 +358,14 @@ export class AnnouncementController {
   @Post('categories')
   @ApiOperation({
     summary: '공지사항 카테고리 생성',
-    description: '새로운 공지사항 카테고리를 생성합니다.',
+    description:
+      '새로운 공지사항 카테고리를 생성합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `name`: 카테고리 이름\n\n' +
+      '**선택 필드:**\n' +
+      '- `description`: 카테고리 설명\n' +
+      '- `isActive`: 활성화 여부 (기본값: true)\n' +
+      '- `order`: 정렬 순서 (기본값: 0)',
   })
   @ApiResponse({
     status: 201,
@@ -379,12 +386,19 @@ export class AnnouncementController {
   @Patch('categories/:id')
   @ApiOperation({
     summary: '공지사항 카테고리 수정',
-    description: '공지사항의 카테고리를 수정합니다.',
+    description:
+      '공지사항의 카테고리를 수정합니다.\n\n' +
+      '**모든 필드 선택사항:**\n' +
+      '- `name`: 카테고리 이름\n' +
+      '- `description`: 카테고리 설명\n' +
+      '- `isActive`: 활성화 여부\n' +
+      '- `order`: 정렬 순서',
   })
   @ApiParam({
     name: 'id',
-    description: '카테고리 ID',
+    description: '카테고리 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiResponse({
     status: 200,
@@ -411,12 +425,16 @@ export class AnnouncementController {
   @Patch('categories/:id/order')
   @ApiOperation({
     summary: '공지사항 카테고리 오더 변경',
-    description: '공지사항 카테고리의 정렬 순서를 변경합니다.',
+    description:
+      '공지사항 카테고리의 정렬 순서를 변경합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `order`: 정렬 순서 (숫자)',
   })
   @ApiParam({
     name: 'id',
-    description: '카테고리 ID',
+    description: '카테고리 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiResponse({
     status: 200,
@@ -559,7 +577,9 @@ export class AnnouncementController {
     summary: '공지사항 권한 로그 일괄 무시 (다시 보지 않기)',
     description:
       '여러 권한 로그에 대한 모달을 더 이상 표시하지 않도록 설정합니다. ' +
-      '권한 로그 관리 페이지에서는 여전히 조회 가능합니다.',
+      '권한 로그 관리 페이지에서는 여전히 조회 가능합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `logIds`: 무시할 권한 로그 ID 배열 (UUID[])',
   })
   @ApiResponse({
     status: 200,
@@ -740,7 +760,11 @@ export class AnnouncementController {
   @ApiOperation({
     summary: '공지사항 오더 일괄 수정',
     description:
-      '여러 공지사항의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 공지사항 목록을 전달하면 됩니다.',
+      '여러 공지사항의 정렬 순서를 한번에 수정합니다. ' +
+      '프론트엔드에서 변경된 순서대로 공지사항 목록을 전달하면 됩니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `announcements`: 공지사항 ID와 order를 포함한 객체 배열\n' +
+      '  - 각 객체: `{ id: string, order: number }`',
   })
   @ApiResponse({
     status: 200,
@@ -843,12 +867,18 @@ export class AnnouncementController {
   @Patch(':id/public')
   @ApiOperation({
     summary: '공지사항 공개 상태 수정',
-    description: '공지사항의 공개 상태를 수정합니다.',
+    description:
+      '공지사항의 공개 상태를 수정합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `isPublic`: 공개 여부 (boolean)\n' +
+      '  - `true`: 전사공개\n' +
+      '  - `false`: 제한공개',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiResponse({
     status: 200,
@@ -873,12 +903,18 @@ export class AnnouncementController {
   @Patch(':id/fixed')
   @ApiOperation({
     summary: '공지사항 고정 상태 수정',
-    description: '공지사항의 고정 상태를 수정합니다.',
+    description:
+      '공지사항의 고정 상태를 수정합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `isFixed`: 고정 여부 (boolean)\n' +
+      '  - `true`: 상단 고정\n' +
+      '  - `false`: 일반 공지',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiResponse({
     status: 200,
@@ -937,12 +973,16 @@ export class AnnouncementController {
   @ApiOperation({
     summary: '공지사항 포함된 전체 직원에게 알림 전송',
     description:
-      '공지사항의 권한 설정을 기반으로 대상 직원 전체에게 알림을 전송합니다. 전사공개인 경우 모든 직원에게, 제한공개인 경우 권한이 있는 직원들에게 알림을 전송합니다.',
+      '공지사항의 권한 설정을 기반으로 대상 직원 전체에게 알림을 전송합니다. ' +
+      '전사공개인 경우 모든 직원에게, 제한공개인 경우 권한이 있는 직원들에게 알림을 전송합니다.\n\n' +
+      '**쿼리 파라미터 (선택):**\n' +
+      '- `path`: 알림 클릭 시 이동할 URL',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiQuery({
     name: 'path',
@@ -989,12 +1029,16 @@ export class AnnouncementController {
   @ApiOperation({
     summary: '공지사항 설문 미답변자에게 알림 전송',
     description:
-      '공지사항에 연결된 설문에 아직 응답하지 않은 직원들에게 알림을 전송합니다. 설문이 없는 공지사항인 경우 오류를 반환합니다.',
+      '공지사항에 연결된 설문에 아직 응답하지 않은 직원들에게 알림을 전송합니다. ' +
+      '설문이 없는 공지사항인 경우 오류를 반환합니다.\n\n' +
+      '**쿼리 파라미터 (선택):**\n' +
+      '- `path`: 알림 클릭 시 이동할 URL',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiQuery({
     name: 'path',
@@ -1045,12 +1089,16 @@ export class AnnouncementController {
   @ApiOperation({
     summary: '공지사항 미열람자에게 알림 전송',
     description:
-      '공지사항을 아직 읽지 않은 직원들에게 알림을 전송합니다. 권한 설정을 기반으로 대상 직원 중 열람하지 않은 직원에게만 알림을 전송합니다.',
+      '공지사항을 아직 읽지 않은 직원들에게 알림을 전송합니다. ' +
+      '권한 설정을 기반으로 대상 직원 중 열람하지 않은 직원에게만 알림을 전송합니다.\n\n' +
+      '**쿼리 파라미터 (선택):**\n' +
+      '- `path`: 알림 클릭 시 이동할 URL',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiQuery({
     name: 'path',
@@ -1097,13 +1145,18 @@ export class AnnouncementController {
   @ApiOperation({
     summary: '공지사항 권한 ID 교체 및 로그 해결',
     description:
-      '비활성화된 부서/직원 ID를 새로운 ID로 교체합니다. 예: 구 마케팅팀(DEPT_001) → 신 마케팅팀(DEPT_002)\n\n' +
-      '권한 교체가 완료되면 자동으로 RESOLVED 로그가 생성됩니다.',
+      '비활성화된 부서/직원 ID를 새로운 ID로 교체합니다. ' +
+      '예: 구 마케팅팀(DEPT_001) → 신 마케팅팀(DEPT_002)\n\n' +
+      '권한 교체가 완료되면 자동으로 RESOLVED 로그가 생성됩니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `replacements`: 교체할 권한 ID 매핑 배열\n' +
+      '  - 각 객체: `{ oldId: string, newId: string, type: "department" | "employee" | "rank" | "position" }`',
   })
   @ApiParam({
     name: 'id',
-    description: '공지사항 ID',
+    description: '공지사항 ID (UUID)',
     type: String,
+    required: true,
   })
   @ApiResponse({
     status: 200,
