@@ -78,10 +78,6 @@ async function bootstrap() {
       { name: 'A-8. 관리자 - 뉴스', description: '뉴스 관리 API' },
       { name: 'A-9. 관리자 - 공지사항', description: '공지사항 관리 API' },
       { name: 'A-10. 관리자 - Wiki', description: 'Wiki 관리 API' },
-      { 
-        name: '공통. 관리자 - 설문조사 (조회)', 
-        description: '설문조사 조회 API (생성/수정/삭제는 공지사항을 통해 수행)' 
-      },
       {
         name: '공통. 관리자 - 권한 검증',
         description: '권한 검증 배치 작업 수동 실행 API',

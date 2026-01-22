@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiParam,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
@@ -27,6 +28,7 @@ import {
 } from '@interface/common/dto/survey/survey-response.dto';
 
 @ApiTags('공통. 관리자 - 설문조사 (조회)')
+@ApiExcludeController()
 @ApiBearerAuth('Bearer')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
