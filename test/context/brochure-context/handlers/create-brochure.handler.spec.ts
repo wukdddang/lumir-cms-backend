@@ -8,6 +8,7 @@ import {
 } from '@context/brochure-context/handlers/commands/create-brochure.handler';
 import { BrochureService } from '@domain/core/brochure/brochure.service';
 import { LanguageService } from '@domain/common/language/language.service';
+import { CategoryService } from '@domain/common/category/category.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { Language } from '@domain/common/language/language.entity';
@@ -17,6 +18,7 @@ describe('CreateBrochureHandler', () => {
   let handler: CreateBrochureHandler;
   let brochureService: jest.Mocked<BrochureService>;
   let languageService: jest.Mocked<LanguageService>;
+  let categoryService: jest.Mocked<CategoryService>;
   let translationRepository: jest.Mocked<Repository<BrochureTranslation>>;
 
   const mockBrochureService = {
@@ -27,6 +29,10 @@ describe('CreateBrochureHandler', () => {
   const mockLanguageService = {
     ID로_언어를_조회한다: jest.fn(),
     모든_언어를_조회한다: jest.fn(),
+  };
+
+  const mockCategoryService = {
+    엔티티에_카테고리를_매핑한다: jest.fn(),
   };
 
   const mockTranslationRepository = {
@@ -54,6 +60,10 @@ describe('CreateBrochureHandler', () => {
           useValue: mockLanguageService,
         },
         {
+          provide: CategoryService,
+          useValue: mockCategoryService,
+        },
+        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -67,6 +77,7 @@ describe('CreateBrochureHandler', () => {
     handler = module.get<CreateBrochureHandler>(CreateBrochureHandler);
     brochureService = module.get(BrochureService);
     languageService = module.get(LanguageService);
+    categoryService = module.get(CategoryService);
     translationRepository = module.get(getRepositoryToken(BrochureTranslation));
   });
 
@@ -85,6 +96,7 @@ describe('CreateBrochureHandler', () => {
             description: '루미르 회사 소개서',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       });
 
@@ -162,6 +174,7 @@ describe('CreateBrochureHandler', () => {
             title: '회사 소개 브로슈어',
           },
         ],
+        categoryId: 'category-1',
         attachments: [
           {
             fileName: 'brochure.pdf',
@@ -221,6 +234,7 @@ describe('CreateBrochureHandler', () => {
             description: 'English description',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       });
 
@@ -276,6 +290,7 @@ describe('CreateBrochureHandler', () => {
             title: '제목2',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       });
 
@@ -306,6 +321,7 @@ describe('CreateBrochureHandler', () => {
             description: '한국어 설명',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       });
 
@@ -392,6 +408,7 @@ describe('CreateBrochureHandler', () => {
             title: '회사 소개 브로슈어',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       });
 
@@ -426,6 +443,28 @@ describe('CreateBrochureHandler', () => {
         }),
       );
       expect(result.order).toBe(5);
+    });
+
+    it('categoryId가 없으면 BadRequestException을 던져야 한다', async () => {
+      // Given
+      const command = new CreateBrochureCommand({
+        translations: [
+          {
+            languageId: 'language-1',
+            title: '회사 소개 브로슈어',
+          },
+        ],
+        categoryId: '' as any, // 빈 문자열
+        createdBy: 'user-1',
+      });
+
+      // When & Then
+      await expect(handler.execute(command)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(handler.execute(command)).rejects.toThrow(
+        'categoryId는 필수입니다.',
+      );
     });
   });
 });

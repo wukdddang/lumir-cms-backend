@@ -3,6 +3,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -26,6 +27,19 @@ describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -50,11 +64,13 @@ describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
           translations: [
             { languageId, title: '브로슈어 1', description: '설명 1' },
           ],
+          categoryId,
         },
         {
           translations: [
             { languageId, title: '브로슈어 2', description: '설명 2' },
           ],
+          categoryId,
         },
       ];
 
@@ -80,6 +96,7 @@ describe('GET /api/admin/brochures (브로슈어 목록 조회)', () => {
 describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -103,6 +120,19 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -119,6 +149,7 @@ describe('GET /api/admin/brochures/:id (브로슈어 상세 조회)', () => {
               description: '상세 설명',
             },
           ],
+          categoryId,
         });
 
       const brochureId = createResponse.body.id;

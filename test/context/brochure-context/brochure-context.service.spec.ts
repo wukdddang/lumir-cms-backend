@@ -52,6 +52,7 @@ describe('BrochureContextService', () => {
             description: '루미르 회사 소개서',
           },
         ],
+        categoryId: 'category-1',
         createdBy: 'user-1',
       };
 
@@ -86,6 +87,7 @@ describe('BrochureContextService', () => {
             title: '회사 소개 브로슈어',
           },
         ],
+        categoryId: 'category-1',
         attachments: [
           {
             fileName: 'brochure.pdf',

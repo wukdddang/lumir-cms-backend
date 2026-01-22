@@ -3,6 +3,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('브로슈어 수정/삭제 (E2E)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
   let brochureId: string;
 
   beforeAll(async () => {
@@ -28,6 +29,19 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
 
     languageId = koreanLanguage.id;
 
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
+
     // 테스트용 브로슈어 생성
     const brochureResponse = await testSuite
       .request()
@@ -40,6 +54,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
             description: '테스트 설명',
           },
         ],
+        categoryId,
       });
     brochureId = brochureResponse.body.id;
   });
@@ -277,6 +292,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
               description: '정책 검증용 브로슈어',
             },
           ],
+          categoryId,
         })
         .expect(201);
 
@@ -323,6 +339,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
               title: '원본 제목',
             },
           ],
+          categoryId,
         })
         .expect(201);
 
@@ -370,6 +387,7 @@ describe('브로슈어 수정/삭제 (E2E)', () => {
 describe('브로슈어 일괄 순서 변경 (E2E)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
   let brochureIds: string[] = [];
 
   beforeAll(async () => {
@@ -396,6 +414,19 @@ describe('브로슈어 일괄 순서 변경 (E2E)', () => {
 
     languageId = koreanLanguage.id;
 
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
+
     // 여러 브로슈어 생성
     for (let i = 1; i <= 3; i++) {
       const response = await testSuite
@@ -408,6 +439,7 @@ describe('브로슈어 일괄 순서 변경 (E2E)', () => {
               title: `브로슈어 ${i}`,
             },
           ],
+          categoryId,
         });
       brochureIds.push(response.body.id);
     }
@@ -512,6 +544,7 @@ describe('브로슈어 일괄 순서 변경 (E2E)', () => {
 describe('브로슈어 필터링 (E2E)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -535,6 +568,19 @@ describe('브로슈어 필터링 (E2E)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/brochures - 필터링', () => {
@@ -545,6 +591,7 @@ describe('브로슈어 필터링 (E2E)', () => {
         .post('/api/admin/brochures')
         .send({
           translations: [{ languageId, title: '공개 브로슈어' }],
+          categoryId,
         });
 
       const publicId = publicResponse.body.id;
@@ -554,6 +601,7 @@ describe('브로슈어 필터링 (E2E)', () => {
         .post('/api/admin/brochures')
         .send({
           translations: [{ languageId, title: '비공개 브로슈어' }],
+          categoryId,
         });
 
       const privateId = privateResponse.body.id;
@@ -589,6 +637,7 @@ describe('브로슈어 필터링 (E2E)', () => {
         .post('/api/admin/brochures')
         .send({
           translations: [{ languageId, title: '비공개 브로슈어' }],
+          categoryId,
         });
 
       const brochureId = response.body.id;
@@ -617,6 +666,7 @@ describe('브로슈어 필터링 (E2E)', () => {
       for (let i = 1; i <= 15; i++) {
         await testSuite.request().post('/api/admin/brochures').send({
           translations: [{ languageId, title: `브로슈어 ${i}` }],
+          categoryId,
         });
       }
 
@@ -647,6 +697,7 @@ describe('브로슈어 필터링 (E2E)', () => {
       for (let i = 1; i <= 3; i++) {
         await testSuite.request().post('/api/admin/brochures').send({
           translations: [{ languageId, title: `브로슈어 ${i}` }],
+          categoryId,
         });
       }
 

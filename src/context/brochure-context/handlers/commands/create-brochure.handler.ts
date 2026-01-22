@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { BrochureService } from '@domain/core/brochure/brochure.service';
 import { LanguageService } from '@domain/common/language/language.service';
+import { CategoryService } from '@domain/common/category/category.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import {
@@ -29,6 +30,7 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
   constructor(
     private readonly brochureService: BrochureService,
     private readonly languageService: LanguageService,
+    private readonly categoryService: CategoryService,
     private readonly configService: ConfigService,
     @InjectRepository(BrochureTranslation)
     private readonly brochureTranslationRepository: Repository<BrochureTranslation>,
@@ -40,6 +42,11 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
     this.logger.log(
       `브로슈어 생성 시작 - 번역 수: ${data.translations.length}`,
     );
+
+    // categoryId 필수 검증
+    if (!data.categoryId) {
+      throw new BadRequestException('categoryId는 필수입니다.');
+    }
 
     // 각 translation 필수 필드 검증
     for (const translation of data.translations) {
@@ -123,6 +130,17 @@ export class CreateBrochureHandler implements ICommandHandler<CreateBrochureComm
 
     const totalTranslations =
       customTranslations.length + remainingLanguages.length;
+
+    // 카테고리 매핑 생성
+    this.logger.log(
+      `브로슈어 카테고리 매핑 생성 시작 - 카테고리 ID: ${data.categoryId}`,
+    );
+    await this.categoryService.엔티티에_카테고리를_매핑한다(
+      saved.id,
+      data.categoryId,
+      data.createdBy,
+    );
+    this.logger.log(`브로슈어 카테고리 매핑 생성 완료`);
 
     this.logger.log(
       `브로슈어 생성 완료 - ID: ${saved.id}, Order: ${saved.order}, 전체 번역 수: ${totalTranslations} (개별 설정: ${customTranslations.length}, 자동 동기화: ${remainingLanguages.length})`,

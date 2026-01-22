@@ -248,8 +248,10 @@ describe('BrochureBusinessService', () => {
       );
 
       // When
+      const categoryId = 'category-1';
       const result = await service.브로슈어를_생성한다(
         translations,
+        categoryId,
         createdBy,
         undefined,
       );
@@ -257,6 +259,7 @@ describe('BrochureBusinessService', () => {
       // Then
       expect(brochureContextService.브로슈어를_생성한다).toHaveBeenCalledWith({
         translations,
+        categoryId,
         attachments: undefined,
         createdBy,
       });
@@ -316,8 +319,10 @@ describe('BrochureBusinessService', () => {
       );
 
       // When
+      const categoryId = 'category-1';
       const result = await service.브로슈어를_생성한다(
         translations,
+        categoryId,
         createdBy,
         files,
       );
@@ -330,6 +335,7 @@ describe('BrochureBusinessService', () => {
       expect(brochureContextService.브로슈어를_생성한다).toHaveBeenCalledWith(
         expect.objectContaining({
           translations,
+          categoryId,
           attachments: expect.arrayContaining([
             expect.objectContaining({
               fileName: 'brochure.pdf',

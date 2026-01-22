@@ -115,6 +115,7 @@ export class BrochureBusinessService {
       title: string;
       description?: string;
     }>,
+    categoryId: string,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<BrochureDetailResult> {
@@ -148,6 +149,7 @@ export class BrochureBusinessService {
     // 생성 데이터 구성
     const createData = {
       translations,
+      categoryId,
       attachments:
         attachments && attachments.length > 0 ? attachments : undefined,
       createdBy,

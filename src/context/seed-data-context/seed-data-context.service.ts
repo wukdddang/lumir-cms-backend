@@ -153,6 +153,10 @@ export class SeedDataContextService {
       const newsCount = await this.뉴스_시드_데이터를_생성한다(10);
       results.news = newsCount;
 
+      // 브로슈어 카테고리
+      const brochureCategoryCount = await this.브로슈어_카테고리_시드_데이터를_생성한다();
+      results.brochureCategories = brochureCategoryCount;
+
       // 브로셔 5개
       const brochureCount = await this.브로셔_시드_데이터를_생성한다(5);
       results.brochures = brochureCount;
@@ -171,6 +175,10 @@ export class SeedDataContextService {
 
       const newsCount = await this.뉴스_시드_데이터를_생성한다(10);
       results.news = newsCount;
+
+      // 브로슈어 카테고리
+      const brochureCategoryCount = await this.브로슈어_카테고리_시드_데이터를_생성한다();
+      results.brochureCategories = brochureCategoryCount;
 
       const brochureCount = await this.브로셔_시드_데이터를_생성한다(5);
       results.brochures = brochureCount;
@@ -275,6 +283,38 @@ export class SeedDataContextService {
 
     this.logger.log(
       `공지사항 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
+    );
+    return created;
+  }
+
+  /**
+   * 브로슈어 카테고리 시드 데이터를 생성한다
+   */
+  private async 브로슈어_카테고리_시드_데이터를_생성한다(): Promise<number> {
+    this.logger.log(`브로슈어 카테고리 시드 데이터 생성 시작`);
+
+    const categories = [
+      { name: '회사 소개', description: '회사 소개 관련 브로슈어' },
+      { name: '제품 소개', description: '제품 소개 관련 브로슈어' },
+      { name: '기술 문서', description: '기술 문서 관련 브로슈어' },
+    ];
+
+    let created = 0;
+
+    for (let i = 0; i < categories.length; i++) {
+      await this.categoryService.카테고리를_생성한다({
+        entityType: CategoryEntityType.BROCHURE,
+        name: categories[i].name,
+        description: categories[i].description,
+        isActive: true,
+        order: i,
+        createdBy: 'seed',
+      });
+      created++;
+    }
+
+    this.logger.log(
+      `브로슈어 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
     );
     return created;
   }
@@ -927,9 +967,23 @@ export class SeedDataContextService {
       return 0;
     }
 
+    // 브로슈어 카테고리 조회
+    const categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+      CategoryEntityType.BROCHURE,
+      false,
+    );
+
+    if (categories.length === 0) {
+      this.logger.warn('브로슈어 카테고리가 없습니다. 브로셔 생성을 건너뜁니다.');
+      return 0;
+    }
+
     let created = 0;
 
     for (let i = 0; i < count; i++) {
+      // 랜덤 카테고리 선택
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+
       // 기본 언어로 번역 생성 (나머지 언어는 자동으로 동기화됨)
       await this.brochureContextService.브로슈어를_생성한다({
         translations: [
@@ -939,6 +993,7 @@ export class SeedDataContextService {
             description: faker.lorem.paragraphs(2),
           },
         ],
+        categoryId: randomCategory.id,
         attachments: [
           {
             fileName: `brochure_${i + 1}.pdf`,

@@ -16,6 +16,7 @@ import { existsSync } from 'fs';
 describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
   let testHelper: BaseE2ETest;
   let languageId: string;
+  let categoryId: string;
   let createdBrochureId: string;
 
   // 간단한 PDF 파일 생성 (최소 PDF 헤더)
@@ -44,6 +45,19 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
     }
 
     languageId = koreanLanguage.id;
+
+    // 테스트용 브로슈어 카테고리 생성
+    const categoryResponse = await testHelper
+      .request()
+      .post('/api/admin/brochures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   afterAll(async () => {
@@ -52,6 +66,14 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
       await testHelper
         .request()
         .delete(`/api/admin/brochures/${createdBrochureId}`)
+        .expect(200);
+    }
+
+    // 테스트용 카테고리 삭제
+    if (categoryId) {
+      await testHelper
+        .request()
+        .delete(`/api/admin/brochures/categories/${categoryId}`)
         .expect(200);
     }
 
@@ -75,6 +97,7 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           title: '파일 테스트 브로슈어',
           description: '파일 업로드 테스트용 브로슈어입니다',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', pdfBuffer, { filename: testFileName, contentType: 'application/pdf' })
         .expect(201);
 
@@ -127,6 +150,7 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           title: '다중 파일 테스트 브로슈어',
           description: '여러 파일 업로드 테스트',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', file1Buffer, { filename: file1Name, contentType: 'application/pdf' })
         .attach('files', file2Buffer, { filename: file2Name, contentType: 'application/pdf' })
         .expect(201);
@@ -159,6 +183,7 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           languageId,
           title: '파일 추가 테스트 브로슈어',
         }]))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const brochureId = createResponse.body.id;
@@ -219,6 +244,7 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           languageId,
           title: '파일 삭제 테스트 브로슈어',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', pdfBuffer, { filename: fileName, contentType: 'application/pdf' })
         .expect(201);
 
@@ -269,6 +295,7 @@ describe('[E2E] POST /api/admin/brochures - 파일 업로드', () => {
           languageId,
           title: '잘못된 파일 테스트',
         }]))
+        .field('categoryId', categoryId)
         .attach('files', executableContent, 'malicious.exe')
         .expect(400); // 클라이언트 검증 에러
 

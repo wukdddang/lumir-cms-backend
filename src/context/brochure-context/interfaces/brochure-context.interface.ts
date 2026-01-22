@@ -13,6 +13,7 @@ export interface CreateBrochureTranslationDto {
 
 export interface CreateBrochureDto {
   translations: CreateBrochureTranslationDto[];
+  categoryId: string;
   attachments?: Array<{
     fileName: string;
     fileUrl: string;
