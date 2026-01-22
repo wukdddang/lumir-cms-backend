@@ -235,7 +235,12 @@ export class ElectronicDisclosureController {
   @ApiOperation({
     summary: '전자공시 생성',
     description:
-      '새로운 전자공시를 생성합니다. 제목, 설명과 함께 생성됩니다. 기본값: 비공개, DRAFT 상태',
+      '새로운 전자공시를 생성합니다. 제목, 설명과 함께 생성됩니다. 기본값: 비공개, DRAFT 상태\n\n' +
+      '**필수 필드:**\n' +
+      '- `translations`: JSON 배열 문자열 (다국어 정보)\n' +
+      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n\n' +
+      '**선택 필드:**\n' +
+      '- `files`: 첨부파일 배열 (PDF/JPG/PNG/WEBP/XLSX/DOCX)',
   })
   @ApiBody({
     description:
@@ -345,7 +350,11 @@ export class ElectronicDisclosureController {
   @ApiOperation({
     summary: '전자공시 오더 일괄 수정',
     description:
-      '여러 전자공시의 정렬 순서를 한번에 수정합니다. 프론트엔드에서 변경된 순서대로 전자공시 목록을 전달하면 됩니다.',
+      '여러 전자공시의 정렬 순서를 한번에 수정합니다. ' +
+      '프론트엔드에서 변경된 순서대로 전자공시 목록을 전달하면 됩니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `electronicDisclosures`: 전자공시 ID와 order를 포함한 객체 배열\n' +
+      '  - 각 객체: `{ id: string, order: number }`',
   })
   @ApiResponse({
     status: 200,
@@ -411,7 +420,19 @@ export class ElectronicDisclosureController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: '전자공시 수정',
-    description: '전자공시의 번역 정보 및 파일을 수정합니다.',
+    description:
+      '전자공시의 번역 정보 및 파일을 수정합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `translations`: JSON 배열 문자열 (다국어 정보)\n' +
+      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n\n' +
+      '**선택 필드:**\n' +
+      '- `files`: 첨부파일 배열 (PDF/JPG/PNG/WEBP/XLSX/DOCX)\n\n' +
+      '**파라미터:**\n' +
+      '- `id`: 전자공시 ID (UUID, 필수)\n\n' +
+      '⚠️ **파일 관리 방식**:\n' +
+      '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
+      '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
+      '- 기존 파일을 유지하려면 반드시 해당 파일을 다시 전송해야 합니다',
   })
   @ApiBody({
     description:
@@ -514,7 +535,14 @@ export class ElectronicDisclosureController {
   @Patch(':id/public')
   @ApiOperation({
     summary: '전자공시 공개 상태 수정',
-    description: '전자공시의 공개 상태를 수정합니다.',
+    description:
+      '전자공시의 공개 상태를 수정합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `isPublic`: 공개 여부 (boolean)\n' +
+      '  - `true`: 공개\n' +
+      '  - `false`: 비공개\n\n' +
+      '**파라미터:**\n' +
+      '- `id`: 전자공시 ID (UUID, 필수)',
   })
   @ApiResponse({
     status: 200,
@@ -567,7 +595,13 @@ export class ElectronicDisclosureController {
   @Post('categories')
   @ApiOperation({
     summary: '전자공시 카테고리 생성',
-    description: '새로운 전자공시 카테고리를 생성합니다.',
+    description:
+      '새로운 전자공시 카테고리를 생성합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `name`: 카테고리 이름\n\n' +
+      '**선택 필드:**\n' +
+      '- `description`: 카테고리 설명\n' +
+      '- `order`: 정렬 순서 (기본값: 0)',
   })
   @ApiResponse({
     status: 201,
@@ -588,7 +622,14 @@ export class ElectronicDisclosureController {
   @Patch('categories/:id')
   @ApiOperation({
     summary: '전자공시 카테고리 수정',
-    description: '전자공시 카테고리를 수정합니다.',
+    description:
+      '전자공시 카테고리를 수정합니다.\n\n' +
+      '**선택 필드 (모두 선택):**\n' +
+      '- `name`: 카테고리 이름\n' +
+      '- `description`: 카테고리 설명\n' +
+      '- `order`: 정렬 순서\n\n' +
+      '**파라미터:**\n' +
+      '- `id`: 카테고리 ID (UUID, 필수)',
   })
   @ApiResponse({
     status: 200,
@@ -619,7 +660,12 @@ export class ElectronicDisclosureController {
   @Patch('categories/:id/order')
   @ApiOperation({
     summary: '전자공시 카테고리 오더 변경',
-    description: '전자공시 카테고리의 정렬 순서를 변경합니다.',
+    description:
+      '전자공시 카테고리의 정렬 순서를 변경합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `order`: 정렬 순서 (숫자)\n\n' +
+      '**파라미터:**\n' +
+      '- `id`: 카테고리 ID (UUID, 필수)',
   })
   @ApiResponse({
     status: 200,
