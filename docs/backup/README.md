@@ -13,6 +13,7 @@
 ```bash
 BACKUP_ENABLED=true
 BACKUP_PATH=./backups/database
+BACKUP_COMPRESS=true
 ```
 
 ### 2. 백업 실행
@@ -71,16 +72,22 @@ npm run backup:cleanup      # 만료된 백업 삭제
 
 ## 🔄 복구 방법
 
-SQL 파일이므로 `psql` 명령어로 간단하게 복구:
+압축된 SQL 파일을 `gunzip`으로 압축 해제 후 `psql`로 복구:
 
 ```bash
-# 환경변수 사용
+# 1. 압축 해제
+gunzip -c ./backups/database/daily/backup_daily_20260121_010000.sql.gz > backup.sql
+
+# 2. 복구
 PGPASSWORD="$DATABASE_PASSWORD" psql \
   -h "$DATABASE_HOST" \
   -p "$DATABASE_PORT" \
   -U "$DATABASE_USERNAME" \
   -d "$DATABASE_NAME" \
-  -f "./backups/database/daily/backup_daily_20260121_010000.sql"
+  -f backup.sql
+
+# 또는 한 번에 (Windows에서는 7zip 사용)
+gunzip -c backup_daily_20260121_010000.sql.gz | psql -h localhost -U postgres -d lumir_cms
 ```
 
 ---
@@ -92,6 +99,7 @@ PGPASSWORD="$DATABASE_PASSWORD" psql \
 | **[빠른 시작](./quick-start.md)** | 5분 안에 백업 시작하기 |
 | **[전체 가이드](./database-backup-guide.md)** | 상세 설정 및 사용법 |
 | **[복구 가이드](./sql-restore-guide.md)** | 백업 복구 방법 |
+| **[압축 가이드](./compression-guide.md)** | 백업 압축 설정 및 관리 |
 | **[TypeORM 백업](./typeorm-backup-benefits.md)** | pg_dump 대신 TypeORM 사용 이유 |
 
 ---
@@ -100,6 +108,7 @@ PGPASSWORD="$DATABASE_PASSWORD" psql \
 
 - ✅ **설치 불필요**: pg_dump 없이 TypeORM으로 백업
 - ✅ **자동 실행**: 스케줄러가 자동으로 백업
+- ✅ **고효율 압축**: gzip으로 70-90% 용량 절감
 - ✅ **SQL 파일**: 텍스트로 확인 가능, 편집 가능
 - ✅ **크로스 플랫폼**: Windows, Linux, Mac 모두 지원
 - ✅ **타입 안전**: TypeScript로 구현

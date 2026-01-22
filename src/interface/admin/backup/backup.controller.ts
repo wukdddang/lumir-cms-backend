@@ -60,8 +60,10 @@ export class BackupController {
         message: '백업이 성공적으로 완료되었습니다.',
         result: {
           type: 'daily',
-          filename: 'backup_daily_20260121_153045.dump',
-          size: 1048576,
+          filename: 'backup_daily_20260121_153045.sql.gz',
+          size: 262144,
+          originalSize: 1048576,
+          compressionRatio: 75,
           timestamp: '2026-01-21T15:30:45.123Z',
         },
       },
@@ -80,6 +82,8 @@ export class BackupController {
           type: result.type,
           filename: result.filename,
           size: result.size,
+          originalSize: result.originalSize,
+          compressionRatio: result.compressionRatio,
           timestamp: result.timestamp,
         },
       };
@@ -111,7 +115,7 @@ export class BackupController {
           {
             type: 'four_hourly',
             success: true,
-            filename: 'backup_four_hourly_20260121_153045.dump',
+            filename: 'backup_four_hourly_20260121_153045.sql.gz',
           },
         ],
       },
@@ -168,9 +172,9 @@ export class BackupController {
         backups: [
           {
             type: 'daily',
-            filename: 'backup_daily_20260121_010000.dump',
+            filename: 'backup_daily_20260121_010000.sql.gz',
             createdAt: '2026-01-21T01:00:00.000Z',
-            expiresAt: '2026-01-22T01:00:00.000Z',
+            expiresAt: '2026-02-20T01:00:00.000Z',
           },
         ],
       },
@@ -279,6 +283,7 @@ export class BackupController {
           path: './backups/database',
           maxRetries: 3,
           retryDelayMs: 5000,
+          compress: true,
         },
       },
     },

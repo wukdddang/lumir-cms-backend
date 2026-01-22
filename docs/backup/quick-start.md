@@ -15,6 +15,9 @@ BACKUP_ENABLED=true
 # 백업 저장 경로 (기본값 사용 권장)
 BACKUP_PATH=./backups/database
 
+# 압축 활성화 (기본값: true, 70-90% 용량 절감)
+BACKUP_COMPRESS=true
+
 # 재시도 설정 (선택사항, 기본값 사용 가능)
 BACKUP_MAX_RETRIES=3
 BACKUP_RETRY_DELAY_MS=5000
@@ -28,6 +31,7 @@ BACKUP_RETRY_DELAY_MS=5000
 - ✅ pg_dump 설치 불필요
 - ✅ PostgreSQL 클라이언트 설치 불필요  
 - ✅ Node.js만 있으면 바로 실행 가능
+- ✅ gzip 압축으로 70-90% 용량 절감
 
 ### 3단계: 테스트 백업 실행 (1분)
 
@@ -42,9 +46,9 @@ npm run backup daily
 🚀 백업 스크립트 시작
 📦 daily 백업을 실행합니다...
 ✅ daily 백업 성공
-   파일명: backup_daily_20260121_153045.sql
-   경로: ./backups/database/daily/backup_daily_20260121_153045.sql
-   크기: 2.5 MB
+   파일명: backup_daily_20260121_153045.sql.gz
+   경로: ./backups/database/daily/backup_daily_20260121_153045.sql.gz
+   크기: 256 KB (압축 전: 2.5 MB, 압축률: 89.8%)
 ✅ 백업 스크립트 완료
 ```
 

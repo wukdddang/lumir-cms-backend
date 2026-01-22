@@ -54,7 +54,7 @@
 - **S3 파일 업로드** - AWS S3 기반 파일 관리
 - **권한 스케줄러** - 자동 권한 무효화 감지 및 처리
 - **번역 동기화** - 다국어 콘텐츠 자동 동기화
-- **자동 백업** - GFS 백업 전략 (TypeORM 기반, 설치 불필요)
+- **자동 백업** - GFS 백업 전략 (TypeORM 기반, gzip 압축 70-90% 절감)
 
 ## 🐳 Docker 실행
 
@@ -363,6 +363,7 @@ DEFAULT_LANGUAGE_CODE=en
 # 백업 설정
 BACKUP_ENABLED=true
 BACKUP_PATH=./backups/database
+BACKUP_COMPRESS=true          # gzip 압축 (70-90% 용량 절감)
 BACKUP_MAX_RETRIES=3
 BACKUP_RETRY_DELAY_MS=5000
 
@@ -549,8 +550,9 @@ SSO_BASE_URL=https://sso.lumir.space
 - [권한 로그 모달 제어 정책](./docs/policies/permission-log-modal-control-policy.md)
 - [Public 상태 관리 정책](./docs/policies/public-state-management-policy.md)
 - [권한 스케줄러 가이드](./docs/scheduler/permission-scheduler-guide.md)
-- **[데이터베이스 백업 가이드](./docs/backup/database-backup-guide.md)** ⭐ - GFS 백업 전략
-- [백업 환경변수 설정](./docs/backup/environment-variables.md)
+- **[데이터베이스 백업 가이드](./docs/backup/database-backup-guide.md)** ⭐ - GFS 백업 전략 및 압축
+- **[백업 압축 가이드](./docs/backup/compression-guide.md)** - 용량 최적화 전략
+- [SQL 복구 가이드](./docs/backup/sql-restore-guide.md) - 백업 복구 방법
 - [다국어 전략](./.cursor/multilingual-strategy.mdc)
 - [위키 권한 전략](./.cursor/wiki-permission-strategy.mdc)
 
@@ -738,7 +740,7 @@ UNLICENSED
 - ✅ S3 파일 업로드
 - ✅ 권한 스케줄러 (공지사항, 위키)
 - ✅ 번역 동기화 스케줄러
-- ✅ 자동 백업 시스템 (GFS 백업 전략)
+- ✅ 자동 백업 시스템 (GFS 백업 전략, gzip 압축 70-90% 절감)
 
 ### 테스트 현황
 - ✅ E2E 테스트 (TestContainers 기반)

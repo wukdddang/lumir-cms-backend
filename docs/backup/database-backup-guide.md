@@ -37,7 +37,8 @@
 
 - 각 백업 타입은 독립적인 보관 기간을 가집니다
 - 매일 새벽 5시에 만료된 백업이 자동으로 삭제됩니다
-- 백업 파일은 SQL 평문 형식 (`.sql`)으로 저장됩니다
+- 백업 파일은 **gzip 압축된 SQL 형식** (`.sql.gz`)으로 저장됩니다
+- 압축률: 평균 70-90% (10MB → 1-3MB)
 
 ### 디렉토리 구조
 
@@ -71,6 +72,7 @@ DATABASE_NAME=lumir_cms
 # 백업 설정
 BACKUP_ENABLED=true                          # 백업 활성화 여부 (true/false)
 BACKUP_PATH=./backups/database               # 백업 저장 경로
+BACKUP_COMPRESS=true                         # gzip 압축 활성화 (기본값: true)
 BACKUP_MAX_RETRIES=3                         # 백업 실패 시 재시도 횟수
 BACKUP_RETRY_DELAY_MS=5000                   # 재시도 간격 (밀리초)
 ```
@@ -80,6 +82,9 @@ BACKUP_RETRY_DELAY_MS=5000                   # 재시도 간격 (밀리초)
 ```bash
 # 프로덕션 환경에서는 별도의 백업 경로 사용 권장
 BACKUP_PATH=/var/backups/lumir-cms/database
+
+# 압축 비활성화 (디버깅용, 프로덕션에서는 권장하지 않음)
+BACKUP_COMPRESS=false
 
 # 재시도 설정 조정
 BACKUP_MAX_RETRIES=5
@@ -94,6 +99,7 @@ BACKUP_RETRY_DELAY_MS=10000
 - ✅ PostgreSQL 클라이언트 설치 불필요
 - ✅ pg_dump 설치 불필요
 - ✅ Node.js만 있으면 실행 가능
+- ✅ gzip 압축으로 70-90% 용량 절감
 - ✅ 크로스 플랫폼 지원 (Windows, Linux, Mac)
 
 ### 디렉토리 권한
@@ -378,53 +384,76 @@ tail -f logs/application.log | grep -i backup
 
 ## 백업 복구
 
-백업 파일은 SQL 평문 형식이므로 `psql` 명령어로 간단하게 복구할 수 있습니다.
+백업 파일은 gzip 압축된 SQL 형식이므로 압축 해제 후 `psql` 명령어로 복구할 수 있습니다.
 
 ### psql을 사용한 복구
 
-#### 1. 기본 복구
+#### 1. 기본 복구 (압축 해제 후)
 
 ```bash
-# 환경변수 설정
+# 1단계: 압축 해제
+gunzip -c ./backups/database/daily/backup_daily_20260121_010000.sql.gz > backup_temp.sql
+
+# 2단계: 환경변수 설정
 export PGPASSWORD="your_password"
 
-# 복구 실행
+# 3단계: 복구 실행
 psql \
   -h localhost \
   -p 5432 \
   -U postgres \
   -d lumir_cms \
-  -f ./backups/database/daily/backup_daily_20260121_010000.sql
+  -f backup_temp.sql
+
+# 4단계: 임시 파일 삭제
+rm backup_temp.sql
 ```
 
-#### 2. 새 데이터베이스로 복구
+#### 2. 파이프를 이용한 직접 복구 (권장)
+
+```bash
+# 압축 해제와 복구를 동시에 수행
+gunzip -c ./backups/database/daily/backup_daily_20260121_010000.sql.gz | \
+  PGPASSWORD="your_password" psql -h localhost -p 5432 -U postgres -d lumir_cms
+```
+
+#### 3. 새 데이터베이스로 복구
 
 ```bash
 # 새 데이터베이스 생성
 createdb -h localhost -p 5432 -U postgres lumir_cms_restore
 
-# 복구 실행
-psql \
-  -h localhost \
-  -p 5432 \
-  -U postgres \
-  -d lumir_cms_restore \
-  -f ./backups/database/daily/backup_daily_20260121_010000.sql
+# 압축 해제 및 복구
+gunzip -c ./backups/database/daily/backup_daily_20260121_010000.sql.gz | \
+  PGPASSWORD="your_password" psql -h localhost -p 5432 -U postgres -d lumir_cms_restore
 ```
 
-#### 3. 환경변수를 사용한 복구
+#### 4. 환경변수를 사용한 복구
 
 ```bash
 # .env 파일에서 환경변수 로드
 source .env
 
-# psql 실행
-PGPASSWORD="$DATABASE_PASSWORD" psql \
-  -h "$DATABASE_HOST" \
-  -p "$DATABASE_PORT" \
-  -U "$DATABASE_USERNAME" \
-  -d "$DATABASE_NAME" \
-  -f "./backups/database/daily/backup_daily_20260121_010000.sql"
+# 압축 해제 및 복구
+gunzip -c "./backups/database/daily/backup_daily_20260121_010000.sql.gz" | \
+  PGPASSWORD="$DATABASE_PASSWORD" psql \
+    -h "$DATABASE_HOST" \
+    -p "$DATABASE_PORT" \
+    -U "$DATABASE_USERNAME" \
+    -d "$DATABASE_NAME"
+```
+
+### Windows에서 복구
+
+Windows에서는 `7-Zip`을 사용하여 압축 해제:
+
+```powershell
+# 7-Zip으로 압축 해제
+7z x backup_daily_20260121_010000.sql.gz
+
+# psql로 복구
+$env:PGPASSWORD="your_password"
+psql -h localhost -p 5432 -U postgres -d lumir_cms -f backup_daily_20260121_010000.sql
 ```
 
 ### 복구 스크립트 예시
@@ -435,7 +464,7 @@ PGPASSWORD="$DATABASE_PASSWORD" psql \
 #!/bin/bash
 
 # 백업 복구 스크립트
-# 사용법: ./scripts/restore-backup.sh <backup-file>
+# 사용법: ./scripts/restore-backup.sh <backup-file.sql.gz>
 
 set -e
 
@@ -449,8 +478,8 @@ fi
 
 # 백업 파일 확인
 if [ -z "$1" ]; then
-  echo "Usage: $0 <backup-file>"
-  echo "Example: $0 ./backups/database/daily/backup_daily_20260121_010000.sql"
+  echo "Usage: $0 <backup-file.sql.gz>"
+  echo "Example: $0 ./backups/database/daily/backup_daily_20260121_010000.sql.gz"
   exit 1
 fi
 
@@ -474,7 +503,13 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 0
 fi
 
-PGPASSWORD="$DATABASE_PASSWORD" psql \
+# gzip 압축 해제 및 psql 실행
+gunzip -c "$BACKUP_FILE" | \
+  PGPASSWORD="$DATABASE_PASSWORD" psql \
+    -h "$DATABASE_HOST" \
+    -p "$DATABASE_PORT" \
+    -U "$DATABASE_USERNAME" \
+    -d "$DATABASE_NAME"
   -h "$DATABASE_HOST" \
   -p "$DATABASE_PORT" \
   -U "$DATABASE_USERNAME" \

@@ -39,6 +39,7 @@ export interface BackupConfig {
   path: string;
   maxRetries: number;
   retryDelayMs: number;
+  compress: boolean;
 }
 
 /**
@@ -50,6 +51,8 @@ export interface BackupResult {
   filename: string;
   path: string;
   size: number;
+  originalSize?: number;
+  compressionRatio?: number;
   timestamp: Date;
   error?: string;
 }

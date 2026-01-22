@@ -3,7 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import * as zlib from 'zlib';
+import { promisify } from 'util';
 import { BackupType, BackupResult, BackupConfig } from './backup.types';
+
+const gzip = promisify(zlib.gzip);
 
 /**
  * 데이터베이스 백업 서비스
@@ -32,6 +36,7 @@ export class BackupService {
         'BACKUP_RETRY_DELAY_MS',
         5000,
       ),
+      compress: this.configService.get<string>('BACKUP_COMPRESS', 'true') === 'true',
     };
   }
 
@@ -61,21 +66,39 @@ export class BackupService {
       await this.ensureBackupDirectory(type);
 
       // SQL 백업 생성
-      await this.generateSqlBackup(backupPath);
+      const sqlContent = await this.generateSqlBackup();
 
-      // 파일 크기 확인
-      const stats = await fs.stat(backupPath);
+      let finalPath = backupPath;
+      let originalSize = Buffer.byteLength(sqlContent, 'utf8');
+      let compressedSize = originalSize;
 
-      this.logger.log(
-        `백업 성공: ${type} - ${filename} (${this.formatBytes(stats.size)})`,
-      );
+      if (this.config.compress) {
+        // gzip 압축
+        const compressed = await gzip(sqlContent);
+        finalPath = `${backupPath}.gz`;
+        await fs.writeFile(finalPath, compressed);
+        compressedSize = compressed.length;
+
+        const compressionRatio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+        this.logger.log(
+          `백업 성공: ${type} - ${path.basename(finalPath)} (원본: ${this.formatBytes(originalSize)}, 압축: ${this.formatBytes(compressedSize)}, 압축률: ${compressionRatio}%)`,
+        );
+      } else {
+        // 압축 없이 저장
+        await fs.writeFile(finalPath, sqlContent, 'utf8');
+        this.logger.log(
+          `백업 성공: ${type} - ${filename} (${this.formatBytes(originalSize)})`,
+        );
+      }
 
       return {
         success: true,
         type,
-        filename,
-        path: backupPath,
-        size: stats.size,
+        filename: path.basename(finalPath),
+        path: finalPath,
+        size: compressedSize,
+        originalSize,
+        compressionRatio: this.config.compress ? ((1 - compressedSize / originalSize) * 100) : 0,
         timestamp,
       };
     } catch (error) {
@@ -95,7 +118,7 @@ export class BackupService {
   /**
    * TypeORM을 사용하여 SQL 백업을 생성합니다.
    */
-  private async generateSqlBackup(backupPath: string): Promise<void> {
+  private async generateSqlBackup(): Promise<string> {
     let retries = 0;
 
     while (retries < this.config.maxRetries) {
@@ -156,11 +179,10 @@ export class BackupService {
             sqlLines.push(seq);
           }
 
-          // 파일로 저장
-          await fs.writeFile(backupPath, sqlLines.join('\n'), 'utf8');
-
-          this.logger.debug(`백업 파일 생성 완료: ${backupPath}`);
-          return;
+          // SQL 문자열 반환
+          const sqlContent = sqlLines.join('\n');
+          this.logger.debug(`백업 SQL 생성 완료 (크기: ${this.formatBytes(Buffer.byteLength(sqlContent, 'utf8'))})`);
+          return sqlContent;
         } finally {
           await queryRunner.release();
         }
@@ -180,6 +202,9 @@ export class BackupService {
         await this.sleep(this.config.retryDelayMs);
       }
     }
+
+    // while 루프가 정상적으로 종료된 경우 (이론적으로 도달 불가)
+    throw new Error(`백업 생성 실패: 최대 재시도 횟수(${this.config.maxRetries})를 초과했습니다.`);
   }
 
   /**
@@ -339,6 +364,8 @@ export class BackupService {
     const minute = String(timestamp.getMinutes()).padStart(2, '0');
     const second = String(timestamp.getSeconds()).padStart(2, '0');
 
+    // 압축 여부에 따라 확장자 결정 (.sql 또는 .sql.gz)
+    // 실제 압축은 나중에 수행되므로 여기서는 .sql만 반환
     return `backup_${type}_${year}${month}${day}_${hour}${minute}${second}.sql`;
   }
 

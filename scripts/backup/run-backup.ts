@@ -73,6 +73,10 @@ async function runBackup(
     console.log(`   파일명: ${result.filename}`);
     console.log(`   경로: ${result.path}`);
     console.log(`   크기: ${formatBytes(result.size)}`);
+    if (result.originalSize && result.compressionRatio) {
+      console.log(`   원본 크기: ${formatBytes(result.originalSize)}`);
+      console.log(`   압축률: ${result.compressionRatio.toFixed(1)}%`);
+    }
     console.log(`   시간: ${result.timestamp.toISOString()}`);
   } else {
     console.error(`❌ ${type} 백업 실패`);
@@ -97,7 +101,12 @@ async function runAllBackups(backupService: BackupService): Promise<void> {
       const result = await backupService.createBackup(type);
 
       if (result.success) {
-        console.log(`✅ ${type} 백업 성공 - ${formatBytes(result.size)}`);
+        console.log(`✅ ${type} 백업 성공`);
+        if (result.originalSize && result.compressionRatio) {
+          console.log(`   원본: ${formatBytes(result.originalSize)} → 압축: ${formatBytes(result.size)} (${result.compressionRatio.toFixed(1)}% 절약)`);
+        } else {
+          console.log(`   크기: ${formatBytes(result.size)}`);
+        }
         results.push({ type, success: true });
       } else {
         console.error(`❌ ${type} 백업 실패 - ${result.error}`);
