@@ -100,6 +100,7 @@ export class ElectronicDisclosureBusinessService {
       title: string;
       description?: string;
     }>,
+    categoryId: string,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<ElectronicDisclosure> {
@@ -134,6 +135,7 @@ export class ElectronicDisclosureBusinessService {
     const result =
       await this.electronicDisclosureContextService.전자공시를_생성한다(
         translations,
+        categoryId,
         createdBy,
         attachments,
       );

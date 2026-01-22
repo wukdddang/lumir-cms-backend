@@ -8,6 +8,7 @@ describe('전자공시 번역 동기화 API', () => {
   let englishLanguageId: string;
   let japaneseLanguageId: string;
   let chineseLanguageId: string;
+  let categoryId: string;
   let syncHandler: SyncElectronicDisclosureTranslationsHandler;
 
   beforeAll(async () => {
@@ -40,6 +41,19 @@ describe('전자공시 번역 동기화 API', () => {
     expect(englishLanguageId).toBeDefined();
     expect(japaneseLanguageId).toBeDefined();
     expect(chineseLanguageId).toBeDefined();
+
+    // 전자공시 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/electronic-disclosures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('번역 자동 동기화 (isSynced=true)', () => {
@@ -48,6 +62,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -114,6 +129,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -206,6 +222,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -298,6 +315,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -342,6 +360,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -390,6 +409,7 @@ describe('전자공시 번역 동기화 API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([

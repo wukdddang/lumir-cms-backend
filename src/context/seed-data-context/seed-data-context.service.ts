@@ -186,6 +186,10 @@ export class SeedDataContextService {
       // 추가 다국어 엔티티들
       this.logger.log('추가 다국어 엔티티 데이터 생성 중...');
       
+      // 전자공시 카테고리
+      const electronicDisclosureCategoryCount = await this.전자공시_카테고리_시드_데이터를_생성한다();
+      results.electronicDisclosureCategories = electronicDisclosureCategoryCount;
+      
       const electronicDisclosureCount = await this.전자공시_시드_데이터를_생성한다(10);
       results.electronicDisclosures = electronicDisclosureCount;
 
@@ -315,6 +319,39 @@ export class SeedDataContextService {
 
     this.logger.log(
       `브로슈어 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
+    );
+    return created;
+  }
+
+  /**
+   * 전자공시 카테고리 시드 데이터를 생성한다
+   */
+  private async 전자공시_카테고리_시드_데이터를_생성한다(): Promise<number> {
+    this.logger.log(`전자공시 카테고리 시드 데이터 생성 시작`);
+
+    const categories = [
+      { name: '분기보고서', description: '분기별 실적 보고서' },
+      { name: '반기보고서', description: '반기별 실적 보고서' },
+      { name: '사업보고서', description: '연간 사업 보고서' },
+      { name: '주요사항보고서', description: '주요 사항 보고서' },
+    ];
+
+    let created = 0;
+
+    for (let i = 0; i < categories.length; i++) {
+      await this.categoryService.카테고리를_생성한다({
+        entityType: CategoryEntityType.ELECTRONIC_DISCLOSURE,
+        name: categories[i].name,
+        description: categories[i].description,
+        isActive: true,
+        order: i,
+        createdBy: 'seed',
+      });
+      created++;
+    }
+
+    this.logger.log(
+      `전자공시 카테고리 시드 데이터 생성 완료 - 생성된 개수: ${created}`,
     );
     return created;
   }
@@ -1033,6 +1070,17 @@ export class SeedDataContextService {
       return 0;
     }
 
+    // 전자공시 카테고리 조회
+    const categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+      CategoryEntityType.ELECTRONIC_DISCLOSURE,
+      false,
+    );
+
+    if (categories.length === 0) {
+      this.logger.warn('전자공시 카테고리가 없습니다. 전자공시 생성을 건너뜁니다.');
+      return 0;
+    }
+
     let created = 0;
 
     const currentYear = new Date().getFullYear();
@@ -1050,6 +1098,9 @@ export class SeedDataContextService {
       const quarter = quarters[i % quarters.length];
       const year = currentYear - Math.floor(i / 4);
 
+      // 랜덤 카테고리 선택
+      const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+
       await this.electronicDisclosureContextService.전자공시를_생성한다(
         [
           {
@@ -1058,6 +1109,7 @@ export class SeedDataContextService {
             description: `${year}년 ${quarter} ${type} 공시 내용입니다. 회사의 재무상태, 경영성과 및 주요 사업 현황을 포함하고 있습니다.`,
           },
         ],
+        randomCategory.id,
         'seed',
         [
           {

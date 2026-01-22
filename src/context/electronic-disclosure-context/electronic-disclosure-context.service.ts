@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventBus } from '@nestjs/cqrs';
 import { ElectronicDisclosureService } from '@domain/core/electronic-disclosure/electronic-disclosure.service';
 import { LanguageService } from '@domain/common/language/language.service';
+import { CategoryService } from '@domain/common/category/category.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
 import { ElectronicDisclosureTranslationUpdatedEvent } from './events/electronic-disclosure-translation-updated.event';
 
@@ -18,6 +19,7 @@ export class ElectronicDisclosureContextService {
   constructor(
     private readonly electronicDisclosureService: ElectronicDisclosureService,
     private readonly languageService: LanguageService,
+    private readonly categoryService: CategoryService,
     private readonly configService: ConfigService,
     private readonly eventBus: EventBus,
   ) {}
@@ -92,6 +94,7 @@ export class ElectronicDisclosureContextService {
       title: string;
       description?: string;
     }>,
+    categoryId: string,
     createdBy?: string,
     attachments?: Array<{
       fileName: string;
@@ -101,6 +104,11 @@ export class ElectronicDisclosureContextService {
     }>,
   ): Promise<ElectronicDisclosure> {
     this.logger.log(`전자공시 생성 시작 - 번역 수: ${translations.length}`);
+
+    // categoryId 필수 검증
+    if (!categoryId) {
+      throw new BadRequestException('categoryId는 필수입니다.');
+    }
 
     // 1. 언어 ID 검증
     const languageIds = translations.map((t) => t.languageId);
@@ -165,12 +173,23 @@ export class ElectronicDisclosureContextService {
       );
     }
 
+    // 9. 카테고리 매핑 생성
+    this.logger.log(
+      `전자공시 카테고리 매핑 생성 시작 - 카테고리 ID: ${categoryId}`,
+    );
+    await this.categoryService.엔티티에_카테고리를_매핑한다(
+      disclosure.id,
+      categoryId,
+      createdBy,
+    );
+    this.logger.log(`전자공시 카테고리 매핑 생성 완료`);
+
     const totalTranslations = translations.length + remainingLanguages.length;
     this.logger.log(
       `전자공시 생성 완료 - ID: ${disclosure.id}, 전체 번역 수: ${totalTranslations} (개별: ${translations.length}, 자동: ${remainingLanguages.length})`,
     );
 
-    // 9. 번역 포함하여 재조회
+    // 10. 번역 포함하여 재조회
     return await this.electronicDisclosureService.ID로_전자공시를_조회한다(
       disclosure.id,
     );

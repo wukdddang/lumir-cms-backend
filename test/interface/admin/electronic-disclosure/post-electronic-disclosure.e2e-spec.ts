@@ -3,6 +3,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -26,6 +27,19 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // 전자공시 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/electronic-disclosures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -44,6 +58,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // Then
@@ -109,6 +124,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // Then
@@ -142,6 +158,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // Then
@@ -171,6 +188,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('PDF content'), 'disclosure.pdf')
         .expect(201);
 
@@ -199,6 +217,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('PDF content'), 'report.pdf')
         .attach('files', Buffer.from('Excel content'), 'data.xlsx')
         .expect(201);
@@ -232,6 +251,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(400);
     });
 
@@ -249,6 +269,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(400);
     });
   });
@@ -306,6 +327,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .attach('files', Buffer.from('text content'), 'test.txt');
 
       expect([400, 500]).toContain(response.status);
@@ -326,6 +348,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -354,6 +377,7 @@ describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;

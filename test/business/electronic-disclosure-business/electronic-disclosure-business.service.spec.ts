@@ -214,12 +214,13 @@ describe('ElectronicDisclosureBusinessService', () => {
       );
 
       // When
-      const result = await service.전자공시를_생성한다(translations, createdBy, undefined);
+      const categoryId = 'category-1';
+      const result = await service.전자공시를_생성한다(translations, categoryId, createdBy, undefined);
 
       // Then
       expect(
         electronicDisclosureContextService.전자공시를_생성한다,
-      ).toHaveBeenCalledWith(translations, createdBy, undefined);
+      ).toHaveBeenCalledWith(translations, categoryId, createdBy, undefined);
       expect(result).toEqual(mockDisclosure);
     });
 
@@ -264,7 +265,8 @@ describe('ElectronicDisclosureBusinessService', () => {
       );
 
       // When
-      const result = await service.전자공시를_생성한다(translations, createdBy, files);
+      const categoryId = 'category-1';
+      const result = await service.전자공시를_생성한다(translations, categoryId, createdBy, files);
 
       // Then
       expect(storageService.uploadFiles).toHaveBeenCalledWith(
@@ -275,6 +277,7 @@ describe('ElectronicDisclosureBusinessService', () => {
         electronicDisclosureContextService.전자공시를_생성한다,
       ).toHaveBeenCalledWith(
         translations,
+        categoryId,
         createdBy,
         expect.arrayContaining([
           expect.objectContaining({

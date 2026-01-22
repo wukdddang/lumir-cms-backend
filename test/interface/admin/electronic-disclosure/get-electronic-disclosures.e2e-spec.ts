@@ -3,6 +3,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
   const testSuite = new BaseE2ETest();
   let languageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -26,6 +27,19 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
     );
 
     languageId = koreanLanguage.id;
+
+    // 전자공시 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/electronic-disclosures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/electronic-disclosures (목록 조회)', () => {
@@ -43,6 +57,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       // When - 목록 조회
@@ -94,6 +109,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const createResponse1 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData1))
         .expect(201);
 
@@ -117,6 +133,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData2))
         .expect(201);
 
@@ -138,6 +155,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
         testSuite
           .request()
           .post('/api/admin/electronic-disclosures')
+          .field('categoryId', categoryId)
           .field(
             'translations',
             JSON.stringify([
@@ -183,12 +201,14 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData1))
         .expect(201);
 
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData2))
         .expect(201);
 
@@ -215,6 +235,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const firstResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData1))
         .expect(201);
 
@@ -226,6 +247,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const secondResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData2))
         .expect(201);
 
@@ -260,6 +282,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .expect(201);
 
@@ -295,6 +318,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
         testSuite
           .request()
           .post('/api/admin/electronic-disclosures')
+          .field('categoryId', categoryId)
           .field(
             'translations',
             JSON.stringify([
@@ -334,6 +358,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .expect(201);
 
@@ -368,6 +393,7 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .attach('files', Buffer.from('PDF content'), 'test.pdf')
         .expect(201);
@@ -434,18 +460,21 @@ describe('GET /api/admin/electronic-disclosures (전자공시 조회)', () => {
       const disclosure1 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations1))
         .expect(201);
 
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations2))
         .expect(201);
 
       const disclosure3 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations3))
         .expect(201);
 

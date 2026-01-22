@@ -4,6 +4,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
   const testSuite = new BaseE2ETest();
   let languageId: string;
   let englishLanguageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -31,6 +32,19 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
 
     languageId = koreanLanguage.id;
     englishLanguageId = englishLanguage.id;
+
+    // 전자공시 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/electronic-disclosures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('PUT /api/admin/electronic-disclosures/:id (전자공시 수정)', () => {
@@ -48,6 +62,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -87,6 +102,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .attach('files', Buffer.from('Old PDF'), 'old.pdf')
         .expect(201);
@@ -129,6 +145,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .attach('files', Buffer.from('PDF'), 'test.pdf')
         .expect(201);
@@ -170,6 +187,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -224,6 +242,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -250,6 +269,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -287,6 +307,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -330,18 +351,21 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
       const disclosure1 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations1))
         .expect(201);
 
       const disclosure2 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations2))
         .expect(201);
 
       const disclosure3 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translations3))
         .expect(201);
 
@@ -417,6 +441,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -449,6 +474,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(translationsData))
         .attach('files', Buffer.from('PDF'), 'test.pdf')
         .expect(201);
@@ -493,6 +519,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;
@@ -525,6 +552,7 @@ describe('PUT/PATCH/DELETE /api/admin/electronic-disclosures (전자공시 수�
         .request()
         .post('/api/admin/electronic-disclosures')
         .field('translations', JSON.stringify(translationsData))
+        .field('categoryId', categoryId)
         .expect(201);
 
       const disclosureId = createResponse.body.id;

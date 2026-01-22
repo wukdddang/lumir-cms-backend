@@ -5,6 +5,7 @@ describe('전자공시 CRUD API', () => {
   let koreanLanguageId: string;
   let englishLanguageId: string;
   let japaneseLanguageId: string;
+  let categoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -31,6 +32,19 @@ describe('전자공시 CRUD API', () => {
     expect(koreanLanguageId).toBeDefined();
     expect(englishLanguageId).toBeDefined();
     expect(japaneseLanguageId).toBeDefined();
+
+    // 전자공시 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/electronic-disclosures/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: 'E2E 테스트용 카테고리',
+        order: 0,
+      })
+      .expect(201);
+
+    categoryId = categoryResponse.body.id;
   });
 
   describe('POST /api/admin/electronic-disclosures (전자공시 생성)', () => {
@@ -39,6 +53,7 @@ describe('전자공시 CRUD API', () => {
       const response = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -79,6 +94,7 @@ describe('전자공시 CRUD API', () => {
       const response = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -135,6 +151,7 @@ describe('전자공시 CRUD API', () => {
       const response = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -170,6 +187,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -184,6 +202,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -198,6 +217,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -229,6 +249,7 @@ describe('전자공시 CRUD API', () => {
         await testSuite
           .request()
           .post('/api/admin/electronic-disclosures')
+          .field('categoryId', categoryId)
           .field(
             'translations',
             JSON.stringify([
@@ -269,6 +290,7 @@ describe('전자공시 CRUD API', () => {
       const disclosure1 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -290,6 +312,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -329,6 +352,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -384,6 +408,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -446,6 +471,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -506,6 +532,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -544,6 +571,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -582,6 +610,7 @@ describe('전자공시 CRUD API', () => {
       const disclosure1 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -596,6 +625,7 @@ describe('전자공시 CRUD API', () => {
       const disclosure2 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -610,6 +640,7 @@ describe('전자공시 CRUD API', () => {
       const disclosure3 = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -667,6 +698,7 @@ describe('전자공시 CRUD API', () => {
       const createResponse = await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -711,6 +743,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -725,6 +758,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -739,6 +773,7 @@ describe('전자공시 CRUD API', () => {
       await testSuite
         .request()
         .post('/api/admin/electronic-disclosures')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
