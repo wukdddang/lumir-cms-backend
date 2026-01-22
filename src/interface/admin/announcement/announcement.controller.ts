@@ -688,7 +688,30 @@ export class AnnouncementController {
   @Post()
   @ApiOperation({
     summary: '공지사항 생성',
-    description: '새로운 공지사항을 생성합니다.',
+    description:
+      '새로운 공지사항을 생성합니다.\n\n' +
+      '**📋 Request Body 작성 가이드:**\n\n' +
+      '1. **기본 정보** (필수)\n' +
+      '   - `title`: 공지사항 제목\n' +
+      '   - `content`: 공지사항 내용 (HTML 지원)\n\n' +
+      '2. **공개 설정**\n' +
+      '   - `isPublic`: `true`(전사공개) 또는 `false`(제한공개)\n' +
+      '   - `isFixed`: 상단 고정 여부\n' +
+      '   - `mustRead`: 필독 여부\n' +
+      '   - `releasedAt`, `expiredAt`: 공개 기간 (ISO 8601 형식)\n\n' +
+      '3. **권한 설정** (제한공개 시)\n' +
+      '   - `permissionEmployeeIds`: 특정 직원 ID 배열\n' +
+      '   - `permissionDepartmentIds`: 부서 ID 배열\n' +
+      '   - `permissionRankIds`: 직급 ID 배열\n' +
+      '   - `permissionPositionIds`: 직책 ID 배열\n\n' +
+      '4. **설문조사 추가** (선택사항)\n' +
+      '   - `survey` 객체에 설문 정보 포함\n' +
+      '   - `survey.questions` 배열에 질문 추가\n' +
+      '   - 각 질문의 `type`에 따라 필요한 `form` 데이터 다름\n\n' +
+      '⚠️ **주의사항:**\n' +
+      '- 날짜는 ISO 8601 형식 (예: `2024-01-01T00:00:00Z`)\n' +
+      '- 설문 질문 타입별로 필요한 `form` 필드가 다릅니다\n' +
+      '- 제한공개 시 최소 하나의 권한 필드는 필수입니다',
   })
   @ApiResponse({
     status: 201,
@@ -754,7 +777,30 @@ export class AnnouncementController {
   @Put(':id')
   @ApiOperation({
     summary: '공지사항 수정',
-    description: '공지사항을 수정합니다. (비공개 상태에서만 가능)',
+    description:
+      '공지사항을 수정합니다. (비공개 상태에서만 가능)\n\n' +
+      '**📋 Request Body 작성 가이드:**\n\n' +
+      '1. **수정 가능한 필드** (모두 선택사항)\n' +
+      '   - `title`: 공지사항 제목\n' +
+      '   - `content`: 공지사항 내용 (HTML 지원)\n' +
+      '   - `isFixed`: 상단 고정 여부\n' +
+      '   - `mustRead`: 필독 여부\n' +
+      '   - `releasedAt`, `expiredAt`: 공개 기간\n\n' +
+      '2. **권한 설정 수정**\n' +
+      '   - `isPublic`: 공개 방식 변경\n' +
+      '   - `permissionEmployeeIds`: 특정 직원 권한\n' +
+      '   - `permissionDepartmentIds`: 부서 권한\n' +
+      '   - `permissionRankIds`: 직급 권한\n' +
+      '   - `permissionPositionIds`: 직책 권한\n\n' +
+      '3. **설문조사 수정/추가**\n' +
+      '   - `survey` 객체를 포함하면 기존 설문 수정 또는 새 설문 생성\n' +
+      '   - 기존 설문이 있으면 덮어씌워집니다\n\n' +
+      '4. **첨부파일 수정**\n' +
+      '   - `attachments` 배열을 전송하면 기존 첨부파일 완전 교체\n\n' +
+      '⚠️ **주의사항:**\n' +
+      '- 공개된 공지사항은 수정 불가 (먼저 비공개로 전환 필요)\n' +
+      '- 수정하지 않을 필드는 생략 가능합니다\n' +
+      '- 날짜는 ISO 8601 형식 사용',
   })
   @ApiParam({
     name: 'id',

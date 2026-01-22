@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Survey } from '@domain/sub/survey/survey.entity';
 import { SurveyQuestion } from '@domain/sub/survey/survey-question.entity';
+import { InqueryType } from '@domain/sub/survey/inquery-type.types';
 
 /**
  * 설문 질문 응답 DTO
@@ -12,8 +13,22 @@ export class SurveyQuestionResponseDto {
   @ApiProperty({ description: '질문 제목' })
   title: string;
 
-  @ApiProperty({ description: '질문 타입' })
-  type: string;
+  @ApiProperty({
+    description:
+      '질문 타입\n\n' +
+      '사용 가능한 타입:\n' +
+      '- `short_answer`: 단답형 (짧은 텍스트 입력)\n' +
+      '- `paragraph`: 장문형 (긴 텍스트 입력)\n' +
+      '- `multiple_choice`: 객관식 (단일 선택)\n' +
+      '- `dropdown`: 드롭다운 (단일 선택)\n' +
+      '- `checkboxes`: 체크박스 (다중 선택)\n' +
+      '- `file_upload`: 파일 업로드\n' +
+      '- `datetime`: 날짜/시간 선택\n' +
+      '- `linear_scale`: 선형 척도 (1-10)\n' +
+      '- `grid_scale`: 그리드 척도',
+    enum: InqueryType,
+  })
+  type: InqueryType;
 
   @ApiProperty({ description: '질문 폼 데이터', required: false })
   form?: any;
