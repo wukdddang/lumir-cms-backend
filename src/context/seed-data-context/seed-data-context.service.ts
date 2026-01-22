@@ -353,20 +353,41 @@ export class SeedDataContextService {
           .sort(() => 0.5 - Math.random())
           .slice(0, Math.min(3, departments.length));
         permissionDepartmentIds = selectedDepts;
-      } else if (i >= 9 && i < 12 && rankCodes.length > 0) {
-        // 10~12번: 특정 직급만 (제한 공개)
+      } else if (i >= 9 && i < 11 && rankCodes.length > 0) {
+        // 10~11번: 특정 직급만 (제한 공개)
         isPublic = false;
         const selectedRanks = rankCodes
           .sort(() => 0.5 - Math.random())
           .slice(0, Math.min(2, rankCodes.length));
         permissionRankCodes = selectedRanks;
-      } else if (i >= 12 && positionCodes.length > 0) {
-        // 13번 이후: 특정 직책만 (제한 공개)
+      } else if (i >= 11 && i < 13 && positionCodes.length > 0) {
+        // 12~13번: 특정 직책만 (제한 공개)
         isPublic = false;
         const selectedPositions = positionCodes
           .sort(() => 0.5 - Math.random())
           .slice(0, Math.min(2, positionCodes.length));
         permissionPositionCodes = selectedPositions;
+      } else if (i >= 13 && employeeIds.length > 0 && departments.length > 0) {
+        // 14번 이후: 여러 권한 조합 (OR 조건 테스트)
+        isPublic = false;
+        // 직원 ID 일부 + 부서 ID 일부 조합
+        const selectedEmployees = employeeIds
+          .sort(() => 0.5 - Math.random())
+          .slice(0, Math.min(3, employeeIds.length));
+        const selectedDepts = departments
+          .sort(() => 0.5 - Math.random())
+          .slice(0, Math.min(2, departments.length));
+        
+        permissionEmployeeIds = selectedEmployees;
+        permissionDepartmentIds = selectedDepts;
+        
+        // 일부는 직급도 추가 (OR 조건 3개)
+        if (i % 2 === 0 && rankCodes.length > 0) {
+          const selectedRanks = rankCodes
+            .sort(() => 0.5 - Math.random())
+            .slice(0, Math.min(1, rankCodes.length));
+          permissionRankCodes = selectedRanks;
+        }
       }
 
       // 첨부파일 더미 데이터 (일부 공지사항에만)
