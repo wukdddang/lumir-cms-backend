@@ -42,7 +42,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
 
     for (const category of defaultCategories) {
       await queryRunner.query(`
-        INSERT INTO "categories" (id, "entityType", name, description, "isActive", "order", "createdAt", "updatedAt", version)
+        INSERT INTO "categories" (id, "entity_type", name, description, "is_active", "order", "created_at", "updated_at", version)
         SELECT 
           gen_random_uuid(),
           '${category.entityType}',
@@ -55,7 +55,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
           1
         WHERE NOT EXISTS (
           SELECT 1 FROM "categories" 
-          WHERE "entityType" = '${category.entityType}' 
+          WHERE "entity_type" = '${category.entityType}' 
           AND name = '${category.name}'
         )
       `);
@@ -66,100 +66,100 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     // 2-1. brochures 테이블
     await queryRunner.query(`
       UPDATE "brochures" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'brochure' AND name = '미분류'
+        WHERE "entity_type" = 'brochure' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-2. irs 테이블
     await queryRunner.query(`
       UPDATE "irs" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'ir' AND name = '미분류'
+        WHERE "entity_type" = 'ir' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-3. electronic_disclosures 테이블
     await queryRunner.query(`
       UPDATE "electronic_disclosures" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'electronic_disclosure' AND name = '미분류'
+        WHERE "entity_type" = 'electronic_disclosure' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-4. shareholders_meetings 테이블
     await queryRunner.query(`
       UPDATE "shareholders_meetings" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'shareholders_meeting' AND name = '미분류'
+        WHERE "entity_type" = 'shareholders_meeting' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-5. announcements 테이블
     await queryRunner.query(`
       UPDATE "announcements" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'announcement' AND name = '미분류'
+        WHERE "entity_type" = 'announcement' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-6. lumir_stories 테이블
     await queryRunner.query(`
       UPDATE "lumir_stories" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'lumir_story' AND name = '미분류'
+        WHERE "entity_type" = 'lumir_story' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-7. video_galleries 테이블
     await queryRunner.query(`
       UPDATE "video_galleries" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'video_gallery' AND name = '미분류'
+        WHERE "entity_type" = 'video_gallery' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-8. news 테이블
     await queryRunner.query(`
       UPDATE "news" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'news' AND name = '미분류'
+        WHERE "entity_type" = 'news' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
 
     // 2-9. main_popups 테이블
     await queryRunner.query(`
       UPDATE "main_popups" 
-      SET "categoryId" = (
+      SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entityType" = 'main_popup' AND name = '미분류'
+        WHERE "entity_type" = 'main_popup' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "categoryId" IS NULL
+      WHERE "category_id" IS NULL
     `);
   }
 
@@ -183,10 +183,10 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     for (const { table, entityType } of tables) {
       await queryRunner.query(`
         UPDATE "${table}" 
-        SET "categoryId" = NULL
-        WHERE "categoryId" = (
+        SET "category_id" = NULL
+        WHERE "category_id" = (
           SELECT id FROM "categories" 
-          WHERE "entityType" = '${entityType}' AND name = '미분류'
+          WHERE "entity_type" = '${entityType}' AND name = '미분류'
           LIMIT 1
         )
       `);
@@ -196,7 +196,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     await queryRunner.query(`
       DELETE FROM "categories" 
       WHERE name = '미분류' 
-      AND "entityType" IN (
+      AND "entity_type" IN (
         'brochure', 'ir', 'electronic_disclosure', 'shareholders_meeting', 
         'announcement', 'lumir_story', 'video_gallery', 'news', 'main_popup'
       )
