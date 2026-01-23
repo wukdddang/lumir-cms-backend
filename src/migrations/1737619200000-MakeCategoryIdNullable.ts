@@ -27,7 +27,38 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
   name = 'SetDefaultCategoryForNullValues1737619200000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // 1. 각 엔티티 타입별 기본 카테고리 생성 (이미 존재하면 무시)
+    // 1. 각 테이블에 category_id 컬럼 추가 (없는 경우에만)
+    const tables = [
+      'brochures',
+      'irs',
+      'electronic_disclosures',
+      'shareholders_meetings',
+      'announcements',
+      'lumir_stories',
+      'video_galleries',
+      'news',
+      'main_popups',
+    ];
+
+    for (const table of tables) {
+      // 컬럼이 존재하는지 확인
+      const columnExists = await queryRunner.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = '${table}' 
+        AND column_name = 'category_id'
+      `);
+
+      // 컬럼이 없으면 추가
+      if (columnExists.length === 0) {
+        await queryRunner.query(`
+          ALTER TABLE "${table}" 
+          ADD COLUMN "category_id" uuid
+        `);
+      }
+    }
+
+    // 2. 각 엔티티 타입별 기본 카테고리 생성 (이미 존재하면 무시)
     const defaultCategories = [
       { entityType: 'brochure', name: '미분류', description: '기본 브로슈어 카테고리' },
       { entityType: 'ir', name: '미분류', description: '기본 IR 카테고리' },
@@ -161,13 +192,18 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       )
       WHERE "category_id" IS NULL
     `);
+
+    // 3. 모든 category_id를 NOT NULL로 변경 (기본 카테고리가 할당되었으므로)
+    for (const table of tables) {
+      await queryRunner.query(`
+        ALTER TABLE "${table}" 
+        ALTER COLUMN "category_id" SET NOT NULL
+      `);
+    }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    // 롤백: 기본 카테고리를 사용하는 데이터를 null로 되돌림
-    // (주의: 이는 데이터 손실을 방지하기 위한 것이며, 실제로는 롤백하지 않는 것을 권장)
-
-    // 각 테이블의 기본 카테고리를 null로 변경
+    // 롤백: NOT NULL 제약조건 제거 및 컬럼 삭제
     const tables = [
       { table: 'brochures', entityType: 'brochure' },
       { table: 'irs', entityType: 'ir' },
@@ -180,6 +216,24 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       { table: 'main_popups', entityType: 'main_popup' },
     ];
 
+    // 1. NOT NULL 제약조건 제거
+    for (const { table } of tables) {
+      const columnExists = await queryRunner.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = '${table}' 
+        AND column_name = 'category_id'
+      `);
+
+      if (columnExists.length > 0) {
+        await queryRunner.query(`
+          ALTER TABLE "${table}" 
+          ALTER COLUMN "category_id" DROP NOT NULL
+        `);
+      }
+    }
+
+    // 2. 각 테이블의 기본 카테고리를 null로 변경
     for (const { table, entityType } of tables) {
       await queryRunner.query(`
         UPDATE "${table}" 
@@ -192,7 +246,15 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       `);
     }
 
-    // 기본 카테고리 삭제 (사용되지 않는 경우에만)
+    // 3. category_id 컬럼 삭제
+    for (const { table } of tables) {
+      await queryRunner.query(`
+        ALTER TABLE "${table}" 
+        DROP COLUMN IF EXISTS "category_id"
+      `);
+    }
+
+    // 4. 기본 카테고리 삭제
     await queryRunner.query(`
       DELETE FROM "categories" 
       WHERE name = '미분류' 
