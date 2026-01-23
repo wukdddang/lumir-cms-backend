@@ -353,9 +353,10 @@ export class VideoGalleryBusinessService {
   async 비디오갤러리를_수정한다(
     videoGalleryId: string,
     title: string,
+    updatedBy: string,
+    categoryId: string,
     description?: string | null,
     youtubeUrls?: string[],
-    updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<VideoGallery> {
     this.logger.log(`비디오갤러리 수정 시작 - 비디오갤러리 ID: ${videoGalleryId}`);
@@ -437,6 +438,7 @@ export class VideoGalleryBusinessService {
       videoGalleryId,
       {
         title,
+        categoryId,
         description,
         updatedBy,
       },

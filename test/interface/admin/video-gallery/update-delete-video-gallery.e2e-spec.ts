@@ -51,6 +51,7 @@ describe('PUT /api/admin/video-galleries/:id (비디오갤러리 수정)', () =>
         .request()
         .put(`/api/admin/video-galleries/${videoGalleryId}`)
         .field('title', updateDto.title)
+        .field('categoryId', categoryId)
         .field('description', updateDto.description)
         .expect(200);
 
@@ -76,6 +77,7 @@ describe('PUT /api/admin/video-galleries/:id (비디오갤러리 수정)', () =>
         .request()
         .put(`/api/admin/video-galleries/${videoGalleryId}`)
         .field('title', updateDto.title)
+        .field('categoryId', categoryId)
         .field('youtubeUrls', updateDto.youtubeUrls)
         .expect(200);
 
@@ -95,6 +97,7 @@ describe('PUT /api/admin/video-galleries/:id (비디오갤러리 수정)', () =>
         .request()
         .put(`/api/admin/video-galleries/${videoGalleryId}`)
         .field('title', updateDto.title)
+        .field('categoryId', categoryId)
         .field('description', updateDto.description)
         .expect(200);
 
@@ -116,12 +119,14 @@ describe('PUT /api/admin/video-galleries/:id (비디오갤러리 수정)', () =>
         .request()
         .put(`/api/admin/video-galleries/${nonExistentId}`)
         .field('title', updateDto.title)
+        .field('categoryId', categoryId)
         .expect(404);
     });
 
     it('title이 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const updateDto = {
+        categoryId,
         description: '설명만 있음',
       };
 
