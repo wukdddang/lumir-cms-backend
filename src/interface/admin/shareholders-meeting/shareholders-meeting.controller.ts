@@ -740,10 +740,8 @@ export class ShareholdersMeetingController {
       throw new BadRequestException('categoryId는 올바른 UUID 형식이어야 합니다.');
     }
 
-    // meetingData 준비 및 검증
-    const meetingData: any = {
-      categoryId: body.categoryId,
-    };
+    // meetingData 준비 및 검증 (location, meetingDate만 포함)
+    const meetingData: any = {};
     if (body.location) {
       meetingData.location = body.location;
     }
@@ -850,9 +848,10 @@ export class ShareholdersMeetingController {
     return await this.shareholdersMeetingBusinessService.주주총회를_수정한다(
       id,
       translations,
-      meetingData,
-      voteResults,
       user.id,
+      body.categoryId,
+      Object.keys(meetingData).length > 0 ? meetingData : undefined,
+      voteResults,
       files,
     );
   }

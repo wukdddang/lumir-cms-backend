@@ -418,9 +418,10 @@ describe('ShareholdersMeetingBusinessService', () => {
       const result = await service.주주총회를_수정한다(
         meetingId,
         translations,
-        meetingData,
-        undefined,
         updatedBy,
+        meetingData.categoryId,
+        { location: meetingData.location, meetingDate: meetingData.meetingDate },
+        undefined,
         files,
       );
 
@@ -449,7 +450,9 @@ describe('ShareholdersMeetingBusinessService', () => {
       expect(shareholdersMeetingContextService.주주총회를_수정한다).toHaveBeenCalledWith(
         meetingId,
         {
-          ...meetingData,
+          categoryId: 'category-1',
+          location: '부산 해운대',
+          meetingDate: new Date('2024-06-20'),
           translations,
           voteResults: undefined,
           updatedBy,
@@ -504,9 +507,10 @@ describe('ShareholdersMeetingBusinessService', () => {
       const result = await service.주주총회를_수정한다(
         meetingId,
         translations,
-        meetingData,
-        undefined,
         updatedBy,
+        meetingData.categoryId,
+        undefined,
+        undefined,
         undefined,
       );
 

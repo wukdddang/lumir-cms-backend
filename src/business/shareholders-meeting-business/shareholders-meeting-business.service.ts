@@ -172,8 +172,9 @@ export class ShareholdersMeetingBusinessService {
       title: string;
       description?: string;
     }>,
-    meetingData: {
-      categoryId: string;
+    updatedBy: string,
+    categoryId: string,
+    meetingData?: {
       location?: string;
       meetingDate?: Date;
     },
@@ -191,7 +192,6 @@ export class ShareholdersMeetingBusinessService {
         title: string;
       }>;
     }>,
-    updatedBy: string,
     files?: Express.Multer.File[],
   ): Promise<ShareholdersMeeting> {
     this.logger.log(
@@ -248,6 +248,7 @@ export class ShareholdersMeetingBusinessService {
     const result = await this.shareholdersMeetingContextService.주주총회를_수정한다(
       id,
       {
+        categoryId,
         ...meetingData,
         translations,
         voteResults,
