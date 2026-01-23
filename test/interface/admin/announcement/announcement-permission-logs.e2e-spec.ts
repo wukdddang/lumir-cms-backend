@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('공지사항 권한 로그 조회 API', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('공지사항 권한 로그 조회 API', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/announcements/permission-logs (권한 로그 목록 조회)', () => {
@@ -34,6 +47,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '공지사항 1',
           content: '내용 1',
           permissionDepartmentIds: ['dept-1'],
@@ -44,6 +58,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '공지사항 2',
           content: '내용 2',
           permissionDepartmentIds: ['dept-2'],
@@ -71,6 +86,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-1'],
@@ -100,6 +116,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-1'],
@@ -129,6 +146,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'Resolved 필터링 테스트',
           content: '내용',
           isPublic: false,
@@ -186,6 +204,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '권한 로그 테스트',
           content: '내용',
           permissionDepartmentIds: null, // 빈 권한으로 로그 생성 유도
@@ -245,6 +264,7 @@ describe('공지사항 권한 로그 조회 API', () => {
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `공지사항 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: [`dept-${i}`],
@@ -276,6 +296,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '권한 교체 테스트',
           content: '내용',
           isPublic: false, // 비공개 상태로 생성
@@ -349,6 +370,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '다중 권한 교체 테스트',
           content: '내용',
           isPublic: false, // 비공개 상태로 생성
@@ -405,6 +427,7 @@ describe('공지사항 권한 로그 조회 API', () => {
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `공지사항 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: [`dept-${i}`],
@@ -443,6 +466,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'DETECTED 로그 테스트',
           content: '내용',
           permissionDepartmentIds: null,
@@ -487,6 +511,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'RESOLVED 로그 테스트',
           content: '내용',
           isPublic: false, // 비공개 상태로 생성
@@ -541,6 +566,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '통합 시나리오 테스트',
           content: '내용',
           isPublic: false, // 비공개 상태로 생성
@@ -598,6 +624,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-1'],
@@ -620,6 +647,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '무시 테스트 공지',
           content: '내용',
           isPublic: false,
@@ -672,6 +700,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '무시 필터 테스트',
           content: '내용',
           isPublic: false,
@@ -731,6 +760,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '전체 조회 테스트',
           content: '내용',
           isPublic: false,
@@ -780,6 +810,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '중복 테스트',
           content: '내용',
           isPublic: false,
@@ -838,6 +869,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '배치 테스트 공지1',
           content: '내용',
           isPublic: false,
@@ -849,6 +881,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '배치 테스트 공지2',
           content: '내용',
           isPublic: false,
@@ -860,6 +893,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '배치 테스트 공지3',
           content: '내용',
           isPublic: false,
@@ -938,6 +972,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '혼합 테스트 1',
           content: '내용',
           isPublic: false,
@@ -949,6 +984,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '혼합 테스트 2',
           content: '내용',
           isPublic: false,
@@ -1088,6 +1124,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '재검증 테스트',
           content: '내용',
           permissionDepartmentIds: null, // 빈 권한으로 스케줄러 트리거 유도
@@ -1116,6 +1153,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '고정 재검증 테스트',
           content: '내용',
           isFixed: true,
@@ -1142,6 +1180,7 @@ describe('공지사항 권한 로그 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '전체 재검증 테스트',
           content: '내용',
           permissionDepartmentIds: null,

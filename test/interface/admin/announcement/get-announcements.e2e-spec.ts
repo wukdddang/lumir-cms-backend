@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -36,9 +49,9 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
     it('등록된 공지사항 목록을 조회해야 한다', async () => {
       // Given
       const announcements = [
-        { title: '공지1', content: '내용1' },
-        { title: '공지2', content: '내용2' },
-        { title: '공지3', content: '내용3' },
+        { categoryId: testCategoryId, title: '공지1', content: '내용1' },
+        { categoryId: testCategoryId, title: '공지2', content: '내용2' },
+        { categoryId: testCategoryId, title: '공지3', content: '내용3' },
       ];
 
       for (const announcement of announcements) {
@@ -68,7 +81,7 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
       }
 
       // When - 첫 페이지 조회 (limit=10)
@@ -103,7 +116,7 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
       }
 
       // When
@@ -124,22 +137,22 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공개-고정', content: '내용', isPublic: true, isFixed: true });
+        .send({ categoryId: testCategoryId, title: '공개-고정', content: '내용', isPublic: true, isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공개-일반', content: '내용', isPublic: true, isFixed: false });
+        .send({ categoryId: testCategoryId, title: '공개-일반', content: '내용', isPublic: true, isFixed: false });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '비공개-고정', content: '내용', isPublic: false, isFixed: true });
+        .send({ categoryId: testCategoryId, title: '비공개-고정', content: '내용', isPublic: false, isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '비공개-일반', content: '내용', isPublic: false, isFixed: false });
+        .send({ categoryId: testCategoryId, title: '비공개-일반', content: '내용', isPublic: false, isFixed: false });
     });
 
     it('기본 조회는 비고정 공지만 반환해야 한다 (isFixed=false)', async () => {
@@ -186,7 +199,7 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
       }
 
       // When
@@ -205,7 +218,7 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
         // 생성 시간 차이를 두기 위한 대기
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
@@ -224,6 +237,7 @@ describe('GET /api/admin/announcements (공지사항 목록 조회)', () => {
 
 describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -235,6 +249,18 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -260,17 +286,17 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '고정1', content: '내용1', isFixed: true });
+        .send({ categoryId: testCategoryId, title: '고정1', content: '내용1', isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '일반1', content: '내용1', isFixed: false });
+        .send({ categoryId: testCategoryId, title: '일반1', content: '내용1', isFixed: false });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '고정2', content: '내용2', isFixed: true });
+        .send({ categoryId: testCategoryId, title: '고정2', content: '내용2', isFixed: true });
 
       // When
       const response = await testSuite
@@ -289,17 +315,17 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공개-고정', content: '내용', isPublic: true, isFixed: true });
+        .send({ categoryId: testCategoryId, title: '공개-고정', content: '내용', isPublic: true, isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '비공개-고정', content: '내용', isPublic: false, isFixed: true });
+        .send({ categoryId: testCategoryId, title: '비공개-고정', content: '내용', isPublic: false, isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공개-일반', content: '내용', isPublic: true, isFixed: false });
+        .send({ categoryId: testCategoryId, title: '공개-일반', content: '내용', isPublic: true, isFixed: false });
 
       // When
       const response = await testSuite
@@ -319,7 +345,7 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `고정${i}`, content: `내용${i}`, isFixed: true });
+          .send({ categoryId: testCategoryId, title: `고정${i}`, content: `내용${i}`, isFixed: true });
       }
 
       // When - 첫 페이지 조회 (limit=10)
@@ -355,27 +381,27 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '고정1', content: '내용', isFixed: true });
+        .send({ categoryId: testCategoryId, title: '고정1', content: '내용', isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '고정2', content: '내용', isFixed: true });
+        .send({ categoryId: testCategoryId, title: '고정2', content: '내용', isFixed: true });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '일반1', content: '내용', isFixed: false });
+        .send({ categoryId: testCategoryId, title: '일반1', content: '내용', isFixed: false });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '일반2', content: '내용', isFixed: false });
+        .send({ categoryId: testCategoryId, title: '일반2', content: '내용', isFixed: false });
 
       await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '일반3', content: '내용', isFixed: false });
+        .send({ categoryId: testCategoryId, title: '일반3', content: '내용', isFixed: false });
     });
 
     it('일반 목록은 비고정 공지만 반환해야 한다', async () => {
@@ -406,6 +432,7 @@ describe('GET /api/admin/announcements/fixed (고정 공지사항 목록 조회)
 
 describe('GET /api/admin/announcements/all (공지사항 전체 목록 조회)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -417,6 +444,18 @@ describe('GET /api/admin/announcements/all (공지사항 전체 목록 조회)',
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -438,7 +477,7 @@ describe('GET /api/admin/announcements/all (공지사항 전체 목록 조회)',
         await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
       }
 
       // When
@@ -456,6 +495,7 @@ describe('GET /api/admin/announcements/all (공지사항 전체 목록 조회)',
 
 describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -467,6 +507,18 @@ describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => 
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -475,7 +527,7 @@ describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => 
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '테스트 공지', content: '테스트 내용' });
+        .send({ categoryId: testCategoryId, title: '테스트 공지', content: '테스트 내용' });
 
       const announcementId = createResponse.body.id;
 
@@ -498,6 +550,7 @@ describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => 
     it('모든 필드가 포함된 공지사항을 조회해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '상세 공지',
         content: '상세 내용',
         isFixed: true,

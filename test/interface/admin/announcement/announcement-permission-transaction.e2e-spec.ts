@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('트랜잭션 원자성 검증', () => {
@@ -22,6 +35,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '트랜잭션 테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-tx-old-1', 'dept-tx-old-2'],
@@ -106,6 +120,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '동시성 테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-concurrent-1', 'dept-concurrent-2'],
@@ -168,6 +183,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'Lost Update 방지 테스트',
           content: '내용',
           permissionDepartmentIds: ['dept-a', 'dept-b', 'dept-c'],
@@ -227,6 +243,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'Race Condition 테스트',
           content: '내용',
           permissionDepartmentIds: ['dept-race-1', 'dept-race-2', 'dept-race-3'],
@@ -278,6 +295,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '격리 수준 테스트',
           content: '내용',
           permissionDepartmentIds: ['dept-isolation-1', 'dept-isolation-2'],
@@ -325,6 +343,7 @@ describe('공지사항 권한 교체 트랜잭션 및 동시성 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '타임아웃 테스트',
           content: '내용',
           permissionDepartmentIds: ['dept-timeout-1', 'dept-timeout-2'],

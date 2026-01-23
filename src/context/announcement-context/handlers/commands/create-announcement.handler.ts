@@ -33,6 +33,7 @@ export class CreateAnnouncementHandler
 
     // 공지사항 생성 (기본값: 전사공개, 일반 공지)
     const saved = await this.announcementService.공지사항을_생성한다({
+      categoryId: data.categoryId,
       title: data.title,
       content: data.content,
       isFixed: data.isFixed ?? false, // 기본값: 일반 공지

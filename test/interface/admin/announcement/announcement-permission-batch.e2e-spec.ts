@@ -3,6 +3,7 @@ import { AnnouncementPermissionScheduler } from '../../../../src/context/announc
 
 describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목록 조회', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
   let scheduler: AnnouncementPermissionScheduler;
   let schedulerSpy: jest.SpyInstance;
 
@@ -35,6 +36,18 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
     schedulerSpy.mockClear();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/announcements - 목록 조회 시 비동기 배치 처리', () => {
@@ -44,6 +57,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 없는 공지1',
           content: '내용1',
           permissionDepartmentIds: null,
@@ -55,6 +69,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지2',
           content: '내용2',
           permissionDepartmentIds: ['dept-1', 'dept-2'],
@@ -87,6 +102,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지1',
           content: '내용1',
           permissionDepartmentIds: ['dept-1'],
@@ -97,6 +113,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지2',
           content: '내용2',
           permissionDepartmentIds: ['dept-2'],
@@ -126,6 +143,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '빈 배열 공지',
           content: '내용',
           permissionDepartmentIds: [],
@@ -152,6 +170,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '테스트 공지',
           content: '내용',
           permissionDepartmentIds: null,
@@ -183,6 +202,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 없는 공지1',
           content: '내용1',
           permissionDepartmentIds: null,
@@ -194,6 +214,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 없는 공지2',
           content: '내용2',
           permissionDepartmentIds: [],
@@ -205,6 +226,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지',
           content: '내용3',
           permissionDepartmentIds: ['dept-1', 'dept-2'],
@@ -242,6 +264,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지1',
           content: '내용1',
           permissionDepartmentIds: ['dept-1'],
@@ -252,6 +275,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 권한 있는 공지2',
           content: '내용2',
           permissionDepartmentIds: ['dept-2'],
@@ -287,6 +311,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 변경 대상 공지',
           content: '내용',
           isFixed: true,
@@ -326,6 +351,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'null 공지',
           content: '내용',
           permissionDepartmentIds: null,
@@ -337,6 +363,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '빈 배열 공지',
           content: '내용',
           permissionDepartmentIds: [],
@@ -348,6 +375,7 @@ describe('공지사항 권한 검증 배치 처리 및 부서 변경 대상 목�
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '값 있는 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-1'],

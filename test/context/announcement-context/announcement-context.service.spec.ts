@@ -57,6 +57,7 @@ describe('AnnouncementContextService', () => {
     it('CreateAnnouncementCommand를 실행해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: 'category-uuid-1',
         title: '새 공지사항',
         content: '새 내용',
         isPublic: true,

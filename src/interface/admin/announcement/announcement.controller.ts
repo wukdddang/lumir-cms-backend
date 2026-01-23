@@ -725,6 +725,7 @@ export class AnnouncementController {
       '새로운 공지사항을 생성합니다.\n\n' +
       '**📋 Request Body 작성 가이드:**\n\n' +
       '1. **기본 정보** (필수)\n' +
+      '   - `categoryId`: 공지사항 카테고리 ID (UUID) - **필수**\n' +
       '   - `title`: 공지사항 제목\n' +
       '   - `content`: 공지사항 내용 (HTML 지원)\n\n' +
       '2. **공개 설정**\n' +
@@ -742,6 +743,7 @@ export class AnnouncementController {
       '   - `survey.questions` 배열에 질문 추가\n' +
       '   - 각 질문의 `type`에 따라 필요한 `form` 데이터 다름\n\n' +
       '⚠️ **주의사항:**\n' +
+      '- `categoryId`는 필수 필드입니다. GET /admin/announcements/categories로 카테고리 목록을 조회하세요\n' +
       '- 날짜는 ISO 8601 형식 (예: `2024-01-01T00:00:00Z`)\n' +
       '- 설문 질문 타입별로 필요한 `form` 필드가 다릅니다\n' +
       '- 제한공개 시 최소 하나의 권한 필드는 필수입니다\n\n' +

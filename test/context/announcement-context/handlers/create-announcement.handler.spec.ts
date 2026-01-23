@@ -35,6 +35,7 @@ describe('CreateAnnouncementHandler', () => {
       // Given
       const command = {
         data: {
+          categoryId: 'category-uuid-1',
           title: '새 공지사항',
           content: '새 내용',
           isPublic: true,
@@ -60,6 +61,7 @@ describe('CreateAnnouncementHandler', () => {
       // Then
       expect(announcementService.공지사항을_생성한다).toHaveBeenCalledWith(
         expect.objectContaining({
+          categoryId: command.data.categoryId,
           title: command.data.title,
           content: command.data.content,
           isPublic: command.data.isPublic,
@@ -75,6 +77,7 @@ describe('CreateAnnouncementHandler', () => {
       // Given
       const command = {
         data: {
+          categoryId: 'category-uuid-1',
           title: '첨부파일 공지',
           content: '첨부파일 포함',
           isPublic: true,
@@ -120,6 +123,7 @@ describe('CreateAnnouncementHandler', () => {
       // Given
       const command = {
         data: {
+          categoryId: 'category-uuid-1',
           title: '제한 공지',
           content: '특정 부서만',
           isPublic: false,

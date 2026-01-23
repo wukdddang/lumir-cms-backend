@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('공지사항 설문조사 통계 조회 API', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('공지사항 설문조사 통계 조회 API', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('GET /api/admin/announcements/:id/survey-statistics (설문조사 통계 조회)', () => {
@@ -22,6 +35,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '일반 공지',
           content: '설문 없음',
         })
@@ -53,6 +67,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '만족도 조사',
           content: '설문에 참여해주세요',
           survey: {
@@ -108,6 +123,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '선호도 조사',
           content: '선호도 조사입니다',
           survey: {
@@ -158,6 +174,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '관심 분야 조사',
           content: '관심 분야를 선택해주세요',
           survey: {
@@ -208,6 +225,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '만족도 평가',
           content: '만족도를 평가해주세요',
           survey: {
@@ -257,6 +275,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '의견 수렴',
           content: '의견을 작성해주세요',
           survey: {
@@ -300,6 +319,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '상세 의견 수렴',
           content: '자세히 작성해주세요',
           survey: {
@@ -343,6 +363,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '종합 설문조사',
           content: '다양한 질문에 답해주세요',
           survey: {
@@ -429,6 +450,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '설문 예고',
           content: '곧 설문이 시작됩니다',
           survey: {
@@ -462,6 +484,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '필수/선택 설문',
           content: '필수 질문에는 반드시 응답해주세요',
           survey: {
@@ -529,7 +552,8 @@ describe('공지사항 설문조사 통계 조회 API', () => {
           .request()
           .post('/api/admin/announcements')
           .send({
-            title: `설문 ${i}`,
+          categoryId: testCategoryId,
+          title: `설문 ${i}`,
             content: `설문조사 ${i}`,
             survey: {
               title: `설문 ${i}`,
@@ -571,6 +595,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 선택',
           content: '부서를 선택해주세요',
           survey: {
@@ -618,6 +643,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '즉시 조회 테스트',
           content: '테스트',
           survey: {
@@ -656,6 +682,7 @@ describe('공지사항 설문조사 통계 조회 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '일반 공지',
           content: '설문 없음',
         })

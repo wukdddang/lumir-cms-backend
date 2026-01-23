@@ -28,6 +28,9 @@ export class AnnouncementResponseDto {
   @ApiProperty({ description: '공지사항 ID' })
   id: string;
 
+  @ApiProperty({ description: '공지사항 카테고리 ID (UUID)' })
+  categoryId: string;
+
   @ApiProperty({ description: '제목', example: '2024년 신년 인사' })
   title: string;
 
@@ -133,6 +136,9 @@ export class AnnouncementResponseDto {
 export class AnnouncementListItemDto {
   @ApiProperty({ description: '공지사항 ID' })
   id: string;
+
+  @ApiProperty({ description: '공지사항 카테고리 ID (UUID)' })
+  categoryId: string;
 
   @ApiProperty({ description: '제목', example: '2024년 신년 인사' })
   title: string;

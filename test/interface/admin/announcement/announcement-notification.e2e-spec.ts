@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('공지사항 알림 API', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('공지사항 알림 API', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('POST /api/admin/announcements/:id/notifications/all (전체 직원에게 알림 전송)', () => {
@@ -22,6 +35,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '전체 공지',
           content: '모든 직원에게 알림',
           isPublic: true,
@@ -50,6 +64,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '커스텀 경로 공지',
           content: '커스텀 경로로 리다이렉트',
           isPublic: true,
@@ -79,6 +94,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '제한 공지',
           content: '특정 부서만',
           isPublic: false,
@@ -121,6 +137,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '일반 공지',
           content: '설문 없음',
         });
@@ -140,6 +157,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '일반 공지',
           content: '설문 없음',
         });
@@ -171,6 +189,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '2024년 직원 만족도 조사',
           content: '설문에 참여해주세요',
           isPublic: true,
@@ -223,6 +242,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '종합 설문조사',
           content: '다양한 질문에 답해주세요',
           isPublic: true,
@@ -292,6 +312,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '긴급 설문조사',
           content: '긴급 설문입니다',
           isPublic: true,
@@ -336,6 +357,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '부서 설문조사',
           content: '부서 설문입니다',
           isPublic: false,
@@ -381,6 +403,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '필수 질문 설문',
           content: '모든 질문이 필수입니다',
           isPublic: true,
@@ -431,6 +454,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '혼합 질문 설문',
           content: '필수와 선택 질문이 있습니다',
           isPublic: true,
@@ -482,6 +506,7 @@ describe('공지사항 알림 API', () => {
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `설문조사 ${i}`,
             content: `설문 ${i}`,
             isPublic: true,
@@ -527,6 +552,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '미열람 알림 테스트',
           content: '읽지 않은 사람에게 알림',
           mustRead: true,
@@ -555,6 +581,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '커스텀 경로 미열람 알림',
           content: '읽지 않은 사람에게 커스텀 경로로',
           mustRead: true,
@@ -584,6 +611,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '전사공개 미열람 알림',
           content: '모든 직원 대상',
           isPublic: true,
@@ -613,6 +641,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '제한공개 미열람 알림',
           content: '특정 직원만',
           isPublic: false,
@@ -656,6 +685,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '중요 공지',
           content: '모두 확인 바랍니다',
           isPublic: true,
@@ -687,6 +717,7 @@ describe('공지사항 알림 API', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '커스텀 경로 테스트',
           content: '다양한 경로로 리다이렉트',
           isPublic: true,
@@ -718,6 +749,7 @@ describe('공지사항 알림 API', () => {
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `공지${i}`,
             content: `내용${i}`,
             isPublic: true,

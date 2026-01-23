@@ -4,6 +4,7 @@ import { Announcement } from '@domain/core/announcement/announcement.entity';
  * 공지사항 생성 DTO
  */
 export interface CreateAnnouncementDto {
+  categoryId: string;
   title: string;
   content: string;
   isFixed?: boolean;
@@ -28,6 +29,7 @@ export interface CreateAnnouncementDto {
  * 공지사항 수정 DTO
  */
 export interface UpdateAnnouncementDto {
+  categoryId?: string;
   title?: string;
   content?: string;
   isFixed?: boolean;

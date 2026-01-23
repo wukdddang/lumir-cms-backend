@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 수정)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,6 +14,18 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
@@ -23,7 +36,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
         const response = await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
         announcements.push(response.body);
       }
 
@@ -76,7 +89,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
         const response = await testSuite
           .request()
           .post('/api/admin/announcements')
-          .send({ title: `공지${i}`, content: `내용${i}` });
+          .send({ categoryId: testCategoryId, title: `공지${i}`, content: `내용${i}` });
         announcements.push(response.body);
       }
 
@@ -107,7 +120,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공지1', content: '내용1' });
+        .send({ categoryId: testCategoryId, title: '공지1', content: '내용1' });
 
       const announcementId = createResponse.body.id;
 
@@ -170,7 +183,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공지1', content: '내용1' });
+        .send({ categoryId: testCategoryId, title: '공지1', content: '내용1' });
 
       const updateDto = {
         announcements: [
@@ -192,7 +205,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공지1', content: '내용1' });
+        .send({ categoryId: testCategoryId, title: '공지1', content: '내용1' });
 
       const updateDto = {
         announcements: [
@@ -227,7 +240,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공지1', content: '내용1' });
+        .send({ categoryId: testCategoryId, title: '공지1', content: '내용1' });
 
       const updateDto = {
         announcements: [{ id: createResponse.body.id }], // order 누락
@@ -248,7 +261,7 @@ describe('PUT /api/admin/announcements/batch-order (공지사항 순서 일괄 �
       const createResponse = await testSuite
         .request()
         .post('/api/admin/announcements')
-        .send({ title: '공지1', content: '내용1' });
+        .send({ categoryId: testCategoryId, title: '공지1', content: '내용1' });
 
       const announcementId = createResponse.body.id;
 

@@ -6,6 +6,8 @@ import {
   IsArray,
   IsDateString,
   ValidateNested,
+  IsUUID,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateSurveyWithoutAnnouncementDto } from '../survey/create-survey.dto';
@@ -52,6 +54,18 @@ export class AnnouncementAttachmentDto {
  * 공지사항 생성 DTO
  */
 export class CreateAnnouncementDto {
+  @ApiProperty({
+    description:
+      '공지사항 카테고리 ID (UUID)\n\n' +
+      '**필수 필드**\n\n' +
+      '공지사항이 속할 카테고리를 지정합니다.\n' +
+      'GET /admin/announcements/categories 엔드포인트로 카테고리 목록을 조회할 수 있습니다.',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  categoryId: string;
+
   @ApiProperty({
     description: '공지사항 제목\n\n목록과 상세 페이지에 표시될 제목입니다.',
     example: '2024년 신년 인사',

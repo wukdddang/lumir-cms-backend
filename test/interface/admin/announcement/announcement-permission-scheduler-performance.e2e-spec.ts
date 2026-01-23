@@ -4,6 +4,7 @@ import { SsoService } from '../../../../src/domain/common/sso/sso.service';
 
 describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
   let scheduler: AnnouncementPermissionScheduler;
   let ssoService: SsoService;
   let ssoSpy: jest.SpyInstance;
@@ -51,6 +52,18 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
     ssoSpy?.mockClear();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('배치 처리 성능 개선 검증', () => {
@@ -62,6 +75,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `성능 테스트 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: i % 3 !== 0 ? [`dept-${i}`, `dept-${i + 10}`] : null,
@@ -107,6 +121,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `중복 부서 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: SAME_DEPT_IDS, // 모두 같은 부서 권한
@@ -137,6 +152,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `병렬 처리 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: [`dept-parallel-${i}`],
@@ -168,6 +184,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `권한 없는 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: null,
@@ -190,6 +207,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '재검증 테스트 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-revalidate-1'],
@@ -226,6 +244,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `대량 테스트 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: i % 5 === 0 ? [`dept-bulk-50-${i}`] : null,
@@ -255,6 +274,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
           .request()
           .post('/api/admin/announcements')
           .send({
+            categoryId: testCategoryId,
             title: `대량 100 테스트 공지 ${i}`,
             content: `내용 ${i}`,
             permissionDepartmentIds: i % 5 === 0 ? [`dept-bulk-100-${i}`] : null,
@@ -290,6 +310,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
               .request()
               .post('/api/admin/announcements')
               .send({
+                categoryId: testCategoryId,
                 title: `대량 1000 테스트 공지 ${index}`,
                 content: `내용 ${index}`,
                 permissionDepartmentIds: index % 10 === 0 ? [`dept-bulk-1000-${index}`] : null,
@@ -326,6 +347,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '정상 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-normal'],
@@ -336,6 +358,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '에러 공지',
           content: '내용',
           permissionDepartmentIds: ['dept-error-non-existent'],
@@ -356,6 +379,7 @@ describe('공지사항 권한 검증 스케줄러 성능 개선 테스트', () =
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'SSO 장애 테스트',
           content: '내용',
           permissionDepartmentIds: ['dept-sso-error'],

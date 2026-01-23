@@ -1,8 +1,9 @@
-import { Entity, Column, OneToMany, OneToOne, Index } from 'typeorm';
+import { Entity, Column, OneToMany, OneToOne, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
 import { AnnouncementRead } from './announcement-read.entity';
 import { Survey } from '../../sub/survey/survey.entity';
 import { AnnouncementPermissionLog } from './announcement-permission-log.entity';
+import { Category } from '../../common/category/category.entity';
 
 /**
  * Announcement Entity (공지사항)
@@ -18,7 +19,18 @@ import { AnnouncementPermissionLog } from './announcement-permission-log.entity'
 @Index('idx_announcement_released_at', ['releasedAt'])
 @Index('idx_announcement_expired_at', ['expiredAt'])
 @Index('idx_announcement_order', ['order'])
+@Index('idx_announcement_category_id', ['categoryId'])
 export class Announcement extends BaseEntity<Announcement> {
+  @Column({
+    type: 'uuid',
+    comment: '공지사항 카테고리 ID',
+  })
+  categoryId: string;
+
+  @ManyToOne(() => Category, { nullable: false })
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
+
   @Column({
     type: 'varchar',
     length: 500,

@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 
 describe('POST /api/admin/announcements (공지사항 생성)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -13,12 +14,25 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('성공 케이스', () => {
     it('기본 공지사항을 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '2024년 신년 인사',
         content: '새해 복 많이 받으세요.',
       };
@@ -46,6 +60,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('모든 필드를 포함한 공지사항을 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '긴급 공지사항',
         content: '모든 직원은 필독하시기 바랍니다.',
         isFixed: true,
@@ -85,6 +100,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('첨부파일이 있는 공지사항을 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '첨부파일 공지사항',
         content: '첨부파일을 확인해주세요.',
         attachments: [
@@ -123,9 +139,9 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('여러 개의 공지사항을 생성해야 한다', async () => {
       // Given
       const announcements = [
-        { title: '공지1', content: '내용1' },
-        { title: '공지2', content: '내용2', isFixed: true },
-        { title: '공지3', content: '내용3', mustRead: true },
+        { categoryId: testCategoryId, title: '공지1', content: '내용1' },
+        { categoryId: testCategoryId, title: '공지2', content: '내용2', isFixed: true },
+        { categoryId: testCategoryId, title: '공지3', content: '내용3', mustRead: true },
       ];
 
       // When & Then
@@ -145,9 +161,25 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
   });
 
   describe('실패 케이스 - 필수 필드 누락', () => {
+    it('categoryId가 누락된 경우 400 에러가 발생해야 한다', async () => {
+      // Given
+      const createDto = {
+        title: '제목',
+        content: '내용',
+      };
+
+      // When & Then
+      await testSuite
+        .request()
+        .post('/api/admin/announcements')
+        .send(createDto)
+        .expect(400);
+    });
+
     it('title이 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         content: '내용만 있는 공지사항',
       };
 
@@ -162,6 +194,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('content가 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목만 있는 공지사항',
       };
 
@@ -189,9 +222,26 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
   });
 
   describe('실패 케이스 - 잘못된 데이터 타입', () => {
+    it('categoryId가 UUID가 아닌 경우 400 에러가 발생해야 한다', async () => {
+      // Given
+      const createDto = {
+        categoryId: 'invalid-uuid',
+        title: '제목',
+        content: '내용',
+      };
+
+      // When & Then
+      await testSuite
+        .request()
+        .post('/api/admin/announcements')
+        .send(createDto)
+        .expect(400);
+    });
+
     it('title이 문자열이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: 12345,
         content: '내용',
       };
@@ -207,6 +257,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('isFixed가 boolean이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         isFixed: 'true',
@@ -223,6 +274,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('isPublic이 boolean이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         isPublic: 'false',
@@ -239,6 +291,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('mustRead가 boolean이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         mustRead: 1,
@@ -255,6 +308,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('releasedAt이 날짜 형식이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         releasedAt: 'invalid-date',
@@ -271,6 +325,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('permissionEmployeeIds가 배열이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         permissionEmployeeIds: 'not-an-array',
@@ -289,6 +344,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('expiredAt이 releasedAt보다 이전인 경우 에러가 발생할 수 있다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '제목',
         content: '내용',
         releasedAt: '2024-12-31T23:59:59Z',
@@ -311,6 +367,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('설문조사가 포함된 공지사항을 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '2024년 직원 만족도 조사',
         content: '우리 회사의 발전을 위한 소중한 의견을 들려주세요.',
         survey: {
@@ -396,6 +453,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('다양한 질문 타입의 설문조사를 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '종합 설문조사',
         content: '다양한 질문에 답해주세요.',
         survey: {
@@ -475,6 +533,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('질문이 없는 설문조사를 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '설문 예고',
         content: '곧 설문이 시작됩니다.',
         survey: {
@@ -511,6 +570,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('설문조사 없이 공지사항만 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '일반 공지사항',
         content: '설문조사 없는 공지사항입니다.',
       };
@@ -545,6 +605,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('필수/선택 질문이 섞인 설문조사를 생성해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '필독 공지사항',
         content: '설문에 참여해주세요.',
         mustRead: true,
@@ -619,6 +680,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('설문조사 제목이 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '공지사항',
         content: '내용',
         survey: {
@@ -639,6 +701,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('잘못된 질문 타입인 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '공지사항',
         content: '내용',
         survey: {
@@ -666,6 +729,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('질문에 필수 필드가 누락된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '공지사항',
         content: '내용',
         survey: {
@@ -692,6 +756,7 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
     it('LINEAR_SCALE의 form 데이터가 잘못된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
+        categoryId: testCategoryId,
         title: '공지사항',
         content: '내용',
         survey: {

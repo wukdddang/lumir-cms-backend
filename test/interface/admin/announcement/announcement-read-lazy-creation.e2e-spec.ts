@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
   const testSuite = new BaseE2ETest();
   let announcementReadRepository: Repository<AnnouncementRead>;
+  let testCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -19,6 +20,18 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
 
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
+
+    // 테스트용 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/announcements/categories')
+      .send({
+        name: '테스트 카테고리',
+        description: '테스트용 공지사항 카테고리',
+      })
+      .expect(201);
+
+    testCategoryId = categoryResponse.body.id;
   });
 
   describe('Lazy Creation 패턴 검증', () => {
@@ -28,6 +41,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '읽음 테스트 공지',
           content: '읽음 표시 테스트 내용',
         })
@@ -74,6 +88,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'Lazy Creation 테스트',
           content: '생성 시점에는 읽음 레코드가 없어야 함',
         })
@@ -95,6 +110,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '여러 직원 읽음 테스트',
           content: '여러 명이 읽는 공지사항',
         })
@@ -155,6 +171,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '중복 읽음 방지 테스트',
           content: '같은 직원이 여러 번 읽어도 레코드는 1개',
         })
@@ -205,6 +222,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '참조 무결성 테스트',
           content: '공지사항 삭제 후에도 읽음 레코드 유지',
           isPublic: false, // 비공개로 생성 (삭제 가능하도록)
@@ -265,6 +283,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '미열람자 조회 테스트',
           content: '일부 직원만 읽은 공지사항',
         })
@@ -311,6 +330,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: '읽음 시각 추적 테스트',
           content: '읽은 시각을 기록',
         })
@@ -347,6 +367,7 @@ describe('공지사항 읽음 표시 (Lazy Creation Pattern) E2E', () => {
         .request()
         .post('/api/admin/announcements')
         .send({
+          categoryId: testCategoryId,
           title: 'Unique 제약 테스트',
           content: '같은 (공지사항, 직원) 조합은 중복 불가',
         })

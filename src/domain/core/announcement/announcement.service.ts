@@ -111,6 +111,7 @@ export class AnnouncementService {
 
     // 허용된 필드만 수정 (화이트리스트 방식)
     const allowedFields = [
+      'categoryId',
       'title',
       'content',
       'mustRead',
