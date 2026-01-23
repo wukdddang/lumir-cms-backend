@@ -44,6 +44,7 @@ describe('NewsService', () => {
         title: '루미르 신제품 출시',
         description: '혁신적인 신제품이 출시되었습니다',
         url: 'https://news.example.com/lumir',
+        categoryId: 'category-1',
         isPublic: true,
         order: 0,
         createdBy: 'user-1',
@@ -74,6 +75,7 @@ describe('NewsService', () => {
       const createData = {
         title: '뉴스 제목',
         description: '뉴스 설명',
+        categoryId: 'category-2',
         attachments: [
           {
             fileName: 'news.pdf',

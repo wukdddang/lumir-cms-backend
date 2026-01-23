@@ -188,6 +188,7 @@ describe('NewsBusinessService', () => {
       const title = '루미르 신제품 출시';
       const description = '혁신적인 신제품이 출시되었습니다';
       const url = 'https://news.example.com/lumir';
+      const categoryId = 'category-1';
       const createdBy = 'user-1';
 
       const mockNews = {
@@ -195,6 +196,7 @@ describe('NewsBusinessService', () => {
         title,
         description,
         url,
+        categoryId,
         isPublic: true,
         order: 0,
       } as News;
@@ -207,6 +209,7 @@ describe('NewsBusinessService', () => {
         title,
         description,
         url,
+        categoryId,
         createdBy,
       );
 
@@ -215,6 +218,7 @@ describe('NewsBusinessService', () => {
         title,
         description,
         url,
+        categoryId,
         attachments: undefined,
         createdBy,
       });
@@ -225,6 +229,7 @@ describe('NewsBusinessService', () => {
     it('파일과 함께 뉴스를 생성해야 한다', async () => {
       // Given
       const title = '뉴스 제목';
+      const categoryId = 'category-2';
       const createdBy = 'user-1';
       const files = [
         {
@@ -247,6 +252,7 @@ describe('NewsBusinessService', () => {
       const mockNews = {
         id: 'news-1',
         title,
+        categoryId,
         attachments: [
           {
             fileName: 'news.pdf',
@@ -264,8 +270,9 @@ describe('NewsBusinessService', () => {
       // When
       const result = await service.뉴스를_생성한다(
         title,
-        undefined,
-        undefined,
+        null,
+        null,
+        categoryId,
         createdBy,
         files,
       );
@@ -274,8 +281,9 @@ describe('NewsBusinessService', () => {
       expect(storageService.uploadFiles).toHaveBeenCalledWith(files, 'news');
       expect(newsContextService.뉴스를_생성한다).toHaveBeenCalledWith({
         title,
-        description: undefined,
-        url: undefined,
+        description: null,
+        url: null,
+        categoryId,
         attachments: [
           {
             fileName: 'news.pdf',
@@ -545,6 +553,7 @@ describe('NewsBusinessService', () => {
       const newsId = 'news-1';
       const title = '수정된 제목';
       const description = '수정된 설명';
+      const categoryId = 'category-2';
       const updatedBy = 'user-1';
 
       const existingNews = {
@@ -557,6 +566,7 @@ describe('NewsBusinessService', () => {
         ...existingNews,
         title,
         description,
+        categoryId,
       } as News;
 
       mockNewsContextService.뉴스_상세_조회한다.mockResolvedValue(
@@ -572,7 +582,8 @@ describe('NewsBusinessService', () => {
         newsId,
         title,
         description,
-        undefined,
+        null,
+        categoryId,
         updatedBy,
       );
 
@@ -585,7 +596,8 @@ describe('NewsBusinessService', () => {
       expect(newsContextService.뉴스를_수정한다).toHaveBeenCalledWith(newsId, {
         title,
         description,
-        url: undefined,
+        url: null,
+        categoryId,
         updatedBy,
       });
       expect(result).toEqual(updatedNews);
@@ -595,6 +607,7 @@ describe('NewsBusinessService', () => {
       // Given
       const newsId = 'news-1';
       const title = '수정된 제목';
+      const categoryId = 'category-3';
       const updatedBy = 'user-1';
       const newFiles = [
         {
@@ -654,8 +667,9 @@ describe('NewsBusinessService', () => {
       const result = await service.뉴스를_수정한다(
         newsId,
         title,
-        undefined,
-        undefined,
+        null,
+        null,
+        categoryId,
         updatedBy,
         newFiles,
       );
@@ -689,6 +703,7 @@ describe('NewsBusinessService', () => {
       // Given
       const newsId = 'news-1';
       const title = '수정된 제목';
+      const categoryId = 'category-4';
       const updatedBy = 'user-1';
 
       const existingNews = {
@@ -723,8 +738,9 @@ describe('NewsBusinessService', () => {
       const result = await service.뉴스를_수정한다(
         newsId,
         title,
-        undefined,
-        undefined,
+        null,
+        null,
+        categoryId,
         updatedBy,
       );
 

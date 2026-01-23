@@ -10,6 +10,7 @@ import { BaseEntity } from '@libs/database/base/base.entity';
 @Entity('news')
 @Index('idx_news_is_public', ['isPublic'])
 @Index('idx_news_order', ['order'])
+@Index('idx_news_category_id', ['categoryId'])
 export class News extends BaseEntity<News> {
   @Column({
     type: 'varchar',
@@ -57,6 +58,13 @@ export class News extends BaseEntity<News> {
     comment: '정렬 순서',
   })
   order: number;
+
+  @Column({
+    type: 'uuid',
+    nullable: false,
+    comment: '뉴스 카테고리 ID',
+  })
+  categoryId: string;
 
   /**
    * 엔티티를 DTO로 변환한다

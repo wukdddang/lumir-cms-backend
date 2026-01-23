@@ -26,6 +26,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
           .field('title', `뉴스${i}`)
           .field('description', `설명${i}`)
           .field('url', `https://news.example.com/${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
 
         newsList.push(response.body);
@@ -58,6 +59,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .post('/api/admin/news')
         .field('title', '공개 뉴스')
         .field('description', '공개된 뉴스입니다')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       const privateNews = await testSuite
@@ -65,6 +67,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .post('/api/admin/news')
         .field('title', '비공개 뉴스')
         .field('description', '비공개된 뉴스입니다')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // 비공개로 변경
@@ -102,6 +105,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
       }
 
@@ -142,6 +146,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .request()
         .post('/api/admin/news')
         .field('title', '첫 번째 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -150,6 +155,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .request()
         .post('/api/admin/news')
         .field('title', '두 번째 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When - order로 정렬 (오름차순)
@@ -187,6 +193,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .request()
         .post('/api/admin/news')
         .field('title', '첫 번째 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -195,6 +202,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .request()
         .post('/api/admin/news')
         .field('title', '두 번째 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When - 오늘 날짜로 필터링
@@ -221,6 +229,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
       }
 
@@ -245,6 +254,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .field('title', '뉴스 제목')
         .field('description', '뉴스 설명')
         .field('url', 'https://news.example.com/article')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       const newsId = createResponse.body.id;
@@ -325,6 +335,7 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When - 잘못된 orderBy 값

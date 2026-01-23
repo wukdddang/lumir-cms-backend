@@ -35,6 +35,7 @@ export class CreateNewsHandler implements ICommandHandler<CreateNewsCommand> {
       title: data.title,
       description: data.description || null,
       url: data.url || null,
+      categoryId: data.categoryId,
       isPublic: true, // 기본값: 공개
       order: nextOrder, // 자동 계산
       attachments: data.attachments || null,

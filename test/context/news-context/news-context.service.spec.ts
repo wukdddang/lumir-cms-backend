@@ -53,6 +53,7 @@ describe('NewsContextService', () => {
         title: '루미르 신제품 출시',
         description: '혁신적인 신제품이 출시되었습니다',
         url: 'https://news.example.com/lumir',
+        categoryId: 'category-1',
         createdBy: 'user-1',
       };
 
@@ -82,6 +83,7 @@ describe('NewsContextService', () => {
       const createDto: CreateNewsDto = {
         title: '뉴스 제목',
         description: '뉴스 설명',
+        categoryId: 'category-2',
         attachments: [
           {
             fileName: 'news.pdf',
@@ -118,6 +120,7 @@ describe('NewsContextService', () => {
       const updateDto: UpdateNewsDto = {
         title: '수정된 제목',
         description: '수정된 설명',
+        categoryId: 'category-2',
         updatedBy: 'user-1',
       };
 

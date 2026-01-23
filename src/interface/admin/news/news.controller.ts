@@ -185,8 +185,9 @@ export class NewsController {
   })
   @ApiBody({
     description:
-      '⚠️ **중요**: 제목은 필수입니다.\n\n' +
+      '⚠️ **중요**: 제목과 카테고리는 필수입니다.\n\n' +
       '**뉴스 URL**: 외부 링크나 뉴스 기사 원본 URL을 입력할 수 있습니다.\n\n' +
+      '**카테고리**: categoryId를 통해 뉴스 카테고리를 지정해야 합니다.\n\n' +
       '**파일 관리 방식**:\n' +
       '- `files`를 전송하면: 첨부파일과 함께 생성\n' +
       '- `files`를 전송하지 않으면: 파일 없이 생성',
@@ -208,13 +209,19 @@ export class NewsController {
           description: '외부 링크 또는 뉴스 기사 URL (선택)',
           example: 'https://news.example.com/lumir-new-product',
         },
+        categoryId: {
+          type: 'string',
+          format: 'uuid',
+          description: '뉴스 카테고리 ID (필수)',
+          example: '123e4567-e89b-12d3-a456-426614174000',
+        },
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
           description: '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능)',
         },
       },
-      required: ['title'],
+      required: ['title', 'categoryId'],
     },
   })
   @ApiResponse({
@@ -231,16 +238,21 @@ export class NewsController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<NewsResponseDto> {
-    const { title, description, url } = body;
+    const { title, description, url, categoryId } = body;
 
     if (!title) {
       throw new BadRequestException('title 필드는 필수입니다.');
+    }
+
+    if (!categoryId) {
+      throw new BadRequestException('categoryId 필드는 필수입니다.');
     }
 
     return await this.newsBusinessService.뉴스를_생성한다(
       title,
       description || null,
       url || null,
+      categoryId,
       user.id,
       files,
     );
@@ -322,8 +334,9 @@ export class NewsController {
   })
   @ApiBody({
     description:
-      '⚠️ **중요**: 제목은 필수입니다.\n\n' +
+      '⚠️ **중요**: 제목과 카테고리는 필수입니다.\n\n' +
       '**뉴스 URL**: 외부 링크나 뉴스 기사 원본 URL을 수정할 수 있습니다.\n\n' +
+      '**카테고리**: categoryId를 통해 뉴스 카테고리를 변경해야 합니다.\n\n' +
       '**파일 관리 방식**:\n' +
       '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
       '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
@@ -346,6 +359,12 @@ export class NewsController {
           description: '외부 링크 또는 뉴스 기사 URL (선택)',
           example: 'https://news.example.com/lumir-new-product',
         },
+        categoryId: {
+          type: 'string',
+          format: 'uuid',
+          description: '뉴스 카테고리 ID (필수)',
+          example: '123e4567-e89b-12d3-a456-426614174000',
+        },
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
@@ -353,7 +372,7 @@ export class NewsController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['title'],
+      required: ['title', 'categoryId'],
     },
   })
   @ApiResponse({
@@ -378,10 +397,14 @@ export class NewsController {
       throw new BadRequestException('id는 유효한 UUID 형식이어야 합니다.');
     }
 
-    const { title, description, url } = body;
+    const { title, description, url, categoryId } = body;
 
     if (!title) {
       throw new BadRequestException('title 필드는 필수입니다.');
+    }
+
+    if (!categoryId) {
+      throw new BadRequestException('categoryId 필드는 필수입니다.');
     }
 
     return await this.newsBusinessService.뉴스를_수정한다(
@@ -389,6 +412,7 @@ export class NewsController {
       title,
       description || null,
       url || null,
+      categoryId,
       user.id,
       files,
     );

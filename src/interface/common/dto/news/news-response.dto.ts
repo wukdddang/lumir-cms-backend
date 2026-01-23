@@ -46,6 +46,12 @@ export class NewsResponseDto {
   })
   url: string | null;
 
+  @ApiProperty({
+    description: '뉴스 카테고리 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  categoryId: string;
+
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
 
@@ -96,6 +102,11 @@ export class NewsListItemDto {
     nullable: true,
   })
   url: string | null;
+
+  @ApiProperty({
+    description: '뉴스 카테고리 ID',
+  })
+  categoryId: string;
 
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;

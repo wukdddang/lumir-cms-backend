@@ -25,6 +25,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
           .field('description', `설명${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
 
         newsList.push(response.body);
@@ -80,6 +81,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
 
         newsList.push(response.body);
@@ -139,12 +141,14 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '뉴스1')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       await testSuite
         .request()
         .post('/api/admin/news')
         .field('title', '뉴스2')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When - 하나만 수정
@@ -179,6 +183,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
         newsList.push(response.body);
       }
@@ -216,6 +221,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When
@@ -248,6 +254,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When
@@ -297,6 +304,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When & Then
@@ -318,6 +326,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When & Then
@@ -347,6 +356,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When & Then
@@ -365,6 +375,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
         .request()
         .post('/api/admin/news')
         .field('title', '테스트 뉴스')
+        .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
         .expect(201);
 
       // When & Then
@@ -387,6 +398,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
         newsList.push(response.body);
       }
@@ -420,6 +432,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
         newsList.push(response.body);
       }
@@ -478,6 +491,7 @@ describe('PUT /api/admin/news/batch-order (뉴스 순서 일괄 수정)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', `뉴스${i}`)
+          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
           .expect(201);
         newsList.push(response.body);
       }

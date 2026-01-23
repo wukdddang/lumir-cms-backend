@@ -94,8 +94,9 @@ export class NewsBusinessService {
    */
   async 뉴스를_생성한다(
     title: string,
-    description?: string | null,
-    url?: string | null,
+    description: string | null,
+    url: string | null,
+    categoryId: string,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<NewsDetailResult> {
@@ -131,6 +132,7 @@ export class NewsBusinessService {
       title,
       description,
       url,
+      categoryId,
       attachments:
         attachments && attachments.length > 0 ? attachments : undefined,
       createdBy,
@@ -319,8 +321,9 @@ export class NewsBusinessService {
   async 뉴스를_수정한다(
     newsId: string,
     title: string,
-    description?: string | null,
-    url?: string | null,
+    description: string | null,
+    url: string | null,
+    categoryId: string,
     updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<News> {
@@ -377,6 +380,7 @@ export class NewsBusinessService {
       title,
       description,
       url,
+      categoryId,
       updatedBy,
     });
 

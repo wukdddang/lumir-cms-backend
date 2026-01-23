@@ -7,6 +7,7 @@ export interface CreateNewsDto {
   title: string;
   description?: string | null;
   url?: string | null;
+  categoryId: string;
   attachments?: Array<{
     fileName: string;
     fileUrl: string;
@@ -23,6 +24,7 @@ export interface UpdateNewsDto {
   title?: string;
   description?: string | null;
   url?: string | null;
+  categoryId?: string;
   isPublic?: boolean;
   order?: number;
   attachments?: Array<{
