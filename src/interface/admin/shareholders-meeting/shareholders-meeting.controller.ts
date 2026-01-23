@@ -582,6 +582,9 @@ export class ShareholdersMeetingController {
     summary: '주주총회 수정',
     description:
       '주주총회의 번역 정보, 의결 결과 및 파일을 수정합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `translations`: JSON 배열 문자열 (다국어 정보)\n' +
+      '- `categoryId`: 주주총회 카테고리 ID (UUID)\n\n' +
       '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
   })
   @ApiBody({
@@ -601,7 +604,7 @@ export class ShareholdersMeetingController {
         categoryId: {
           type: 'string',
           format: 'uuid',
-          description: '주주총회 카테고리 ID (선택사항)',
+          description: '주주총회 카테고리 ID (필수)',
           example: '31e6bbc6-2839-4477-9672-bb4b381e8914',
         },
         translations: {
@@ -657,7 +660,7 @@ export class ShareholdersMeetingController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['translations'],
+      required: ['translations', 'categoryId'],
     },
   })
   @ApiResponse({
@@ -726,16 +729,21 @@ export class ShareholdersMeetingController {
       }
     }
 
-    // meetingData 준비 및 검증
-    const meetingData: any = {};
-    if (body.categoryId) {
-      // UUID 형식 검증
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(body.categoryId)) {
-        throw new BadRequestException('categoryId는 올바른 UUID 형식이어야 합니다.');
-      }
-      meetingData.categoryId = body.categoryId;
+    // categoryId 필수 검증
+    if (!body.categoryId) {
+      throw new BadRequestException('categoryId 필드는 필수입니다.');
     }
+    
+    // UUID 형식 검증
+    const categoryIdUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!categoryIdUuidRegex.test(body.categoryId)) {
+      throw new BadRequestException('categoryId는 올바른 UUID 형식이어야 합니다.');
+    }
+
+    // meetingData 준비 및 검증
+    const meetingData: any = {
+      categoryId: body.categoryId,
+    };
     if (body.location) {
       meetingData.location = body.location;
     }

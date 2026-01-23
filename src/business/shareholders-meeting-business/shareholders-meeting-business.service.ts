@@ -172,8 +172,8 @@ export class ShareholdersMeetingBusinessService {
       title: string;
       description?: string;
     }>,
-    meetingData?: {
-      categoryId?: string;
+    meetingData: {
+      categoryId: string;
       location?: string;
       meetingDate?: Date;
     },
@@ -191,7 +191,7 @@ export class ShareholdersMeetingBusinessService {
         title: string;
       }>;
     }>,
-    updatedBy?: string,
+    updatedBy: string,
     files?: Express.Multer.File[],
   ): Promise<ShareholdersMeeting> {
     this.logger.log(

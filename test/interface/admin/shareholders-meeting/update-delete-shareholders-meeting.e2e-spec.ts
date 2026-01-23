@@ -68,6 +68,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       const response = await testSuite
         .request()
         .put(`/api/admin/shareholders-meetings/${meetingId}`)
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -104,6 +105,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       const response = await testSuite
         .request()
         .put(`/api/admin/shareholders-meetings/${meetingId}`)
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -127,6 +129,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       const response = await testSuite
         .request()
         .put(`/api/admin/shareholders-meetings/${meetingId}`)
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -172,6 +175,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       await testSuite
         .request()
         .put('/api/admin/shareholders-meetings/00000000-0000-0000-0000-000000000001')
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([
@@ -189,6 +193,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       await testSuite
         .request()
         .put(`/api/admin/shareholders-meetings/${meetingId}`)
+        .field('categoryId', categoryId)
         .expect(400);
     });
   });
@@ -318,6 +323,7 @@ describe('주주총회 수정/삭제 (E2E)', () => {
       await testSuite
         .request()
         .put(`/api/admin/shareholders-meetings/${meetingId}`)
+        .field('categoryId', categoryId)
         .field(
           'translations',
           JSON.stringify([

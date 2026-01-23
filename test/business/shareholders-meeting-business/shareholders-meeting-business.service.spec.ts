@@ -467,6 +467,9 @@ describe('ShareholdersMeetingBusinessService', () => {
           title: '수정된 제목',
         },
       ];
+      const meetingData = {
+        categoryId: 'category-1',
+      };
       const updatedBy = 'user-1';
 
       const mockExistingMeeting = {
@@ -501,7 +504,7 @@ describe('ShareholdersMeetingBusinessService', () => {
       const result = await service.주주총회를_수정한다(
         meetingId,
         translations,
-        undefined,
+        meetingData,
         undefined,
         updatedBy,
         undefined,
