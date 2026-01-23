@@ -1,67 +1,49 @@
 import { News } from '@domain/core/news/news.entity';
+import {
+  CreateNewsDto as BaseCreateNewsDto,
+} from '@interface/common/dto/news/create-news.dto';
+import {
+  UpdateNewsDto as BaseUpdateNewsDto,
+  UpdateNewsPublicDto as BaseUpdateNewsPublicDto,
+  UpdateNewsOrderDto as BaseUpdateNewsOrderDto,
+  UpdateNewsFileDto as BaseUpdateNewsFileDto,
+} from '@interface/common/dto/news/update-news.dto';
+
+// Re-export base types
+export { NewsAttachmentDto } from '@interface/common/dto/news/create-news.dto';
 
 /**
- * 뉴스 생성 DTO
+ * 뉴스 생성 DTO (Context Layer용 - createdBy 포함)
  */
-export interface CreateNewsDto {
-  title: string;
-  description?: string | null;
-  url?: string | null;
-  categoryId: string;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+export interface CreateNewsDto extends BaseCreateNewsDto {
   createdBy?: string;
 }
 
 /**
- * 뉴스 수정 DTO
+ * 뉴스 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateNewsDto {
-  title?: string;
-  description?: string | null;
-  url?: string | null;
-  categoryId?: string;
-  isPublic?: boolean;
-  order?: number;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+export interface UpdateNewsDto extends BaseUpdateNewsDto {
   updatedBy?: string;
 }
 
 /**
- * 뉴스 공개 상태 수정 DTO
+ * 뉴스 공개 상태 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateNewsPublicDto {
-  isPublic: boolean;
+export interface UpdateNewsPublicDto extends BaseUpdateNewsPublicDto {
   updatedBy?: string;
 }
 
 /**
- * 뉴스 오더 수정 DTO
+ * 뉴스 오더 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateNewsOrderDto {
-  order: number;
+export interface UpdateNewsOrderDto extends BaseUpdateNewsOrderDto {
   updatedBy?: string;
 }
 
 /**
- * 뉴스 파일 수정 DTO
+ * 뉴스 파일 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateNewsFileDto {
-  attachments: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+export interface UpdateNewsFileDto extends BaseUpdateNewsFileDto {
   updatedBy?: string;
 }
 
