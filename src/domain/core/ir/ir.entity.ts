@@ -38,6 +38,12 @@ export class IR extends BaseEntity<IR> {
   })
   order: number;
 
+  @Column({
+    type: 'uuid',
+    comment: 'IR 카테고리 ID',
+  })
+  categoryId: string;
+
   @OneToMany(() => IRTranslation, (translation) => translation.ir, {
     cascade: true,
   })

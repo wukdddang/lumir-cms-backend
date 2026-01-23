@@ -176,7 +176,8 @@ export class IRBusinessService {
       title: string;
       description?: string;
     }>,
-    updatedBy?: string,
+    updatedBy: string,
+    categoryId: string,
     files?: Express.Multer.File[],
   ): Promise<any> {
     this.logger.log(`IR 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`);
@@ -223,13 +224,20 @@ export class IRBusinessService {
       `IR 파일 업데이트 완료 - 최종 파일 수: ${finalAttachments.length}개`,
     );
 
-    // 5. 번역 수정
+    // 5. categoryId 업데이트
+    await this.irContextService.IR을_수정한다(id, {
+      categoryId,
+      updatedBy,
+    });
+    this.logger.log(`IR 카테고리 업데이트 완료 - 카테고리 ID: ${categoryId}`);
+
+    // 6. 번역 수정
     const result = await this.irContextService.IR을_수정한다(id, {
       translations,
       updatedBy,
     });
 
-    // 6. 카테고리 매핑 조회
+    // 7. 카테고리 매핑 조회
     const categories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(id);
 
     this.logger.log(`IR 수정 완료 - ID: ${id}`);

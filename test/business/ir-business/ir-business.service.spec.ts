@@ -312,6 +312,7 @@ describe('IRBusinessService', () => {
         },
       ];
       const updatedBy = 'user-1';
+      const categoryId = 'category-1';
       const files = [
         {
           originalname: 'new-ir.pdf',
@@ -361,6 +362,7 @@ describe('IRBusinessService', () => {
         irId,
         translations,
         updatedBy,
+        categoryId,
         files,
       );
 
@@ -379,6 +381,10 @@ describe('IRBusinessService', () => {
         ]),
         updatedBy,
       );
+      expect(irContextService.IR을_수정한다).toHaveBeenCalledWith(irId, expect.objectContaining({
+        categoryId,
+        updatedBy,
+      }));
       expect(irContextService.IR을_수정한다).toHaveBeenCalledWith(irId, {
         translations,
         updatedBy,
@@ -397,6 +403,7 @@ describe('IRBusinessService', () => {
         },
       ];
       const updatedBy = 'user-1';
+      const categoryId = 'category-1';
 
       const mockExistingIR = {
         id: irId,
@@ -428,6 +435,7 @@ describe('IRBusinessService', () => {
         irId,
         translations,
         updatedBy,
+        categoryId,
         undefined,
       );
 
@@ -441,6 +449,10 @@ describe('IRBusinessService', () => {
         [],
         updatedBy,
       );
+      expect(irContextService.IR을_수정한다).toHaveBeenCalledWith(irId, expect.objectContaining({
+        categoryId,
+        updatedBy,
+      }));
       expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith(irId);
       expect(result).toHaveProperty('categories');
     });

@@ -78,6 +78,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       const updateResponse = await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .expect(200);
 
@@ -120,6 +121,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       const updateResponse = await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .attach('files', Buffer.from('New PDF'), 'new.pdf')
         .expect(200);
@@ -163,6 +165,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       const updateResponse = await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .expect(200);
 
@@ -202,6 +205,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       const updateResponse = await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .attach('files', Buffer.from('PDF 1'), 'file1.pdf')
         .attach('files', Buffer.from('PDF 2'), 'file2.pdf')
@@ -224,6 +228,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       await testSuite
         .request()
         .put('/api/admin/irs/00000000-0000-0000-0000-000000000001')
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .expect(404);
     });
@@ -250,6 +255,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .expect(400);
     });
   });
@@ -567,6 +573,7 @@ describe('PUT/PATCH/DELETE /api/admin/irs (IR 수정/삭제)', () => {
       const updateResponse = await testSuite
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify(updatedTranslations))
         .expect(200);
 

@@ -188,6 +188,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
       const updateResponse = await testHelper
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify([{
           languageId,
           title: '파일 추가 테스트 IR',
@@ -239,6 +240,7 @@ describe('[E2E] POST /api/admin/irs - 파일 업로드', () => {
       await testHelper
         .request()
         .put(`/api/admin/irs/${irId}`)
+        .field('categoryId', categoryId)
         .field('translations', JSON.stringify([{
           languageId,
           title: '파일 삭제 테스트 IR',

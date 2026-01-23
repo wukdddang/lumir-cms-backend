@@ -288,6 +288,7 @@ describe('IRContextService', () => {
       expect(irService.IR을_생성한다).toHaveBeenCalledWith({
         isPublic: true,
         order: 0,
+        categoryId,
         attachments,
         createdBy,
       });
