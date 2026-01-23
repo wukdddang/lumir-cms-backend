@@ -73,7 +73,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
 
     for (const category of defaultCategories) {
       await queryRunner.query(`
-        INSERT INTO "categories" (id, "entity_type", name, description, "is_active", "order", "created_at", "updated_at", version)
+        INSERT INTO "categories" (id, "entityType", name, description, "isActive", "order", "createdAt", "updatedAt", version)
         SELECT 
           gen_random_uuid(),
           '${category.entityType}',
@@ -86,7 +86,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
           1
         WHERE NOT EXISTS (
           SELECT 1 FROM "categories" 
-          WHERE "entity_type" = '${category.entityType}' 
+          WHERE "entityType" = '${category.entityType}' 
           AND name = '${category.name}'
         )
       `);
@@ -99,7 +99,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "brochures" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'brochure' AND name = '미분류'
+        WHERE "entityType" = 'brochure' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -110,7 +110,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "irs" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'ir' AND name = '미분류'
+        WHERE "entityType" = 'ir' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -121,7 +121,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "electronic_disclosures" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'electronic_disclosure' AND name = '미분류'
+        WHERE "entityType" = 'electronic_disclosure' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -132,7 +132,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "shareholders_meetings" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'shareholders_meeting' AND name = '미분류'
+        WHERE "entityType" = 'shareholders_meeting' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -143,7 +143,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "announcements" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'announcement' AND name = '미분류'
+        WHERE "entityType" = 'announcement' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -154,7 +154,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "lumir_stories" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'lumir_story' AND name = '미분류'
+        WHERE "entityType" = 'lumir_story' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -165,7 +165,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "video_galleries" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'video_gallery' AND name = '미분류'
+        WHERE "entityType" = 'video_gallery' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -176,7 +176,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "news" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'news' AND name = '미분류'
+        WHERE "entityType" = 'news' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -187,7 +187,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       UPDATE "main_popups" 
       SET "category_id" = (
         SELECT id FROM "categories" 
-        WHERE "entity_type" = 'main_popup' AND name = '미분류'
+        WHERE "entityType" = 'main_popup' AND name = '미분류'
         LIMIT 1
       )
       WHERE "category_id" IS NULL
@@ -240,7 +240,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
         SET "category_id" = NULL
         WHERE "category_id" = (
           SELECT id FROM "categories" 
-          WHERE "entity_type" = '${entityType}' AND name = '미분류'
+          WHERE "entityType" = '${entityType}' AND name = '미분류'
           LIMIT 1
         )
       `);
@@ -258,7 +258,7 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     await queryRunner.query(`
       DELETE FROM "categories" 
       WHERE name = '미분류' 
-      AND "entity_type" IN (
+      AND "entityType" IN (
         'brochure', 'ir', 'electronic_disclosure', 'shareholders_meeting', 
         'announcement', 'lumir_story', 'video_gallery', 'news', 'main_popup'
       )
