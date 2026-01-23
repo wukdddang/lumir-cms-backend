@@ -43,7 +43,8 @@ import { TransactionManagerService } from './transaction-manager.service';
           password,
           database,
           autoLoadEntities: true,
-          synchronize: isDevelopment ? true : false, // Supabase 사용 시 자동 동기화 비활성화 (마이그레이션으로 관리)
+          // synchronize: isDevelopment ? true : false, // Supabase 사용 시 자동 동기화 비활성화 (마이그레이션으로 관리)
+          synchronize: true,
           logging: configService.get<boolean>(
             'DB_LOGGING',
             isDevelopment && !isTest,
