@@ -12,6 +12,7 @@ import {
   ApiResponse,
   ApiQuery,
   ApiBearerAuth,
+  ApiExcludeController,
 } from '@nestjs/swagger';
 import { JwtAuthGuard, RolesGuard } from '@interface/common/guards';
 import { Roles } from '@interface/common/decorators';
@@ -24,6 +25,7 @@ import { BackupType } from '@context/backup-context/backup.types';
  *
  * 데이터베이스 백업을 수동으로 실행하고 관리할 수 있는 API를 제공합니다.
  */
+@ApiExcludeController()
 @ApiBearerAuth('Bearer')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin')
