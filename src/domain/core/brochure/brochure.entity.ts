@@ -41,7 +41,6 @@ export class Brochure extends BaseEntity<Brochure> {
 
   @Column({
     type: 'uuid',
-    name: 'category_id',
     comment: '브로슈어 카테고리 ID',
   })
   categoryId: string;

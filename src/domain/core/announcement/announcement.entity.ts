@@ -23,7 +23,6 @@ import { Category } from '../../common/category/category.entity';
 export class Announcement extends BaseEntity<Announcement> {
   @Column({
     type: 'uuid',
-    name: 'category_id',
     comment: '공지사항 카테고리 ID',
   })
   categoryId: string;

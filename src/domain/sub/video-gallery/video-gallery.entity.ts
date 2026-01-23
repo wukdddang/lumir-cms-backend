@@ -29,7 +29,6 @@ export class VideoGallery extends BaseEntity<VideoGallery> {
 
   @Column({
     type: 'uuid',
-    name: 'category_id',
     comment: '카테고리 ID',
   })
   categoryId: string;

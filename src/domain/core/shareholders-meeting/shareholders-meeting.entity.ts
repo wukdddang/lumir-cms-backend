@@ -18,7 +18,6 @@ import { Category } from '../../common/category/category.entity';
 export class ShareholdersMeeting extends BaseEntity<ShareholdersMeeting> {
   @Column({
     type: 'uuid',
-    name: 'category_id',
     comment: '주주총회 카테고리 ID',
   })
   categoryId: string;

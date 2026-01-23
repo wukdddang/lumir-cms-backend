@@ -41,19 +41,34 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     ];
 
     for (const table of tables) {
-      // 컬럼이 존재하는지 확인
-      const columnExists = await queryRunner.query(`
+      // 컬럼이 존재하는지 확인 (camelCase와 snake_case 모두 체크)
+      const camelCaseExists = await queryRunner.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = '${table}' 
+        AND column_name = 'categoryId'
+      `);
+
+      const snakeCaseExists = await queryRunner.query(`
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = '${table}' 
         AND column_name = 'category_id'
       `);
 
-      // 컬럼이 없으면 추가
-      if (columnExists.length === 0) {
+      // 컬럼이 없으면 camelCase로 추가
+      if (camelCaseExists.length === 0 && snakeCaseExists.length === 0) {
         await queryRunner.query(`
           ALTER TABLE "${table}" 
-          ADD COLUMN "category_id" uuid
+          ADD COLUMN "categoryId" uuid
+        `);
+      }
+      
+      // snake_case가 있으면 camelCase로 변경
+      if (snakeCaseExists.length > 0 && camelCaseExists.length === 0) {
+        await queryRunner.query(`
+          ALTER TABLE "${table}" 
+          RENAME COLUMN "category_id" TO "categoryId"
         `);
       }
     }
@@ -97,107 +112,107 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     // 2-1. brochures 테이블
     await queryRunner.query(`
       UPDATE "brochures" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'brochure' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-2. irs 테이블
     await queryRunner.query(`
       UPDATE "irs" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'ir' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-3. electronic_disclosures 테이블
     await queryRunner.query(`
       UPDATE "electronic_disclosures" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'electronic_disclosure' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-4. shareholders_meetings 테이블
     await queryRunner.query(`
       UPDATE "shareholders_meetings" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'shareholders_meeting' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-5. announcements 테이블
     await queryRunner.query(`
       UPDATE "announcements" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'announcement' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-6. lumir_stories 테이블
     await queryRunner.query(`
       UPDATE "lumir_stories" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'lumir_story' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-7. video_galleries 테이블
     await queryRunner.query(`
       UPDATE "video_galleries" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'video_gallery' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-8. news 테이블
     await queryRunner.query(`
       UPDATE "news" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'news' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
     // 2-9. main_popups 테이블
     await queryRunner.query(`
       UPDATE "main_popups" 
-      SET "category_id" = (
+      SET "categoryId" = (
         SELECT id FROM "categories" 
         WHERE "entityType" = 'main_popup' AND name = '미분류'
         LIMIT 1
       )
-      WHERE "category_id" IS NULL
+      WHERE "categoryId" IS NULL
     `);
 
-    // 3. 모든 category_id를 NOT NULL로 변경 (기본 카테고리가 할당되었으므로)
+    // 3. 모든 categoryId를 NOT NULL로 변경 (기본 카테고리가 할당되었으므로)
     for (const table of tables) {
       await queryRunner.query(`
         ALTER TABLE "${table}" 
-        ALTER COLUMN "category_id" SET NOT NULL
+        ALTER COLUMN "categoryId" SET NOT NULL
       `);
     }
   }
@@ -222,13 +237,13 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = '${table}' 
-        AND column_name = 'category_id'
+        AND column_name = 'categoryId'
       `);
 
       if (columnExists.length > 0) {
         await queryRunner.query(`
           ALTER TABLE "${table}" 
-          ALTER COLUMN "category_id" DROP NOT NULL
+          ALTER COLUMN "categoryId" DROP NOT NULL
         `);
       }
     }
@@ -237,8 +252,8 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
     for (const { table, entityType } of tables) {
       await queryRunner.query(`
         UPDATE "${table}" 
-        SET "category_id" = NULL
-        WHERE "category_id" = (
+        SET "categoryId" = NULL
+        WHERE "categoryId" = (
           SELECT id FROM "categories" 
           WHERE "entityType" = '${entityType}' AND name = '미분류'
           LIMIT 1
@@ -246,11 +261,11 @@ export class SetDefaultCategoryForNullValues1737619200000 implements MigrationIn
       `);
     }
 
-    // 3. category_id 컬럼 삭제
+    // 3. categoryId 컬럼 삭제
     for (const { table } of tables) {
       await queryRunner.query(`
         ALTER TABLE "${table}" 
-        DROP COLUMN IF EXISTS "category_id"
+        DROP COLUMN IF EXISTS "categoryId"
       `);
     }
 
