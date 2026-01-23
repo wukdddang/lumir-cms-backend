@@ -27,6 +27,7 @@ export interface CreateVideoGalleryDto {
 export interface UpdateVideoGalleryDto {
   title?: string;
   description?: string | null;
+  categoryId?: string;
   isPublic?: boolean;
   order?: number;
   videoSources?: VideoSourceDto[];

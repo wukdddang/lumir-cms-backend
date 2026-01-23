@@ -820,24 +820,27 @@ export class AnnouncementController {
     description:
       '공지사항을 수정합니다. (비공개 상태에서만 가능)\n\n' +
       '**📋 Request Body 작성 가이드:**\n\n' +
-      '1. **수정 가능한 필드** (모두 선택사항)\n' +
+      '1. **필수 필드**\n' +
+      '   - `categoryId`: 공지사항 카테고리 ID (UUID) - **필수**\n\n' +
+      '2. **수정 가능한 필드** (선택사항)\n' +
       '   - `title`: 공지사항 제목\n' +
       '   - `content`: 공지사항 내용 (HTML 지원)\n' +
       '   - `isFixed`: 상단 고정 여부\n' +
       '   - `mustRead`: 필독 여부\n' +
       '   - `releasedAt`, `expiredAt`: 공개 기간\n\n' +
-      '2. **권한 설정 수정**\n' +
+      '3. **권한 설정 수정**\n' +
       '   - `isPublic`: 공개 방식 변경\n' +
       '   - `permissionEmployeeIds`: 특정 직원 권한\n' +
       '   - `permissionDepartmentIds`: 부서 권한\n' +
       '   - `permissionRankIds`: 직급 권한\n' +
       '   - `permissionPositionIds`: 직책 권한\n\n' +
-      '3. **설문조사 수정/추가**\n' +
+      '4. **설문조사 수정/추가**\n' +
       '   - `survey` 객체를 포함하면 기존 설문 수정 또는 새 설문 생성\n' +
       '   - 기존 설문이 있으면 덮어씌워집니다\n\n' +
-      '4. **첨부파일 수정**\n' +
+      '5. **첨부파일 수정**\n' +
       '   - `attachments` 배열을 전송하면 기존 첨부파일 완전 교체\n\n' +
       '⚠️ **주의사항:**\n' +
+      '- `categoryId`는 필수 필드입니다. GET /admin/announcements/categories로 카테고리 목록을 조회하세요\n' +
       '- 공개된 공지사항은 수정 불가 (먼저 비공개로 전환 필요)\n' +
       '- 수정하지 않을 필드는 생략 가능합니다\n' +
       '- 날짜는 ISO 8601 형식 사용\n\n' +

@@ -92,6 +92,7 @@ describe('AnnouncementContextService', () => {
       // Given
       const announcementId = 'announcement-1';
       const updateDto = {
+        categoryId: 'category-1',
         title: '수정된 제목',
         content: '수정된 내용',
         updatedBy: 'user-1',

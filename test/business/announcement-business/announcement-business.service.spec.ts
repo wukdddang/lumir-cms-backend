@@ -302,6 +302,7 @@ describe('AnnouncementBusinessService', () => {
       // Given
       const announcementId = 'announcement-1';
       const updateDto = {
+        categoryId: 'category-1',
         title: '수정된 제목',
         updatedBy: 'user-1',
       };

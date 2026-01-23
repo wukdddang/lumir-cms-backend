@@ -66,7 +66,7 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
       const response = await testSuite
         .request()
         .put(`/api/admin/announcements/${announcementId}`)
-        .send({ content: '수정된 내용' })
+        .send({ categoryId: testCategoryId, content: '수정된 내용' })
         .expect(200);
 
       // Then
@@ -97,6 +97,7 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
         .request()
         .put(`/api/admin/announcements/${announcementId}`)
         .send({
+          categoryId: testCategoryId,
           title: '수정된 제목',
           content: '수정된 내용',
           mustRead: true,
@@ -133,6 +134,7 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
         .request()
         .put(`/api/admin/announcements/${announcementId}`)
         .send({
+          categoryId: testCategoryId,
           releasedAt: '2024-02-01T00:00:00Z',
           expiredAt: '2024-12-31T23:59:59Z',
         })
@@ -165,6 +167,7 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
         .request()
         .put(`/api/admin/announcements/${announcementId}`)
         .send({
+          categoryId: testCategoryId,
           permissionEmployeeIds: ['uuid-2', 'uuid-3'],
           permissionRankCodes: ['책임매니저'],
           permissionPositionCodes: ['팀장'],
@@ -202,7 +205,7 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
       await testSuite
         .request()
         .put(`/api/admin/announcements/${announcementId}`)
-        .send({ isFixed: 'not-a-boolean' })
+        .send({ categoryId: testCategoryId, isFixed: 'not-a-boolean' })
         .expect(400);
     });
   });
