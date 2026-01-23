@@ -270,6 +270,38 @@ export class BrochureBusinessService {
   }
 
   /**
+   * 브로슈어의 카테고리를 수정한다 (브로슈어에 연결된 카테고리 변경)
+   */
+  async 브로슈어의_카테고리를_수정한다(
+    brochureId: string,
+    data: {
+      categoryIds: string[];
+      updatedBy?: string;
+    },
+  ): Promise<Category[]> {
+    this.logger.log(`브로슈어 카테고리 수정 시작 - 브로슈어 ID: ${brochureId}, 카테고리 수: ${data.categoryIds.length}`);
+
+    // 1. 기존 카테고리 매핑 모두 삭제
+    await this.categoryService.엔티티의_모든_카테고리_매핑을_삭제한다(brochureId);
+
+    // 2. 새 카테고리 매핑 생성
+    if (data.categoryIds.length > 0) {
+      await this.categoryService.엔티티에_카테고리를_매핑한다(
+        brochureId,
+        data.categoryIds,
+        data.updatedBy,
+      );
+    }
+
+    // 3. 업데이트된 카테고리 목록 조회
+    const updatedCategories = await this.categoryService.엔티티의_카테고리_매핑을_조회한다(brochureId);
+
+    this.logger.log(`브로슈어 카테고리 수정 완료 - 브로슈어 ID: ${brochureId}`);
+
+    return updatedCategories;
+  }
+
+  /**
    * 브로슈어 카테고리를 생성한다
    */
   async 브로슈어_카테고리를_생성한다(data: {
@@ -296,9 +328,9 @@ export class BrochureBusinessService {
   }
 
   /**
-   * 브로슈어 카테고리를 수정한다
+   * 브로슈어 카테고리 엔티티를 수정한다
    */
-  async 브로슈어_카테고리를_수정한다(
+  async 브로슈어_카테고리_엔티티를_수정한다(
     id: string,
     data: {
       name?: string;
@@ -308,14 +340,14 @@ export class BrochureBusinessService {
       updatedBy?: string;
     },
   ): Promise<Category> {
-    this.logger.log(`브로슈어 카테고리 수정 시작 - ID: ${id}`);
+    this.logger.log(`브로슈어 카테고리 엔티티 수정 시작 - ID: ${id}`);
 
     const updatedCategory = await this.categoryService.카테고리를_업데이트한다(
       id,
       data,
     );
 
-    this.logger.log(`브로슈어 카테고리 수정 완료 - ID: ${id}`);
+    this.logger.log(`브로슈어 카테고리 엔티티 수정 완료 - ID: ${id}`);
 
     return updatedCategory;
   }
