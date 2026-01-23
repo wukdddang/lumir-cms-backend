@@ -33,6 +33,7 @@ import {
   UpdateBrochurePublicDto,
   CreateBrochureCategoryDto,
   UpdateBrochureCategoryDto,
+  UpdateBrochureCategoryEntityDto,
   UpdateBrochureCategoryOrderDto,
 } from '@interface/common/dto/brochure/update-brochure.dto';
 import { UpdateBrochureBatchOrderDto } from '@interface/common/dto/brochure/update-brochure-batch-order.dto';
@@ -571,13 +572,13 @@ export class BrochureController {
   }
 
   /**
-   * 브로슈어 카테고리를 수정한다
+   * 브로슈어의 카테고리 매핑을 수정한다
    */
   @Patch(':id/categories')
   @ApiOperation({
-    summary: '브로슈어 카테고리 수정',
+    summary: '브로슈어 카테고리 매핑 수정',
     description:
-      '브로슈어의 카테고리를 수정합니다.\n\n' +
+      '브로슈어에 연결된 카테고리를 수정합니다.\n\n' +
       '**필수 필드:**\n' +
       '- `categoryIds`: 카테고리 ID 배열\n\n' +
       '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
@@ -599,14 +600,14 @@ export class BrochureController {
   })
   @ApiResponse({
     status: 200,
-    description: '브로슈어 카테고리 수정 성공',
+    description: '브로슈어 카테고리 매핑 수정 성공',
     type: BrochureCategoryListResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: '브로슈어를 찾을 수 없음',
   })
-  async 브로슈어_카테고리를_수정한다(
+  async 브로슈어의_카테고리를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() updateDto: UpdateBrochureCategoryDto,
@@ -653,6 +654,45 @@ export class BrochureController {
       ...createDto,
       createdBy: user.id,
     });
+  }
+
+  /**
+   * 브로슈어 카테고리를 수정한다
+   */
+  @Patch('categories/:id')
+  @ApiOperation({
+    summary: '브로슈어 카테고리 수정',
+    description:
+      '브로슈어 카테고리를 수정합니다.\n\n' +
+      '**선택 필드 (모두 선택):**\n' +
+      '- `name`: 카테고리 이름\n' +
+      '- `description`: 카테고리 설명\n' +
+      '- `isActive`: 활성화 여부\n\n' +
+      '**파라미터:**\n' +
+      '- `id`: 카테고리 ID (UUID, 필수)\n\n' +
+      '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '브로슈어 카테고리 수정 성공',
+    type: BrochureCategoryResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '카테고리를 찾을 수 없음',
+  })
+  async 브로슈어_카테고리_엔티티를_수정한다(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() updateDto: UpdateBrochureCategoryEntityDto,
+  ): Promise<BrochureCategoryResponseDto> {
+    return await this.brochureBusinessService.브로슈어_카테고리_엔티티를_수정한다(
+      id,
+      {
+        ...updateDto,
+        updatedBy: user.id,
+      },
+    );
   }
 
   /**

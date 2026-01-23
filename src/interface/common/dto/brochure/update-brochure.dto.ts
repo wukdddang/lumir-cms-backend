@@ -131,7 +131,7 @@ export class CreateBrochureCategoryDto {
 }
 
 /**
- * 브로슈어 카테고리 수정 DTO
+ * 브로슈어 카테고리 수정 DTO (브로슈어에 카테고리 매핑)
  */
 export class UpdateBrochureCategoryDto {
   @ApiProperty({
@@ -142,6 +142,29 @@ export class UpdateBrochureCategoryDto {
   @IsArray()
   @IsString({ each: true })
   categoryIds: string[];
+}
+
+/**
+ * 브로슈어 카테고리 엔티티 수정 DTO
+ */
+export class UpdateBrochureCategoryEntityDto {
+  @ApiProperty({ description: '카테고리 이름', example: '제품 소개', required: false })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty({
+    description: '카테고리 설명',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({ description: '활성화 여부', required: false })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 /**
