@@ -37,6 +37,13 @@ export class UpdateBrochureTranslationDto {
  * 브로슈어 수정 DTO
  */
 export class UpdateBrochureDto {
+  @ApiProperty({
+    description: '카테고리 ID (UUID)',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  @IsString()
+  categoryId: string;
+
   @ApiProperty({ description: '공개 여부', example: true, required: false })
   @IsOptional()
   @IsBoolean()

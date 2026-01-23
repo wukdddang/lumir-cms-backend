@@ -1,75 +1,54 @@
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
-import { LanguageCode } from '@domain/common/language/language-code.types';
+import {
+  CreateBrochureDto as BaseCreateBrochureDto,
+} from '@interface/common/dto/brochure/create-brochure.dto';
+import {
+  UpdateBrochureDto as BaseUpdateBrochureDto,
+  UpdateBrochurePublicDto as BaseUpdateBrochurePublicDto,
+  UpdateBrochureOrderDto as BaseUpdateBrochureOrderDto,
+  UpdateBrochureFileDto as BaseUpdateBrochureFileDto,
+} from '@interface/common/dto/brochure/update-brochure.dto';
+
+// Re-export base types
+export {
+  BrochureAttachmentDto,
+  CreateBrochureTranslationDto,
+} from '@interface/common/dto/brochure/create-brochure.dto';
+export { UpdateBrochureTranslationDto } from '@interface/common/dto/brochure/update-brochure.dto';
 
 /**
- * 브로슈어 생성 DTO
+ * 브로슈어 생성 DTO (Context Layer용 - createdBy 포함)
  */
-export interface CreateBrochureTranslationDto {
-  languageId: string;
-  title: string;
-  description?: string;
-}
-
-export interface CreateBrochureDto {
-  translations: CreateBrochureTranslationDto[];
-  categoryId: string;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+export interface CreateBrochureDto extends BaseCreateBrochureDto {
   createdBy?: string;
 }
 
 /**
- * 브로슈어 수정 DTO
+ * 브로슈어 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateBrochureDto {
-  isPublic?: boolean;
-  order?: number;
-  categoryId: string;
-  attachments?: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
-  translations?: Array<{
-    languageId: string;
-    title: string;
-    description?: string;
-  }>;
+export interface UpdateBrochureDto extends BaseUpdateBrochureDto {
   updatedBy?: string;
 }
 
 /**
- * 브로슈어 공개 상태 수정 DTO
+ * 브로슈어 공개 상태 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateBrochurePublicDto {
-  isPublic: boolean;
+export interface UpdateBrochurePublicDto extends BaseUpdateBrochurePublicDto {
   updatedBy?: string;
 }
 
 /**
- * 브로슈어 오더 수정 DTO
+ * 브로슈어 오더 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateBrochureOrderDto {
-  order: number;
+export interface UpdateBrochureOrderDto extends BaseUpdateBrochureOrderDto {
   updatedBy?: string;
 }
 
 /**
- * 브로슈어 파일 수정 DTO
+ * 브로슈어 파일 수정 DTO (Context Layer용 - updatedBy 포함)
  */
-export interface UpdateBrochureFileDto {
-  attachments: Array<{
-    fileName: string;
-    fileUrl: string;
-    fileSize: number;
-    mimeType: string;
-  }>;
+export interface UpdateBrochureFileDto extends BaseUpdateBrochureFileDto {
   updatedBy?: string;
 }
 

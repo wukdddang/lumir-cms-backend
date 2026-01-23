@@ -86,4 +86,23 @@ export class CreateBrochureDto {
   @ValidateNested({ each: true })
   @Type(() => CreateBrochureTranslationDto)
   translations: CreateBrochureTranslationDto[];
+
+  @ApiProperty({
+    description: '카테고리 ID (UUID)',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  @IsNotEmpty()
+  @IsString()
+  categoryId: string;
+
+  @ApiProperty({
+    description: '첨부파일 목록',
+    type: [BrochureAttachmentDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BrochureAttachmentDto)
+  attachments?: BrochureAttachmentDto[];
 }
