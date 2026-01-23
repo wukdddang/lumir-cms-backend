@@ -576,9 +576,9 @@ describe('LumirStoryBusinessService', () => {
         lumirStoryId,
         title,
         content,
+        updatedBy,
         categoryId,
         undefined,
-        updatedBy,
         files,
       );
 
@@ -661,9 +661,9 @@ describe('LumirStoryBusinessService', () => {
         lumirStoryId,
         title,
         content,
+        updatedBy,
         categoryId,
         undefined,
-        updatedBy,
         undefined,
       );
 

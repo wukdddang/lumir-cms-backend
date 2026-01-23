@@ -195,6 +195,7 @@ describe('[E2E] POST /api/admin/lumir-stories - 파일 업로드', () => {
         .put(`/api/admin/lumir-stories/${lumirStoryId}`)
         .field('title', '파일 추가 테스트')
         .field('content', '파일 추가 테스트 내용')
+        .field('categoryId', categoryId)
         .attach('files', fileBuffer, {
           filename: fileName,
           contentType: 'application/pdf',

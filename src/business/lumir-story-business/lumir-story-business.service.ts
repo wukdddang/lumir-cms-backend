@@ -341,9 +341,9 @@ export class LumirStoryBusinessService {
     lumirStoryId: string,
     title: string,
     content: string,
-    categoryId?: string,
+    updatedBy: string,
+    categoryId: string,
     imageUrl?: string | null,
-    updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<LumirStory> {
     this.logger.log(`루미르스토리 수정 시작 - 루미르스토리 ID: ${lumirStoryId}`);
@@ -404,13 +404,10 @@ export class LumirStoryBusinessService {
     const updateData: any = {
       title,
       content,
+      categoryId,
       imageUrl,
       updatedBy,
     };
-
-    if (categoryId !== undefined) {
-      updateData.categoryId = categoryId;
-    }
 
     const result = await this.lumirStoryContextService.루미르스토리를_수정한다(
       lumirStoryId,

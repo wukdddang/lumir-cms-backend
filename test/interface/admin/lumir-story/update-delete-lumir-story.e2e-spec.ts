@@ -47,6 +47,7 @@ describe('루미르스토리 수정/삭제 (E2E)', () => {
         .send({
           title: '수정된 제목',
           content: '수정된 내용',
+          categoryId,
         })
         .expect(200);
 
@@ -66,6 +67,7 @@ describe('루미르스토리 수정/삭제 (E2E)', () => {
         .send({
           title: '수정된 제목',
           content: '기존 내용 유지',
+          categoryId,
         })
         .expect(200);
 
@@ -82,6 +84,7 @@ describe('루미르스토리 수정/삭제 (E2E)', () => {
         .send({
           title: '수정 시도',
           content: '수정 내용',
+          categoryId,
         })
         .expect(404);
     });
