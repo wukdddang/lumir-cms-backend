@@ -84,6 +84,101 @@ describe('브로슈어 카테고리 관리 (E2E)', () => {
     });
   });
 
+  describe('PATCH /api/admin/brochures/categories/:id - 브로슈어 카테고리 엔티티 수정', () => {
+    it('카테고리의 이름과 설명을 수정할 수 있어야 한다', async () => {
+      // Given: 카테고리 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/brochures/categories')
+        .send({
+          name: '원본 카테고리',
+          description: '원본 설명',
+          order: 1,
+        });
+
+      const categoryId = createResponse.body.id;
+
+      // When: 카테고리 수정
+      const response = await testSuite
+        .request()
+        .patch(`/api/admin/brochures/categories/${categoryId}`)
+        .send({
+          name: '수정된 카테고리',
+          description: '수정된 설명',
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.id).toBe(categoryId);
+      expect(response.body.name).toBe('수정된 카테고리');
+      expect(response.body.description).toBe('수정된 설명');
+      expect(response.body.order).toBe(1); // order는 변경하지 않음
+    });
+
+    it('카테고리의 활성화 여부를 수정할 수 있어야 한다', async () => {
+      // Given: 카테고리 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/brochures/categories')
+        .send({
+          name: '활성화 테스트',
+          isActive: true,
+        });
+
+      const categoryId = createResponse.body.id;
+
+      // When: 비활성화
+      const response = await testSuite
+        .request()
+        .patch(`/api/admin/brochures/categories/${categoryId}`)
+        .send({
+          isActive: false,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.id).toBe(categoryId);
+      expect(response.body.isActive).toBe(false);
+      expect(response.body.name).toBe('활성화 테스트'); // 이름은 변경하지 않음
+    });
+
+    it('일부 필드만 수정할 수 있어야 한다', async () => {
+      // Given: 카테고리 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/api/admin/brochures/categories')
+        .send({
+          name: '원본 이름',
+          description: '원본 설명',
+        });
+
+      const categoryId = createResponse.body.id;
+
+      // When: 이름만 수정
+      const response = await testSuite
+        .request()
+        .patch(`/api/admin/brochures/categories/${categoryId}`)
+        .send({
+          name: '수정된 이름',
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.name).toBe('수정된 이름');
+      expect(response.body.description).toBe('원본 설명'); // 설명은 그대로
+    });
+
+    it('존재하지 않는 카테고리를 수정하면 실패해야 한다', async () => {
+      await testSuite
+        .request()
+        .patch('/api/admin/brochures/categories/00000000-0000-0000-0000-000000000001')
+        .send({
+          name: '존재하지 않음',
+        })
+        .expect(404);
+    });
+  });
+
   describe('PATCH /api/admin/brochures/categories/:id/order - 브로슈어 카테고리 오더 변경', () => {
     it('카테고리 오더를 변경할 수 있어야 한다', async () => {
       // Given: 카테고리 생성

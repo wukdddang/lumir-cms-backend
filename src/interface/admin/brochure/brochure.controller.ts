@@ -32,7 +32,6 @@ import { BrochureBusinessService } from '@business/brochure-business/brochure-bu
 import {
   UpdateBrochurePublicDto,
   CreateBrochureCategoryDto,
-  UpdateBrochureCategoryDto,
   UpdateBrochureCategoryEntityDto,
   UpdateBrochureCategoryOrderDto,
 } from '@interface/common/dto/brochure/update-brochure.dto';
@@ -569,61 +568,6 @@ export class BrochureController {
   ): Promise<{ success: boolean }> {
     const result = await this.brochureBusinessService.브로슈어를_삭제한다(id);
     return { success: result };
-  }
-
-  /**
-   * 브로슈어의 카테고리 매핑을 수정한다
-   */
-  @Patch(':id/categories')
-  @ApiOperation({
-    summary: '브로슈어 카테고리 매핑 수정',
-    description:
-      '브로슈어에 연결된 카테고리를 수정합니다.\n\n' +
-      '**필수 필드:**\n' +
-      '- `categoryIds`: 카테고리 ID 배열\n\n' +
-      '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
-  })
-  @ApiBody({
-    description: '카테고리 ID 배열을 전송합니다.',
-    schema: {
-      type: 'object',
-      properties: {
-        categoryIds: {
-          type: 'array',
-          items: { type: 'string' },
-          description: '카테고리 ID 목록',
-          example: ['31e6bbc6-2839-4477-9672-bb4b381e8914'],
-        },
-      },
-      required: ['categoryIds'],
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: '브로슈어 카테고리 매핑 수정 성공',
-    type: BrochureCategoryListResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: '브로슈어를 찾을 수 없음',
-  })
-  async 브로슈어의_카테고리를_수정한다(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() updateDto: UpdateBrochureCategoryDto,
-  ): Promise<BrochureCategoryListResponseDto> {
-    const categories = await this.brochureBusinessService.브로슈어의_카테고리를_수정한다(
-      id,
-      {
-        ...updateDto,
-        updatedBy: user.id,
-      },
-    );
-
-    return {
-      items: categories,
-      total: categories.length,
-    };
   }
 
   /**

@@ -527,6 +527,128 @@ describe('BrochureBusinessService', () => {
     });
   });
 
+  describe('브로슈어_카테고리_엔티티를_수정한다', () => {
+    it('카테고리 서비스를 호출하여 카테고리를 수정해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const updateDto = {
+        name: '수정된 카테고리',
+        description: '수정된 설명',
+        isActive: false,
+        updatedBy: 'user-1',
+      };
+
+      const mockUpdatedCategory = {
+        id: categoryId,
+        ...updateDto,
+        entityType: 'brochure',
+      } as Category;
+
+      mockCategoryService.카테고리를_업데이트한다.mockResolvedValue(
+        mockUpdatedCategory,
+      );
+
+      // When
+      const result = await service.브로슈어_카테고리_엔티티를_수정한다(
+        categoryId,
+        updateDto,
+      );
+
+      // Then
+      expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(
+        categoryId,
+        updateDto,
+      );
+      expect(result).toEqual(mockUpdatedCategory);
+    });
+
+    it('일부 필드만 수정할 수 있어야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const updateDto = {
+        name: '수정된 이름만',
+        updatedBy: 'user-1',
+      };
+
+      const mockUpdatedCategory = {
+        id: categoryId,
+        ...updateDto,
+        entityType: 'brochure',
+      } as Category;
+
+      mockCategoryService.카테고리를_업데이트한다.mockResolvedValue(
+        mockUpdatedCategory,
+      );
+
+      // When
+      const result = await service.브로슈어_카테고리_엔티티를_수정한다(
+        categoryId,
+        updateDto,
+      );
+
+      // Then
+      expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(
+        categoryId,
+        updateDto,
+      );
+      expect(result).toEqual(mockUpdatedCategory);
+    });
+  });
+
+  describe('브로슈어_카테고리_오더를_변경한다', () => {
+    it('카테고리 서비스를 호출하여 정렬 순서를 변경해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const updateDto = {
+        order: 10,
+        updatedBy: 'user-1',
+      };
+
+      const mockUpdatedCategory = {
+        id: categoryId,
+        order: 10,
+        entityType: 'brochure',
+      } as Category;
+
+      mockCategoryService.카테고리를_업데이트한다.mockResolvedValue(
+        mockUpdatedCategory,
+      );
+
+      // When
+      const result = await service.브로슈어_카테고리_오더를_변경한다(
+        categoryId,
+        updateDto,
+      );
+
+      // Then
+      expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(
+        categoryId,
+        {
+          order: updateDto.order,
+          updatedBy: updateDto.updatedBy,
+        },
+      );
+      expect(result).toEqual(mockUpdatedCategory);
+    });
+  });
+
+  describe('브로슈어_카테고리를_삭제한다', () => {
+    it('카테고리 서비스를 호출하여 카테고리를 삭제해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      mockCategoryService.카테고리를_삭제한다.mockResolvedValue(true);
+
+      // When
+      const result = await service.브로슈어_카테고리를_삭제한다(categoryId);
+
+      // Then
+      expect(categoryService.카테고리를_삭제한다).toHaveBeenCalledWith(
+        categoryId,
+      );
+      expect(result).toBe(true);
+    });
+  });
+
   describe('브로슈어_오더를_일괄_수정한다', () => {
     it('컨텍스트 서비스를 호출하여 순서를 일괄 수정해야 한다', async () => {
       // Given

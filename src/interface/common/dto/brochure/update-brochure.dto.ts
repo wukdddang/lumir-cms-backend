@@ -131,20 +131,6 @@ export class CreateBrochureCategoryDto {
 }
 
 /**
- * 브로슈어 카테고리 수정 DTO (브로슈어에 카테고리 매핑)
- */
-export class UpdateBrochureCategoryDto {
-  @ApiProperty({
-    description: '카테고리 ID 목록',
-    type: [String],
-    example: ['31e6bbc6-2839-4477-9672-bb4b381e8914'],
-  })
-  @IsArray()
-  @IsString({ each: true })
-  categoryIds: string[];
-}
-
-/**
  * 브로슈어 카테고리 엔티티 수정 DTO
  */
 export class UpdateBrochureCategoryEntityDto {

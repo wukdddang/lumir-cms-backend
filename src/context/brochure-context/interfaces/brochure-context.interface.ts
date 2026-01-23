@@ -60,14 +60,6 @@ export interface UpdateBrochureOrderDto {
 }
 
 /**
- * 브로슈어 카테고리 수정 DTO
- */
-export interface UpdateBrochureCategoryDto {
-  categoryIds: string[];
-  updatedBy?: string;
-}
-
-/**
  * 브로슈어 파일 수정 DTO
  */
 export interface UpdateBrochureFileDto {
