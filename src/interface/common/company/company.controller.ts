@@ -105,14 +105,14 @@ export class CompanyController {
   /**
    * 직원 정보를 조회한다 (단건)
    */
-  @Get('organizations/employees/:employeeId')
+  @Get('organizations/employees/:employeeNumber')
   @ApiOperation({
     summary: '직원 정보 조회',
     description: 'SSO 서버로부터 특정 직원의 정보를 조회합니다.',
   })
   @ApiParam({
-    name: 'employeeId',
-    description: '직원 ID 또는 사번',
+    name: 'employeeNumber',
+    description: '사번',
     example: '23047',
   })
   @ApiResponse({
@@ -125,10 +125,10 @@ export class CompanyController {
     description: '직원을 찾을 수 없음',
   })
   async 직원_정보를_조회한다(
-    @Param('employeeId') employeeId: string,
+    @Param('employeeNumber') employeeNumber: string,
   ): Promise<EmployeeDetailResponseDto> {
     const employee =
-      await this.announcementBusinessService.직원_정보를_조회한다(employeeId);
+      await this.announcementBusinessService.직원_정보를_조회한다(employeeNumber);
 
     if (!employee) {
       throw new BadRequestException('직원을 찾을 수 없습니다.');
@@ -144,11 +144,11 @@ export class CompanyController {
   @ApiOperation({
     summary: '직원 목록 조회',
     description:
-      'SSO 서버로부터 여러 직원의 정보를 조회합니다. 쿼리 파라미터로 employeeIds를 콤마로 구분하여 전달합니다.',
+      'SSO 서버로부터 여러 직원의 정보를 조회합니다. 쿼리 파라미터로 employeeNumbers를 콤마로 구분하여 전달합니다.',
   })
   @ApiQuery({
-    name: 'employeeIds',
-    description: '직원 ID 목록 (콤마로 구분)',
+    name: 'employeeNumbers',
+    description: '사번 목록 (콤마로 구분)',
     example: '23047,24019,24024',
     required: true,
   })
@@ -158,20 +158,20 @@ export class CompanyController {
     type: EmployeeListResponseDto,
   })
   async 직원_목록을_조회한다(
-    @Query('employeeIds') employeeIds: string,
+    @Query('employeeNumbers') employeeNumbers: string,
   ): Promise<EmployeeListResponseDto> {
-    if (!employeeIds) {
-      throw new BadRequestException('employeeIds 파라미터가 필요합니다.');
+    if (!employeeNumbers) {
+      throw new BadRequestException('employeeNumbers 파라미터가 필요합니다.');
     }
 
-    const idsArray = employeeIds.split(',').map((id) => id.trim());
+    const numbersArray = employeeNumbers.split(',').map((num) => num.trim());
 
-    if (idsArray.length === 0) {
-      throw new BadRequestException('최소 1개 이상의 직원 ID가 필요합니다.');
+    if (numbersArray.length === 0) {
+      throw new BadRequestException('최소 1개 이상의 사번이 필요합니다.');
     }
 
     const employees =
-      await this.announcementBusinessService.직원_목록을_조회한다(idsArray);
+      await this.announcementBusinessService.직원_목록을_조회한다(numbersArray);
 
     const items = employees.map((employee) =>
       this.직원_데이터를_DTO로_변환한다(employee),
