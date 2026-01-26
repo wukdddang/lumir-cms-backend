@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import {
   GetBrochureListHandler,
   GetBrochureListQuery,
 } from '@context/brochure-context/handlers/queries/get-brochure-list.handler';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
-import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 
 describe('GetBrochureListHandler', () => {
   let handler: GetBrochureListHandler;
@@ -50,6 +49,8 @@ describe('GetBrochureListHandler', () => {
   const createMockQueryBuilder = (items: Partial<Brochure>[], total: number) => {
     const mockQueryBuilder = {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
@@ -82,6 +83,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko', name: '한국어' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
         {
           id: 'brochure-2',
@@ -94,6 +98,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko', name: '한국어' },
             },
           ],
+          category: {
+            name: '제품 소개',
+          },
         },
       ];
 
@@ -113,6 +120,12 @@ describe('GetBrochureListHandler', () => {
         'brochure.translations',
         'translations',
       );
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith(
+        'categories',
+        'category',
+        'brochure.categoryId = category.id',
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(['category.name']);
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
         'brochure.order',
         'ASC',
@@ -139,6 +152,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
       ];
 
@@ -172,6 +188,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
       ];
 
@@ -204,6 +223,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
         {
           id: 'brochure-2',
@@ -213,6 +235,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '제품 소개',
+          },
         },
       ];
 
@@ -245,6 +270,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '카테고리',
+          },
         }));
 
       const mockQueryBuilder = createMockQueryBuilder(mockBrochures as any, 15);
@@ -288,6 +316,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'ko' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
       ];
 
@@ -331,6 +362,9 @@ describe('GetBrochureListHandler', () => {
               language: { code: 'en', name: 'English' },
             },
           ],
+          category: {
+            name: '회사 소개',
+          },
         },
       ];
 

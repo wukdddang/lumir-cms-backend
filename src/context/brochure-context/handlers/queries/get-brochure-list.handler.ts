@@ -46,6 +46,8 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
       .createQueryBuilder('brochure')
       .leftJoinAndSelect('brochure.translations', 'translations')
       .leftJoinAndSelect('translations.language', 'language')
+      .leftJoin('categories', 'category', 'brochure.categoryId = category.id')
+      .addSelect(['category.name'])
       // 기본 언어 번역이 있는 브로슈어만 조회 (EXISTS 서브쿼리 사용)
       .where((qb) => {
         const subQuery = qb

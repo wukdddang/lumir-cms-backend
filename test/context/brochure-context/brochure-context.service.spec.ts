@@ -122,6 +122,7 @@ describe('BrochureContextService', () => {
       // Given
       const brochureId = 'brochure-1';
       const updateDto = {
+        categoryId: 'category-1',
         isPublic: false,
         updatedBy: 'user-1',
       };
@@ -286,6 +287,9 @@ describe('BrochureContextService', () => {
             id: 'brochure-1',
             isPublic: true,
             order: 0,
+            category: {
+              name: '회사 소개',
+            },
           } as Brochure,
         ],
         total: 1,

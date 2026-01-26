@@ -1368,14 +1368,14 @@ export class SeedDataContextService {
 
     // 메인 팝업 카테고리 생성 (없으면 생성)
     const categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
-      'MAIN_POPUP' as any,
+      CategoryEntityType.MAIN_POPUP,
       false,
     );
     
     let defaultCategory;
     if (categories.length === 0) {
       defaultCategory = await this.categoryService.카테고리를_생성한다({
-        entityType: 'MAIN_POPUP' as any,
+        entityType: CategoryEntityType.MAIN_POPUP,
         name: '이벤트',
         description: '이벤트 및 프로모션',
         isActive: true,
@@ -1735,15 +1735,20 @@ export class SeedDataContextService {
       
       // Survey는 Announcement CASCADE로 자동 삭제되므로 명시적 삭제 불필요
       await this.announcementRepository.createQueryBuilder().delete().execute();
+      
+      // Category를 참조하는 엔티티들을 먼저 삭제
       await this.newsRepository.createQueryBuilder().delete().execute();
       await this.brochureRepository.createQueryBuilder().delete().execute();
-      await this.categoryRepository.createQueryBuilder().delete().execute();
       await this.electronicDisclosureRepository.createQueryBuilder().delete().execute();
       await this.irRepository.createQueryBuilder().delete().execute();
       await this.shareholdersMeetingRepository.createQueryBuilder().delete().execute();
       await this.mainPopupRepository.createQueryBuilder().delete().execute();
       await this.lumirStoryRepository.createQueryBuilder().delete().execute();
       await this.videoGalleryRepository.createQueryBuilder().delete().execute();
+      
+      // 마지막으로 Category 삭제 (외래키로 참조되므로)
+      await this.categoryRepository.createQueryBuilder().delete().execute();
+      
       await this.wikiFileSystemRepository.createQueryBuilder().delete().execute();
       // Language는 삭제하지 않음 (시스템 기본 데이터)
     } else {
@@ -1752,15 +1757,19 @@ export class SeedDataContextService {
       
       // QueryBuilder를 사용하여 soft delete
       await this.announcementRepository.createQueryBuilder().softDelete().execute();
+      
+      // Category를 참조하는 엔티티들을 먼저 soft delete
       await this.newsRepository.createQueryBuilder().softDelete().execute();
       await this.brochureRepository.createQueryBuilder().softDelete().execute();
-      await this.categoryRepository.createQueryBuilder().softDelete().execute();
       await this.electronicDisclosureRepository.createQueryBuilder().softDelete().execute();
       await this.irRepository.createQueryBuilder().softDelete().execute();
       await this.shareholdersMeetingRepository.createQueryBuilder().softDelete().execute();
       await this.mainPopupRepository.createQueryBuilder().softDelete().execute();
       await this.lumirStoryRepository.createQueryBuilder().softDelete().execute();
       await this.videoGalleryRepository.createQueryBuilder().softDelete().execute();
+      
+      // 마지막으로 Category soft delete
+      await this.categoryRepository.createQueryBuilder().softDelete().execute();
       await this.wikiFileSystemRepository.createQueryBuilder().softDelete().execute();
     }
 

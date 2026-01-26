@@ -101,6 +101,9 @@ export class BrochureListItemDto {
   })
   description: string | null;
 
+  @ApiProperty({ description: '카테고리 이름', example: '회사 소개' })
+  categoryName: string;
+
   @ApiProperty({ description: '생성 일시' })
   createdAt: Date;
 

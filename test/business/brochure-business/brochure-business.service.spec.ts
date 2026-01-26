@@ -88,6 +88,9 @@ describe('BrochureBusinessService', () => {
                 language: { code: 'ko' },
               },
             ],
+            category: {
+              name: '회사 소개',
+            },
           } as any,
         ],
         total: 1,
@@ -118,6 +121,7 @@ describe('BrochureBusinessService', () => {
       );
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('회사 소개');
+      expect(result.items[0].categoryName).toBe('회사 소개');
     });
 
     it('날짜 필터를 포함하여 조회해야 한다', async () => {

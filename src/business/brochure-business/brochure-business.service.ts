@@ -70,6 +70,7 @@ export class BrochureBusinessService {
         order: brochure.order,
         title: koreanTranslation?.title || '',
         description: koreanTranslation?.description || null,
+        categoryName: brochure.category?.name || '',
         createdAt: brochure.createdAt,
         updatedAt: brochure.updatedAt,
       };
