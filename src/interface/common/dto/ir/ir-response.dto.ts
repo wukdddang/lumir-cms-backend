@@ -138,6 +138,9 @@ export class IRListItemDto {
   })
   description: string | null;
 
+  @ApiProperty({ description: '카테고리 이름', example: '재무정보' })
+  categoryName: string;
+
   @ApiProperty({
     description: '카테고리 목록',
     type: [IRCategoryResponseDto],

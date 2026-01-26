@@ -498,6 +498,9 @@ describe('IRBusinessService', () => {
                 language: { code: 'ko' },
               },
             ],
+            category: {
+              name: '재무제표',
+            },
             createdAt: new Date('2024-01-01'),
             updatedAt: new Date('2024-01-02'),
           } as any,
@@ -527,6 +530,7 @@ describe('IRBusinessService', () => {
       expect(categoryService.엔티티의_카테고리_매핑을_조회한다).toHaveBeenCalledWith('ir-1');
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('2024년 1분기 IR 자료');
+      expect(result.items[0].categoryName).toBe('재무제표');
       expect(result.items[0]).toHaveProperty('categories');
       expect(result.items[0].categories).toEqual(mockCategories);
       expect(result.totalPages).toBe(1);

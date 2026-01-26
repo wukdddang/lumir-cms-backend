@@ -53,6 +53,10 @@ export class IRService {
       .leftJoinAndSelect('ir.translations', 'translations')
       .leftJoinAndSelect('translations.language', 'language');
 
+    // category 조인
+    queryBuilder.leftJoin('categories', 'category', 'ir.categoryId = category.id');
+    queryBuilder.addSelect(['category.name']);
+
     let hasWhere = false;
 
     if (options?.isPublic !== undefined) {
@@ -87,7 +91,20 @@ export class IRService {
       queryBuilder.orderBy('ir.createdAt', 'DESC');
     }
 
-    return await queryBuilder.getMany();
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+    const items = rawAndEntities.entities;
+    const raw = rawAndEntities.raw;
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    items.forEach((ir, index) => {
+      if (raw[index] && raw[index].category_name) {
+        ir.category = {
+          name: raw[index].category_name,
+        };
+      }
+    });
+
+    return items;
   }
 
   /**

@@ -629,6 +629,9 @@ describe('IRContextService', () => {
               title: 'IR 제목',
             },
           ],
+          category: {
+            name: '재무정보',
+          },
         } as any,
       ];
 
@@ -688,6 +691,7 @@ describe('IRContextService', () => {
         id: `ir-${i}`,
         isPublic: true,
         translations: [{ language: { code: 'ko' }, title: `제목 ${i}` }],
+        category: { name: '재무정보' },
       })) as any;
 
       mockIRService.모든_IR을_조회한다.mockResolvedValue(mockIRs);

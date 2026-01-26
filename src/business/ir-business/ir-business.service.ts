@@ -328,6 +328,7 @@ export class IRBusinessService {
         order: ir.order,
         title: defaultTranslation?.title || '',
         description: defaultTranslation?.description || null,
+        categoryName: ir.category?.name || '',
         categories: categoryMap.get(ir.id) || [],
         createdAt: ir.createdAt,
         updatedAt: ir.updatedAt,
