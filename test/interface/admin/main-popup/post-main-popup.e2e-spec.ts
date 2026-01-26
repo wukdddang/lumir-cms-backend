@@ -70,6 +70,7 @@ describe('POST /api/admin/main-popups (메인 팝업 생성)', () => {
         updatedAt: expect.any(String),
       });
 
+      expect(response.body.categoryName).toBeDefined();
       expect(response.body.translations).toBeDefined();
       expect(response.body.translations.length).toBeGreaterThan(0);
       
@@ -225,6 +226,7 @@ describe('POST /api/admin/main-popups (메인 팝업 생성)', () => {
         categoryId: categoryId,
       });
 
+      expect(response.body.categoryName).toBeDefined();
       const koTranslation = response.body.translations.find(
         (t: any) => t.languageId === testLanguageId,
       );

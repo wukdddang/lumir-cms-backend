@@ -113,13 +113,31 @@ export class MainPopupService {
   async ID로_메인_팝업을_조회한다(id: string): Promise<MainPopup> {
     this.logger.debug(`메인 팝업 조회 - ID: ${id}`);
 
-    const popup = await this.mainPopupRepository.findOne({
-      where: { id },
-      relations: ['translations', 'translations.language'],
-    });
+    const queryBuilder = this.mainPopupRepository
+      .createQueryBuilder('popup')
+      .leftJoinAndSelect('popup.translations', 'translations')
+      .leftJoinAndSelect('translations.language', 'language')
+      .leftJoin('categories', 'category', 'popup.categoryId = category.id')
+      .addSelect(['category.name'])
+      .where('popup.id = :id', { id });
 
-    if (!popup) {
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+
+    if (!rawAndEntities.entities || rawAndEntities.entities.length === 0) {
       throw new NotFoundException(`메인 팝업을 찾을 수 없습니다. ID: ${id}`);
+    }
+
+    const popup = rawAndEntities.entities[0];
+    const raw = rawAndEntities.raw[0];
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    if (raw && raw.category_name) {
+      popup.category = {
+        name: raw.category_name,
+      };
+      this.logger.debug(`메인 팝업 ${popup.id}: 카테고리명 = ${raw.category_name}`);
+    } else {
+      this.logger.warn(`메인 팝업 ${popup.id}: 카테고리명을 찾을 수 없음. categoryId: ${popup.categoryId}`);
     }
 
     return popup;

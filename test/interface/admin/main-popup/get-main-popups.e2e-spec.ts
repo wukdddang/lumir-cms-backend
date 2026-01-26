@@ -504,7 +504,10 @@ describe('GET /api/admin/main-popups/:id (메인 팝업 상세 조회)', () => {
         isPublic: true, // 기본값: 공개
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
+      expect(response.body.categoryName).toBe('테스트 카테고리');
       expect(response.body.translations).toBeDefined();
       expect(response.body.translations[0]).toMatchObject({
         title: '테스트 팝업',

@@ -417,6 +417,8 @@ describe('PATCH /api/admin/main-popups/:id/public (메인 팝업 공개 상태 �
 
       // Then
       expect(response.body.isPublic).toBe(true);
+      expect(response.body.categoryId).toBeDefined();
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('메인 팝업을 비공개로 변경해야 한다', async () => {
@@ -452,6 +454,8 @@ describe('PATCH /api/admin/main-popups/:id/public (메인 팝업 공개 상태 �
 
       // Then
       expect(response.body.isPublic).toBe(false);
+      expect(response.body.categoryId).toBeDefined();
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('공개 상태를 여러 번 변경할 수 있어야 한다', async () => {

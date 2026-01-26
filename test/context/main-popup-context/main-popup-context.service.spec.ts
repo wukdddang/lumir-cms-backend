@@ -118,6 +118,10 @@ describe('MainPopupContextService', () => {
         id: popupId,
         isPublic: true,
         translations: [],
+        categoryId: 'category-1',
+        category: {
+          name: '공지사항',
+        },
       } as any as MainPopup;
 
       mockMainPopupService.ID로_메인_팝업을_조회한다.mockResolvedValue(
@@ -132,6 +136,8 @@ describe('MainPopupContextService', () => {
         popupId,
       );
       expect(result).toEqual(mockPopup);
+      expect(result.categoryId).toBe('category-1');
+      expect(result.category?.name).toBe('공지사항');
     });
   });
 

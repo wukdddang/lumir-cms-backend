@@ -43,14 +43,20 @@ export class MainPopupBusinessService {
   /**
    * 메인 팝업 상세를 조회한다
    */
-  async 메인_팝업_상세를_조회한다(id: string): Promise<MainPopup> {
+  async 메인_팝업_상세를_조회한다(id: string): Promise<any> {
     this.logger.log(`메인 팝업 상세 조회 시작 - ID: ${id}`);
 
     const popup = await this.mainPopupContextService.메인_팝업_상세를_조회한다(id);
 
     this.logger.log(`메인 팝업 상세 조회 완료 - ID: ${id}`);
 
-    return popup;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...popupData } = popup as any;
+
+    return {
+      ...popupData,
+      categoryName: category?.name,
+    };
   }
 
   /**

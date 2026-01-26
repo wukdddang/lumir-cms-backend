@@ -187,13 +187,13 @@ export class MainPopupController {
   @ApiResponse({
     status: 200,
     description: '메인 팝업 상세 조회 성공',
-    type: MainPopup,
+    type: MainPopupResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: '메인 팝업을 찾을 수 없음',
   })
-  async 메인_팝업_상세를_조회한다(@Param('id') id: string): Promise<MainPopup> {
+  async 메인_팝업_상세를_조회한다(@Param('id') id: string): Promise<MainPopupResponseDto> {
     // UUID 형식 검증
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {

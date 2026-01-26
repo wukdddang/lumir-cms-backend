@@ -121,6 +121,10 @@ describe('MainPopupBusinessService', () => {
         id: popupId,
         isPublic: true,
         translations: [],
+        categoryId: 'category-1',
+        category: {
+          name: '공지사항',
+        },
       } as Partial<MainPopup> as MainPopup;
 
       mockMainPopupContextService.메인_팝업_상세를_조회한다.mockResolvedValue(
@@ -134,7 +138,9 @@ describe('MainPopupBusinessService', () => {
       expect(
         mainPopupContextService.메인_팝업_상세를_조회한다,
       ).toHaveBeenCalledWith(popupId);
-      expect(result).toEqual(mockPopup);
+      expect(result).toHaveProperty('categoryId', 'category-1');
+      expect(result).toHaveProperty('categoryName', '공지사항');
+      expect(result).not.toHaveProperty('category');
     });
   });
 
