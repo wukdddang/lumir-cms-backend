@@ -152,7 +152,10 @@ describe('GET /api/admin/lumir-stories/:id (루미르스토리 상세 조회)', 
         title: '상세 조회 테스트',
         content: '상세 조회 내용',
         isPublic: true,
+        categoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
+      expect(response.body.categoryName).toBe('상세 조회 카테고리');
     });
   });
 

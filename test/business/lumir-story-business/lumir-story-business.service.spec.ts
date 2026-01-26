@@ -417,6 +417,10 @@ describe('LumirStoryBusinessService', () => {
         title: '루미르 스토리',
         content: '내용',
         isPublic: true,
+        categoryId: 'category-1',
+        category: {
+          name: '혁신',
+        },
       } as any;
 
       mockLumirStoryContextService.루미르스토리_상세_조회한다.mockResolvedValue(
@@ -430,7 +434,9 @@ describe('LumirStoryBusinessService', () => {
       expect(
         lumirStoryContextService.루미르스토리_상세_조회한다,
       ).toHaveBeenCalledWith(lumirStoryId);
-      expect(result).toEqual(mockLumirStory);
+      expect(result).toHaveProperty('categoryId', 'category-1');
+      expect(result).toHaveProperty('categoryName', '혁신');
+      expect(result).not.toHaveProperty('category');
     });
   });
 

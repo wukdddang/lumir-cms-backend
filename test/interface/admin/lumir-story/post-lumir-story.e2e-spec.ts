@@ -52,6 +52,7 @@ describe('POST /api/admin/lumir-stories (루미르스토리 생성)', () => {
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('이미지 URL을 포함한 루미르스토리를 생성해야 한다', async () => {

@@ -211,7 +211,7 @@ export class LumirStoryBusinessService {
    */
   async 루미르스토리_상세_조회한다(
     id: string,
-  ): Promise<LumirStoryDetailResult> {
+  ): Promise<any> {
     this.logger.log(`루미르스토리 상세 조회 시작 - ID: ${id}`);
 
     const result = await this.lumirStoryContextService.루미르스토리_상세_조회한다(
@@ -220,7 +220,13 @@ export class LumirStoryBusinessService {
 
     this.logger.log(`루미르스토리 상세 조회 완료 - ID: ${id}`);
 
-    return result;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...storyData } = result as any;
+
+    return {
+      ...storyData,
+      categoryName: category?.name,
+    };
   }
 
   /**

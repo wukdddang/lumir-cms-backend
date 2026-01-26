@@ -347,6 +347,10 @@ describe('LumirStoryContextService', () => {
         isPublic: true,
         order: 0,
         attachments: null,
+        categoryId: 'category-1',
+        category: {
+          name: '혁신',
+        },
         createdAt: new Date(),
         updatedAt: new Date(),
       } as any as LumirStory;
@@ -364,6 +368,8 @@ describe('LumirStoryContextService', () => {
         }),
       );
       expect(result).toEqual(mockLumirStory);
+      expect(result.categoryId).toBe('category-1');
+      expect(result.category?.name).toBe('혁신');
     });
   });
 });

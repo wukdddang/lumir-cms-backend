@@ -87,12 +87,29 @@ export class LumirStoryService {
   async ID로_루미르스토리를_조회한다(id: string): Promise<LumirStory> {
     this.logger.debug(`루미르스토리 조회 - ID: ${id}`);
 
-    const lumirStory = await this.lumirStoryRepository.findOne({
-      where: { id },
-    });
+    const queryBuilder = this.lumirStoryRepository
+      .createQueryBuilder('lumirStory')
+      .leftJoin('categories', 'category', 'lumirStory.categoryId = category.id')
+      .addSelect(['category.name'])
+      .where('lumirStory.id = :id', { id });
 
-    if (!lumirStory) {
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+
+    if (!rawAndEntities.entities || rawAndEntities.entities.length === 0) {
       throw new NotFoundException(`루미르스토리를 찾을 수 없습니다. ID: ${id}`);
+    }
+
+    const lumirStory = rawAndEntities.entities[0];
+    const raw = rawAndEntities.raw[0];
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    if (raw && raw.category_name) {
+      lumirStory.category = {
+        name: raw.category_name,
+      };
+      this.logger.debug(`루미르스토리 ${lumirStory.id}: 카테고리명 = ${raw.category_name}`);
+    } else {
+      this.logger.warn(`루미르스토리 ${lumirStory.id}: 카테고리명을 찾을 수 없음. categoryId: ${lumirStory.categoryId}`);
     }
 
     return lumirStory;

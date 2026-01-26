@@ -68,6 +68,9 @@ export class LumirStoryResponseDto {
 
   @ApiProperty({ description: '수정자 ID', required: false, nullable: true })
   updatedBy: string | null;
+
+  @ApiProperty({ description: '카테고리 이름', example: '혁신', required: false })
+  categoryName?: string;
 }
 
 /**
