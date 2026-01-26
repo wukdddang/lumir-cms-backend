@@ -561,6 +561,8 @@ describe('ShareholdersMeetingBusinessService', () => {
         items: [
           {
             id: 'meeting-1',
+            categoryId: 'category-1',
+            category: { name: '정기총회' },
             isPublic: true,
             order: 0,
             location: '서울',
@@ -598,6 +600,7 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('제38기 정기 주주총회');
+      expect(result.items[0].categoryName).toBe('정기총회');
     });
 
     it('날짜 필터를 포함하여 조회해야 한다', async () => {
