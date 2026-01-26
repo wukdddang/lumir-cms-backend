@@ -76,14 +76,26 @@ describe('NewsBusinessService', () => {
         {
           id: 'news-1',
           title: '뉴스 1',
+          description: '설명 1',
+          url: 'https://news1.com',
+          categoryId: 'cat-1',
+          category: { name: '신제품' },
           isPublic: true,
           order: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         } as News,
         {
           id: 'news-2',
           title: '뉴스 2',
+          description: '설명 2',
+          url: 'https://news2.com',
+          categoryId: 'cat-2',
+          category: { name: '수상' },
           isPublic: true,
           order: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         } as News,
       ];
 
@@ -112,7 +124,9 @@ describe('NewsBusinessService', () => {
       );
       expect(result.total).toBe(2);
       expect(result.totalPages).toBe(1);
-      expect(result.items).toEqual(mockNews);
+      expect(result.items[0].categoryName).toBe('신제품');
+      expect(result.items[1].categoryName).toBe('수상');
+      expect(result.items.length).toBe(2);
     });
 
     it('날짜 범위로 필터링하여 조회해야 한다', async () => {

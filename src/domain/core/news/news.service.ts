@@ -39,16 +39,32 @@ export class NewsService {
 
     const queryBuilder = this.repository.createQueryBuilder('news');
 
+    // category 조인
+    queryBuilder.leftJoin('categories', 'category', 'news.categoryId = category.id');
+    queryBuilder.addSelect(['category.name']);
+
     if (options?.isPublic !== undefined) {
       queryBuilder.where('news.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
     }
 
-    return await queryBuilder
-      .orderBy('news.order', 'ASC')
-      .addOrderBy('news.createdAt', 'DESC')
-      .getMany();
+    queryBuilder.orderBy('news.order', 'ASC').addOrderBy('news.createdAt', 'DESC');
+
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+    const items = rawAndEntities.entities;
+    const raw = rawAndEntities.raw;
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    items.forEach((news, index) => {
+      if (raw[index] && raw[index].category_name) {
+        news.category = {
+          name: raw[index].category_name,
+        };
+      }
+    });
+
+    return items;
   }
 
   /**

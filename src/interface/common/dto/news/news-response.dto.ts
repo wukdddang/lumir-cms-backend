@@ -108,6 +108,9 @@ export class NewsListItemDto {
   })
   categoryId: string;
 
+  @ApiProperty({ description: '카테고리 이름', example: '신제품' })
+  categoryName: string;
+
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;
 

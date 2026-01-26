@@ -123,10 +123,18 @@ describe('NewsService', () => {
       ];
 
       const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         addOrderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockNews),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockNews,
+          raw: [
+            { category_name: '신제품' },
+            { category_name: '신제품' },
+          ],
+        }),
       };
 
       mockRepository.createQueryBuilder.mockReturnValue(
@@ -138,6 +146,12 @@ describe('NewsService', () => {
 
       // Then
       expect(repository.createQueryBuilder).toHaveBeenCalledWith('news');
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith(
+        'categories',
+        'category',
+        'news.categoryId = category.id',
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(['category.name']);
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
         'news.order',
         'ASC',
@@ -160,10 +174,18 @@ describe('NewsService', () => {
       ];
 
       const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         addOrderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockNews),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockNews,
+          raw: [
+            { category_name: '신제품' },
+            { category_name: '신제품' },
+          ],
+        }),
       };
 
       mockRepository.createQueryBuilder.mockReturnValue(

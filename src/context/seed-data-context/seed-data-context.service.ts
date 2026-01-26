@@ -1001,13 +1001,44 @@ export class SeedDataContextService {
   private async 뉴스_시드_데이터를_생성한다(count: number): Promise<number> {
     this.logger.log(`뉴스 시드 데이터 생성 시작 - 개수: ${count}`);
 
+    // 뉴스 카테고리 조회 또는 생성
+    let categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+      CategoryEntityType.NEWS,
+      false,
+    );
+
+    if (categories.length === 0) {
+      this.logger.log('뉴스 카테고리가 없어 기본 카테고리 생성');
+      const newsCategories = [
+        { name: '신제품', description: '신제품 관련 뉴스' },
+        { name: '수상', description: '수상 관련 뉴스' },
+        { name: '사회공헌', description: '사회공헌 활동 뉴스' },
+      ];
+
+      for (let i = 0; i < newsCategories.length; i++) {
+        const category = await this.categoryService.카테고리를_생성한다({
+          entityType: CategoryEntityType.NEWS,
+          name: newsCategories[i].name,
+          description: newsCategories[i].description,
+          isActive: true,
+          order: i,
+          createdBy: 'seed',
+        });
+        categories.push(category);
+      }
+      this.logger.log(`뉴스 카테고리 ${categories.length}개 생성 완료`);
+    }
+
     let created = 0;
 
     for (let i = 0; i < count; i++) {
+      const category = categories[i % categories.length];
+      
       await this.newsService.뉴스를_생성한다({
         title: `${faker.lorem.sentence()} - 뉴스 ${i + 1}`,
         description: faker.lorem.paragraph(),
         url: faker.internet.url(),
+        categoryId: category.id,
         isPublic: true,
         attachments: null,
         order: count - i,

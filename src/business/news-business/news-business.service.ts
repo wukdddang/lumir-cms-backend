@@ -7,6 +7,7 @@ import { Category } from '@domain/common/category/category.entity';
 import { STORAGE_SERVICE } from '@libs/storage/storage.module';
 import type { IStorageService } from '@libs/storage/interfaces/storage.interface';
 import { NewsDetailResult } from '@context/news-context/interfaces/news-context.interface';
+import { NewsListItemDto } from '@interface/common/dto/news/news-response.dto';
 
 /**
  * 뉴스 비즈니스 서비스
@@ -37,7 +38,7 @@ export class NewsBusinessService {
     startDate?: Date,
     endDate?: Date,
   ): Promise<{
-    items: News[];
+    items: NewsListItemDto[];
     total: number;
     page: number;
     limit: number;
@@ -58,12 +59,26 @@ export class NewsBusinessService {
 
     const totalPages = Math.ceil(result.total / limit);
 
+    // 엔티티를 DTO로 변환
+    const items: NewsListItemDto[] = result.items.map((news) => ({
+      id: news.id,
+      title: news.title,
+      description: news.description,
+      url: news.url,
+      categoryId: news.categoryId,
+      categoryName: news.category?.name || '',
+      isPublic: news.isPublic,
+      order: news.order,
+      createdAt: news.createdAt,
+      updatedAt: news.updatedAt,
+    }));
+
     this.logger.log(
       `뉴스 목록 조회 완료 - 총 ${result.total}개 (${page}/${totalPages} 페이지)`,
     );
 
     return {
-      items: result.items,
+      items,
       total: result.total,
       page: result.page,
       limit: result.limit,

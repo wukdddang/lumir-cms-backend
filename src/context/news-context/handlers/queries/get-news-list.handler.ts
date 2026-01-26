@@ -40,6 +40,10 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
 
     const queryBuilder = this.newsRepository.createQueryBuilder('news');
 
+    // category 조인
+    queryBuilder.leftJoin('categories', 'category', 'news.categoryId = category.id');
+    queryBuilder.addSelect(['category.name']);
+
     let hasWhere = false;
 
     if (isPublic !== undefined) {
@@ -75,7 +79,19 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
     const skip = (page - 1) * limit;
     queryBuilder.skip(skip).take(limit);
 
-    const [items, total] = await queryBuilder.getManyAndCount();
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+    const items = rawAndEntities.entities;
+    const raw = rawAndEntities.raw;
+    const total = await queryBuilder.skip(0).take(undefined).getCount(); // Count separately
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    items.forEach((news, index) => {
+      if (raw[index] && raw[index].category_name) {
+        news.category = {
+          name: raw[index].category_name,
+        };
+      }
+    });
 
     return { items, total, page, limit };
   }

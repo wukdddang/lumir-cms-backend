@@ -66,6 +66,11 @@ export class News extends BaseEntity<News> {
   })
   categoryId: string;
 
+  // TypeORM 조인 시 임시로 담기 위한 필드 (DB 컬럼이 아님)
+  category?: {
+    name: string;
+  };
+
   /**
    * 엔티티를 DTO로 변환한다
    */
