@@ -41,7 +41,8 @@ export class GetVideoGalleryListHandler
     );
 
     const queryBuilder =
-      this.videoGalleryRepository.createQueryBuilder('videoGallery');
+      this.videoGalleryRepository.createQueryBuilder('videoGallery')
+        .leftJoinAndSelect('videoGallery.category', 'category');
 
     let hasWhere = false;
 

@@ -7,6 +7,7 @@ import { Category } from '@domain/common/category/category.entity';
 import { STORAGE_SERVICE } from '@libs/storage/storage.module';
 import type { IStorageService } from '@libs/storage/interfaces/storage.interface';
 import { VideoGalleryDetailResult } from '@context/video-gallery-context/interfaces/video-gallery-context.interface';
+import { VideoGalleryListItemDto } from '@interface/common/dto/video-gallery/video-gallery-response.dto';
 
 /**
  * 비디오갤러리 비즈니스 서비스
@@ -37,7 +38,7 @@ export class VideoGalleryBusinessService {
     startDate?: Date,
     endDate?: Date,
   ): Promise<{
-    items: VideoGallery[];
+    items: VideoGalleryListItemDto[];
     total: number;
     page: number;
     limit: number;
@@ -58,12 +59,26 @@ export class VideoGalleryBusinessService {
 
     const totalPages = Math.ceil(result.total / limit);
 
+    // 엔티티를 DTO로 변환
+    const items: VideoGalleryListItemDto[] = result.items.map((gallery) => ({
+      id: gallery.id,
+      title: gallery.title,
+      description: gallery.description,
+      categoryId: gallery.categoryId,
+      categoryName: gallery.category?.name || '',
+      category: gallery.category,
+      isPublic: gallery.isPublic,
+      order: gallery.order,
+      createdAt: gallery.createdAt,
+      updatedAt: gallery.updatedAt,
+    }));
+
     this.logger.log(
       `비디오갤러리 목록 조회 완료 - 총 ${result.total}개 (${page}/${totalPages} 페이지)`,
     );
 
     return {
-      items: result.items,
+      items,
       total: result.total,
       page: result.page,
       limit: result.limit,

@@ -54,16 +54,19 @@ describe('GetVideoGalleryListHandler', () => {
           title: '비디오 1',
           isPublic: true,
           order: 0,
+          category: { id: 'cat-1', name: '제품 소개' },
         },
         {
           id: 'video-gallery-2',
           title: '비디오 2',
           isPublic: true,
           order: 1,
+          category: { id: 'cat-2', name: '회사 소개' },
         },
       ] as VideoGallery[];
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -84,6 +87,10 @@ describe('GetVideoGalleryListHandler', () => {
       // Then
       expect(videoGalleryRepository.createQueryBuilder).toHaveBeenCalledWith(
         'videoGallery',
+      );
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'videoGallery.category',
+        'category',
       );
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
         'videoGallery.order',
@@ -112,6 +119,7 @@ describe('GetVideoGalleryListHandler', () => {
       ] as VideoGallery[];
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -146,6 +154,7 @@ describe('GetVideoGalleryListHandler', () => {
       );
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -182,6 +191,7 @@ describe('GetVideoGalleryListHandler', () => {
       );
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -213,6 +223,7 @@ describe('GetVideoGalleryListHandler', () => {
       const query = new GetVideoGalleryListQuery(undefined, 'order', 2, 5);
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),

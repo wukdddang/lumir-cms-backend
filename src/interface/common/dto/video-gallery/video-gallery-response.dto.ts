@@ -136,6 +136,9 @@ export class VideoGalleryListItemDto {
   @ApiProperty({ description: '카테고리 ID' })
   categoryId: string;
 
+  @ApiProperty({ description: '카테고리 이름', example: '제품 소개' })
+  categoryName: string;
+
   @ApiProperty({ 
     description: '카테고리 정보',
     type: VideoGalleryCategoryResponseDto,
