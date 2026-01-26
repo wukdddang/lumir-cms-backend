@@ -306,7 +306,7 @@ export class ShareholdersMeetingController {
   @ApiResponse({
     status: 201,
     description: '주주총회 생성 성공 (비공개, DRAFT 상태로 생성됨)',
-    type: ShareholdersMeeting,
+    type: ShareholdersMeetingResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -316,7 +316,7 @@ export class ShareholdersMeetingController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
-  ): Promise<ShareholdersMeeting> {
+  ): Promise<ShareholdersMeetingResponseDto> {
     // categoryId 검증
     if (!body.categoryId) {
       throw new BadRequestException('categoryId 필드는 필수입니다.');
@@ -470,13 +470,18 @@ export class ShareholdersMeetingController {
       }
     }
 
-    return await this.shareholdersMeetingBusinessService.주주총회를_생성한다(
+    const shareholdersMeeting = await this.shareholdersMeetingBusinessService.주주총회를_생성한다(
       translations,
       meetingData,
       voteResults,
       user.id,
       files,
     );
+
+    return {
+      ...shareholdersMeeting,
+      categoryName: shareholdersMeeting.category?.name,
+    };
   }
 
   /**
@@ -870,7 +875,7 @@ export class ShareholdersMeetingController {
   @ApiResponse({
     status: 200,
     description: '주주총회 공개 상태 수정 성공',
-    type: ShareholdersMeeting,
+    type: ShareholdersMeetingResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -880,7 +885,7 @@ export class ShareholdersMeetingController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() body: { isPublic: boolean },
-  ): Promise<ShareholdersMeeting> {
+  ): Promise<ShareholdersMeetingResponseDto> {
     // UUID 형식 검증
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
@@ -895,11 +900,16 @@ export class ShareholdersMeetingController {
       throw new BadRequestException('isPublic 필드는 boolean 타입이어야 합니다.');
     }
     
-    return await this.shareholdersMeetingBusinessService.주주총회_공개를_수정한다(
+    const shareholdersMeeting = await this.shareholdersMeetingBusinessService.주주총회_공개를_수정한다(
       id,
       body.isPublic,
       user.id,
     );
+
+    return {
+      ...shareholdersMeeting,
+      categoryName: shareholdersMeeting.category?.name,
+    };
   }
 
   /**
