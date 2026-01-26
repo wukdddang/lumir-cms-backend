@@ -287,6 +287,7 @@ export class MainPopupBusinessService {
         order: popup.order,
         title: defaultTranslation?.title || '',
         description: defaultTranslation?.description || null,
+        categoryName: popup.category?.name || '',
         createdAt: popup.createdAt,
         updatedAt: popup.updatedAt,
       };

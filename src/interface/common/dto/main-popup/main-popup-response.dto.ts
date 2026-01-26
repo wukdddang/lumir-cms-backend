@@ -108,6 +108,9 @@ export class MainPopupListItemDto {
   })
   description: string | null;
 
+  @ApiProperty({ description: '카테고리 이름', example: '공지사항' })
+  categoryName: string;
+
   @ApiProperty({ description: '생성 일시' })
   createdAt: Date;
 

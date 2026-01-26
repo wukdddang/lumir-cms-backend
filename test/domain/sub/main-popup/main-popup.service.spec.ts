@@ -148,16 +148,24 @@ describe('MainPopupService', () => {
     it('모든 메인 팝업을 order 순으로 조회해야 한다', async () => {
       // Given
       const mockPopups = [
-        { id: 'popup-1', order: 0, isPublic: true } as MainPopup,
-        { id: 'popup-2', order: 1, isPublic: true } as MainPopup,
+        { id: 'popup-1', order: 0, isPublic: true, category: { name: '공지사항' } } as MainPopup,
+        { id: 'popup-2', order: 1, isPublic: true, category: { name: '이벤트' } } as MainPopup,
       ];
 
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockPopups),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockPopups,
+          raw: [
+            { category_name: '공지사항' },
+            { category_name: '이벤트' },
+          ],
+        }),
       };
 
       mockMainPopupRepository.createQueryBuilder.mockReturnValue(
@@ -177,6 +185,8 @@ describe('MainPopupService', () => {
         'popup.translations',
         'translations',
       );
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalledWith('categories', 'category', 'popup.categoryId = category.id');
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(['category.name']);
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
         'popup.order',
         'ASC',
@@ -187,15 +197,20 @@ describe('MainPopupService', () => {
     it('공개된 메인 팝업만 조회해야 한다', async () => {
       // Given
       const mockPopups = [
-        { id: 'popup-1', isPublic: true } as MainPopup,
+        { id: 'popup-1', isPublic: true, category: { name: '공지사항' } } as MainPopup,
       ];
 
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockPopups),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockPopups,
+          raw: [{ category_name: '공지사항' }],
+        }),
       };
 
       mockMainPopupRepository.createQueryBuilder.mockReturnValue(
@@ -220,15 +235,20 @@ describe('MainPopupService', () => {
       const startDate = new Date('2024-01-01');
       const endDate = new Date('2024-12-31');
       const mockPopups = [
-        { id: 'popup-1', createdAt: new Date('2024-06-01') } as MainPopup,
+        { id: 'popup-1', createdAt: new Date('2024-06-01'), category: { name: '공지사항' } } as MainPopup,
       ];
 
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockPopups),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockPopups,
+          raw: [{ category_name: '공지사항' }],
+        }),
       };
 
       mockMainPopupRepository.createQueryBuilder.mockReturnValue(

@@ -701,11 +701,17 @@ describe('MainPopupContextService', () => {
           id: 'popup-1',
           isPublic: true,
           order: 0,
+          category: {
+            name: '공지사항',
+          },
         } as MainPopup,
         {
           id: 'popup-2',
           isPublic: true,
           order: 1,
+          category: {
+            name: '이벤트',
+          },
         } as MainPopup,
       ];
 
@@ -765,6 +771,7 @@ describe('MainPopupContextService', () => {
         id: `popup-${i + 1}`,
         isPublic: true,
         order: i,
+        category: { name: '공지사항' },
       })) as MainPopup[];
 
       mockMainPopupService.모든_메인_팝업을_조회한다.mockResolvedValue(

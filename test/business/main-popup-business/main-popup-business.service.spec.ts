@@ -677,6 +677,9 @@ describe('MainPopupBusinessService', () => {
               description: '설명 1',
             },
           ],
+          category: {
+            name: '공지사항',
+          },
         } as any as MainPopup,
         {
           id: 'popup-2',
@@ -691,6 +694,9 @@ describe('MainPopupBusinessService', () => {
               description: 'Description 2',
             },
           ],
+          category: {
+            name: '이벤트',
+          },
         } as any as MainPopup,
       ];
 
@@ -721,6 +727,7 @@ describe('MainPopupBusinessService', () => {
         order: 0,
         title: '메인 팝업 1',
         description: '설명 1',
+        categoryName: '공지사항',
       });
     });
 

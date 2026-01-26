@@ -53,6 +53,10 @@ export class MainPopupService {
       .leftJoinAndSelect('popup.translations', 'translations')
       .leftJoinAndSelect('translations.language', 'language');
 
+    // category 조인
+    queryBuilder.leftJoin('categories', 'category', 'popup.categoryId = category.id');
+    queryBuilder.addSelect(['category.name']);
+
     let hasWhere = false;
 
     if (options?.isPublic !== undefined) {
@@ -87,7 +91,20 @@ export class MainPopupService {
       queryBuilder.orderBy('popup.createdAt', 'DESC');
     }
 
-    return await queryBuilder.getMany();
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+    const items = rawAndEntities.entities;
+    const raw = rawAndEntities.raw;
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    items.forEach((popup, index) => {
+      if (raw[index] && raw[index].category_name) {
+        popup.category = {
+          name: raw[index].category_name,
+        };
+      }
+    });
+
+    return items;
   }
 
   /**
