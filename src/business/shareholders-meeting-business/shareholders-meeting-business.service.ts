@@ -43,7 +43,7 @@ export class ShareholdersMeetingBusinessService {
   /**
    * 주주총회 상세를 조회한다
    */
-  async 주주총회_상세를_조회한다(id: string): Promise<ShareholdersMeeting> {
+  async 주주총회_상세를_조회한다(id: string): Promise<any> {
     this.logger.log(`주주총회 상세 조회 시작 - ID: ${id}`);
 
     const meeting =
@@ -51,7 +51,13 @@ export class ShareholdersMeetingBusinessService {
 
     this.logger.log(`주주총회 상세 조회 완료 - ID: ${id}`);
 
-    return meeting;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...meetingData } = meeting as any;
+
+    return {
+      ...meetingData,
+      categoryName: category?.name,
+    };
   }
 
   /**

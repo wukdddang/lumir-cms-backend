@@ -209,6 +209,8 @@ describe('주주총회 수정/삭제 (E2E)', () => {
 
       // Then
       expect(response.body.isPublic).toBe(false);
+      expect(response.body.categoryId).toBeDefined();
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('주주총회를 공개로 변경할 수 있어야 한다', async () => {
@@ -227,6 +229,8 @@ describe('주주총회 수정/삭제 (E2E)', () => {
 
       // Then
       expect(response.body.isPublic).toBe(true);
+      expect(response.body.categoryId).toBeDefined();
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('존재하지 않는 주주총회의 공개 상태를 변경하면 404 에러가 발생해야 한다', async () => {

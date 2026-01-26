@@ -77,6 +77,8 @@ describe('POST /api/admin/shareholders-meetings (주주총회 생성)', () => {
         updatedAt: expect.any(String),
       });
 
+      expect(response.body.categoryName).toBeDefined();
+
       // 자동 번역 동기화로 인해 4개 언어 모두 번역이 생성됨
       expect(response.body.translations).toHaveLength(4);
 

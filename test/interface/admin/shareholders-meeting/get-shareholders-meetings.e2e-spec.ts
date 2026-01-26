@@ -287,7 +287,9 @@ describe('GET /api/admin/shareholders-meetings (주주총회 조회)', () => {
         order: expect.any(Number),
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
+        categoryId: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('상세 조회 시 번역 정보가 포함되어야 한다', async () => {

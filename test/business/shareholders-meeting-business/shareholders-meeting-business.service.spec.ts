@@ -132,6 +132,10 @@ describe('ShareholdersMeetingBusinessService', () => {
         meetingDate: new Date('2024-03-15'),
         translations: [],
         voteResults: [],
+        categoryId: 'category-1',
+        category: {
+          name: '정기 주주총회',
+        },
       } as any;
 
       mockShareholdersMeetingContextService.주주총회_상세를_조회한다.mockResolvedValue(
@@ -145,7 +149,9 @@ describe('ShareholdersMeetingBusinessService', () => {
       expect(
         shareholdersMeetingContextService.주주총회_상세를_조회한다,
       ).toHaveBeenCalledWith(meetingId);
-      expect(result).toEqual(mockMeeting);
+      expect(result).toHaveProperty('categoryId', 'category-1');
+      expect(result).toHaveProperty('categoryName', '정기 주주총회');
+      expect(result).not.toHaveProperty('category');
     });
   });
 

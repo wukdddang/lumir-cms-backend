@@ -30,6 +30,7 @@ import { Roles } from '@interface/common/decorators';
 import { ShareholdersMeetingBusinessService } from '@business/shareholders-meeting-business/shareholders-meeting-business.service';
 import { ShareholdersMeeting } from '@domain/core/shareholders-meeting/shareholders-meeting.entity';
 import { UpdateShareholdersMeetingCategoryDto, UpdateShareholdersMeetingCategoryOrderDto } from '@interface/common/dto/shareholders-meeting/update-shareholders-meeting.dto';
+import { ShareholdersMeetingResponseDto } from '@interface/common/dto/shareholders-meeting/shareholders-meeting-response.dto';
 
 @ApiTags('A-5. 관리자 - 주주총회')
 @ApiBearerAuth('Bearer')
@@ -172,7 +173,7 @@ export class ShareholdersMeetingController {
   @ApiResponse({
     status: 200,
     description: '주주총회 상세 조회 성공',
-    type: ShareholdersMeeting,
+    type: ShareholdersMeetingResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -180,7 +181,7 @@ export class ShareholdersMeetingController {
   })
   async 주주총회_상세를_조회한다(
     @Param('id') id: string,
-  ): Promise<ShareholdersMeeting> {
+  ): Promise<ShareholdersMeetingResponseDto> {
     // UUID 형식 검증
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
