@@ -618,7 +618,7 @@ export class MainPopupController {
   @ApiResponse({
     status: 200,
     description: '메인 팝업 공개 상태 수정 성공',
-    type: MainPopup,
+    type: MainPopupResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -628,7 +628,7 @@ export class MainPopupController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() body: UpdateMainPopupPublicDto,
-  ): Promise<MainPopup> {
+  ): Promise<MainPopupResponseDto> {
     // UUID 형식 검증
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {

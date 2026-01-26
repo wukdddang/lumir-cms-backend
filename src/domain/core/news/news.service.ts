@@ -73,29 +73,31 @@ export class NewsService {
   async ID로_뉴스를_조회한다(id: string): Promise<News> {
     this.logger.debug(`뉴스 조회 - ID: ${id}`);
 
-    const queryBuilder = this.repository
+    const news = await this.repository
       .createQueryBuilder('news')
       .leftJoin('categories', 'category', 'news.categoryId = category.id')
-      .addSelect(['category.name'])
-      .where('news.id = :id', { id });
+      .addSelect('category.name', 'categoryName')
+      .where('news.id = :id', { id })
+      .getOne();
 
-    const rawAndEntities = await queryBuilder.getRawAndEntities();
-
-    if (!rawAndEntities.entities || rawAndEntities.entities.length === 0) {
+    if (!news) {
       throw new NotFoundException(`뉴스를 찾을 수 없습니다. ID: ${id}`);
     }
 
-    const news = rawAndEntities.entities[0];
-    const raw = rawAndEntities.raw[0];
+    // getRawOne을 사용해서 category name도 함께 가져오기
+    const result = await this.repository
+      .createQueryBuilder('news')
+      .leftJoin('categories', 'category', 'news.categoryId = category.id')
+      .select(['news', 'category.name'])
+      .where('news.id = :id', { id })
+      .getRawAndEntities();
 
-    // raw 데이터에서 category name을 엔티티에 매핑
-    if (raw && raw.category_name) {
+    if (result.raw && result.raw.length > 0) {
+      const raw = result.raw[0];
+      // TypeORM의 경우 alias.column은 alias_column으로 변환됩니다
       news.category = {
         name: raw.category_name,
       };
-      this.logger.debug(`뉴스 ${news.id}: 카테고리명 = ${raw.category_name}`);
-    } else {
-      this.logger.warn(`뉴스 ${news.id}: 카테고리명을 찾을 수 없음. categoryId: ${news.categoryId}`);
     }
 
     return news;

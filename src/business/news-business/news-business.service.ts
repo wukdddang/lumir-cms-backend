@@ -157,8 +157,8 @@ export class NewsBusinessService {
 
     this.logger.log(`뉴스 생성 완료 - ID: ${result.id}`);
 
-    // 상세 정보 조회
-    return await this.newsContextService.뉴스_상세_조회한다(result.id);
+    // 상세 정보 조회 (category 정보 포함)
+    return await this.뉴스_상세_조회한다(result.id);
   }
 
   /**
@@ -194,7 +194,8 @@ export class NewsBusinessService {
 
     this.logger.log(`뉴스 공개 수정 완료 - ID: ${id}`);
 
-    return result;
+    // 상세 정보 재조회하여 category 정보 포함
+    return await this.뉴스_상세_조회한다(id);
   }
 
   /**
@@ -406,6 +407,7 @@ export class NewsBusinessService {
 
     this.logger.log(`뉴스 수정 완료 - 뉴스 ID: ${newsId}`);
 
-    return result;
+    // 상세 정보 재조회하여 category 정보 포함
+    return await this.뉴스_상세_조회한다(newsId);
   }
 }

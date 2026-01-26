@@ -4,6 +4,8 @@ import * as fs from 'fs';
 
 describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => {
   const testSuite = new BaseE2ETest();
+  let testCategoryId: string;
+  let secondCategoryId: string;
 
   beforeAll(async () => {
     await testSuite.beforeAll();
@@ -15,6 +17,28 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
 
   beforeEach(async () => {
     await testSuite.cleanupSpecificTables(['news']);
+
+    // 테스트용 뉴스 카테고리 생성
+    const categoryResponse = await testSuite
+      .request()
+      .post('/api/admin/news/categories')
+      .send({
+        name: '테스트 뉴스 카테고리',
+        description: '테스트용 뉴스 카테고리',
+        order: 0,
+      });
+    testCategoryId = categoryResponse.body.id;
+
+    // 수정 테스트용 두 번째 카테고리
+    const secondCategoryResponse = await testSuite
+      .request()
+      .post('/api/admin/news/categories')
+      .send({
+        name: '수정된 카테고리',
+        description: '수정 테스트용 카테고리',
+        order: 1,
+      });
+    secondCategoryId = secondCategoryResponse.body.id;
   });
 
   describe('POST /api/admin/news (뉴스 생성)', () => {
@@ -27,7 +51,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .field('title', '루미르 신제품 출시')
           .field('description', '혁신적인 신제품이 출시되었습니다')
           .field('url', 'https://news.example.com/lumir')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         // Then
@@ -36,7 +60,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           title: '루미르 신제품 출시',
           description: '혁신적인 신제품이 출시되었습니다',
           url: 'https://news.example.com/lumir',
-          categoryId: '123e4567-e89b-12d3-a456-426614174000',
+          categoryId: testCategoryId,
           isPublic: true,
           order: expect.any(Number),
           attachments: null,
@@ -61,7 +85,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
             .post('/api/admin/news')
             .field('title', '파일이 있는 뉴스')
             .field('description', '첨부파일이 포함된 뉴스입니다')
-            .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+            .field('categoryId', testCategoryId)
             .attach('files', testFilePath)
             .expect(201);
 
@@ -109,7 +133,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
             .request()
             .post('/api/admin/news')
             .field('title', '여러 파일이 있는 뉴스')
-            .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+            .field('categoryId', testCategoryId)
             .attach('files', testFile1Path)
             .attach('files', testFile2Path)
             .expect(201);
@@ -136,13 +160,13 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '제목만 있는 뉴스')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         // Then
         expect(response.body).toMatchObject({
           title: '제목만 있는 뉴스',
-          categoryId: '123e4567-e89b-12d3-a456-426614174000',
+            categoryId: testCategoryId,
           isPublic: true,
         });
         expect(response.body.categoryName).toBeDefined();
@@ -156,7 +180,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('description', '제목이 없는 뉴스')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(400);
       });
 
@@ -181,7 +205,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .post('/api/admin/news')
           .field('title', '원본 제목')
           .field('description', '원본 설명')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         const newsId = createResponse.body.id;
@@ -193,7 +217,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .field('title', '수정된 제목')
           .field('description', '수정된 설명')
           .field('url', 'https://news.example.com/updated')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174001')
+          .field('categoryId', secondCategoryId)
           .expect(200);
 
         // Then
@@ -202,7 +226,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           title: '수정된 제목',
           description: '수정된 설명',
           url: 'https://news.example.com/updated',
-          categoryId: '123e4567-e89b-12d3-a456-426614174001',
+            categoryId: secondCategoryId,
         });
         expect(response.body.categoryName).toBeDefined();
       });
@@ -221,7 +245,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '원본 뉴스')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .attach('files', oldFilePath)
           .expect(201);
 
@@ -238,7 +262,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
             .request()
             .put(`/api/admin/news/${newsId}`)
             .field('title', '수정된 뉴스')
-            .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+            .field('categoryId', testCategoryId)
             .attach('files', newFilePath)
             .expect(200);
 
@@ -274,7 +298,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .post('/api/admin/news')
           .field('title', '원본 뉴스')
           .field('description', '원본 설명')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .attach('files', testFilePath)
           .expect(201);
 
@@ -287,7 +311,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
             .put(`/api/admin/news/${newsId}`)
             .field('title', '원본 뉴스')
             .field('description', '원본 설명')
-            .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+            .field('categoryId', testCategoryId)
             .expect(200);
 
           // Then - 파일이 삭제됨
@@ -320,7 +344,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '원본 제목')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         const newsId = createResponse.body.id;
@@ -330,7 +354,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .put(`/api/admin/news/${newsId}`)
           .field('description', '설명만 수정')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(400);
       });
 
@@ -340,7 +364,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '원본 제목')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         const newsId = createResponse.body.id;
@@ -364,7 +388,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '삭제될 뉴스')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .expect(201);
 
         const newsId = createResponse.body.id;
@@ -398,7 +422,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           .request()
           .post('/api/admin/news')
           .field('title', '파일이 있는 뉴스')
-          .field('categoryId', '123e4567-e89b-12d3-a456-426614174000')
+          .field('categoryId', testCategoryId)
           .attach('files', testFilePath)
           .expect(201);
 
