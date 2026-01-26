@@ -28,7 +28,9 @@
     "migration:show": "npm run build && npm run typeorm -- migration:show -d dist/src/migration.datasource.js",
     "backup": "ts-node -r tsconfig-paths/register scripts/backup/run-backup.ts",
     "backup:cleanup": "ts-node -r tsconfig-paths/register scripts/backup/cleanup-backups.ts",
-    "backup:list": "ts-node -r tsconfig-paths/register scripts/backup/list-backups.ts"
+    "backup:list": "ts-node -r tsconfig-paths/register scripts/backup/list-backups.ts",
+    "backup:restore": "ts-node -r tsconfig-paths/register scripts/backup/restore-backup.ts",
+    "migration:from-mongodb": "ts-node -r tsconfig-paths/register scripts/migration/migrate-from-mongodb.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
@@ -63,10 +65,12 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@testcontainers/postgresql": "^11.11.0",
+    "@types/bson": "^4.0.5",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
+    "bson": "^7.1.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

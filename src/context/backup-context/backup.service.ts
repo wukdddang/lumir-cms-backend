@@ -140,6 +140,16 @@ export class BackupService {
           sqlLines.push('SET standard_conforming_strings = on;');
           sqlLines.push('');
 
+          // ENUM 타입 백업
+          const enumTypes = await this.getEnumTypes(queryRunner);
+          if (enumTypes.length > 0) {
+            sqlLines.push('-- ENUM Types');
+            for (const enumDef of enumTypes) {
+              sqlLines.push(enumDef);
+            }
+            sqlLines.push('');
+          }
+
           // 모든 테이블 목록 가져오기
           const tables = await this.getAllTables(queryRunner);
 
@@ -208,6 +218,45 @@ export class BackupService {
   }
 
   /**
+   * ENUM 타입 목록을 가져옵니다.
+   */
+  private async getEnumTypes(queryRunner: any): Promise<string[]> {
+    const enums = await queryRunner.query(`
+      SELECT 
+        t.typname as enum_name,
+        e.enumlabel as enum_value,
+        e.enumsortorder as sort_order
+      FROM pg_type t
+      JOIN pg_enum e ON t.oid = e.enumtypid
+      JOIN pg_namespace n ON t.typnamespace = n.oid
+      WHERE n.nspname = 'public'
+      ORDER BY t.typname, e.enumsortorder
+    `);
+
+    if (enums.length === 0) {
+      return [];
+    }
+
+    // ENUM 타입별로 그룹화
+    const enumsByType = new Map<string, string[]>();
+    for (const row of enums) {
+      if (!enumsByType.has(row.enum_name)) {
+        enumsByType.set(row.enum_name, []);
+      }
+      enumsByType.get(row.enum_name)!.push(row.enum_value);
+    }
+
+    const enumDefs: string[] = [];
+    for (const [enumName, values] of enumsByType.entries()) {
+      const valueList = values.map((v: string) => `'${v.replace(/'/g, "''")}'`).join(', ');
+      enumDefs.push(`DROP TYPE IF EXISTS "${enumName}" CASCADE;`);
+      enumDefs.push(`CREATE TYPE "${enumName}" AS ENUM (${valueList});`);
+    }
+
+    return enumDefs;
+  }
+
+  /**
    * 모든 테이블 목록을 가져옵니다.
    */
   private async getAllTables(queryRunner: any): Promise<string[]> {
@@ -232,6 +281,7 @@ export class BackupService {
       SELECT 
         column_name,
         data_type,
+        udt_name,
         character_maximum_length,
         is_nullable,
         column_default
@@ -249,8 +299,15 @@ export class BackupService {
     let createSql = `CREATE TABLE "${tableName}" (\n`;
 
     // 컬럼 정의
-    const columnDefs = columns.map((col: any) => {
-      let def = `  "${col.column_name}" ${col.data_type}`;
+    const columnDefs = await Promise.all(columns.map(async (col: any) => {
+      let dataType = col.data_type;
+      
+      // USER-DEFINED 타입 (ENUM 등)인 경우 실제 타입 이름 사용
+      if (dataType === 'USER-DEFINED') {
+        dataType = col.udt_name;
+      }
+      
+      let def = `  "${col.column_name}" ${dataType}`;
 
       if (col.character_maximum_length) {
         def += `(${col.character_maximum_length})`;
@@ -265,7 +322,7 @@ export class BackupService {
       }
 
       return def;
-    });
+    }));
 
     createSql += columnDefs.join(',\n');
     createSql += '\n);';

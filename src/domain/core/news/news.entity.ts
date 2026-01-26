@@ -61,10 +61,10 @@ export class News extends BaseEntity<News> {
 
   @Column({
     type: 'uuid',
-    nullable: false,
+    nullable: true,
     comment: '뉴스 카테고리 ID',
   })
-  categoryId: string;
+  categoryId: string | null;
 
   // TypeORM 조인 시 임시로 담기 위한 필드 (DB 컬럼이 아님)
   category?: {
