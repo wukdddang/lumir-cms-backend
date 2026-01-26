@@ -73,24 +73,19 @@ export class NewsService {
   async ID로_뉴스를_조회한다(id: string): Promise<News> {
     this.logger.debug(`뉴스 조회 - ID: ${id}`);
 
-    const news = await this.repository
-      .createQueryBuilder('news')
-      .leftJoin('categories', 'category', 'news.categoryId = category.id')
-      .addSelect('category.name', 'categoryName')
-      .where('news.id = :id', { id })
-      .getOne();
-
-    if (!news) {
-      throw new NotFoundException(`뉴스를 찾을 수 없습니다. ID: ${id}`);
-    }
-
-    // getRawOne을 사용해서 category name도 함께 가져오기
+    // getRawAndEntities를 사용해서 category name도 함께 가져오기
     const result = await this.repository
       .createQueryBuilder('news')
       .leftJoin('categories', 'category', 'news.categoryId = category.id')
       .select(['news', 'category.name'])
       .where('news.id = :id', { id })
       .getRawAndEntities();
+
+    if (!result.entities || result.entities.length === 0) {
+      throw new NotFoundException(`뉴스를 찾을 수 없습니다. ID: ${id}`);
+    }
+
+    const news = result.entities[0];
 
     if (result.raw && result.raw.length > 0) {
       const raw = result.raw[0];

@@ -219,7 +219,7 @@ describe('NewsService', () => {
 
       const mockQueryBuilder = {
         leftJoin: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockNews],
@@ -247,7 +247,7 @@ describe('NewsService', () => {
       const newsId = 'non-existent';
       const mockQueryBuilder = {
         leftJoin: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [],
@@ -291,7 +291,7 @@ describe('NewsService', () => {
 
       const mockQueryBuilder = {
         leftJoin: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [existingNews],
@@ -329,7 +329,7 @@ describe('NewsService', () => {
 
       const mockQueryBuilder = {
         leftJoin: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockNews],
@@ -363,6 +363,7 @@ describe('NewsService', () => {
         id: newsId,
         title: '뉴스 1',
         isPublic: true,
+        category: { name: '신제품' },
       } as News;
 
       const updatedNews = {
@@ -371,7 +372,19 @@ describe('NewsService', () => {
         updatedBy,
       } as News;
 
-      mockRepository.findOne.mockResolvedValue(existingNews);
+      const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: [existingNews],
+          raw: [{ category_name: '신제품' }],
+        }),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
       mockRepository.save.mockResolvedValue(updatedNews);
 
       // When
@@ -422,14 +435,24 @@ describe('NewsService', () => {
       const updatedBy = 'user-1';
 
       const mockNewsItems = [
-        { id: 'news-1', order: 0 } as News,
-        { id: 'news-2', order: 1 } as News,
-        { id: 'news-3', order: 2 } as News,
+        { id: 'news-1', order: 0, category: { name: '신제품' } } as News,
+        { id: 'news-2', order: 1, category: { name: '신제품' } } as News,
+        { id: 'news-3', order: 2, category: { name: '신제품' } } as News,
       ];
 
-      mockRepository.findOne.mockImplementation((options: any) => {
-        const news = mockNewsItems.find((n) => n.id === options.where.id);
-        return Promise.resolve(news || null);
+      let callIndex = 0;
+      mockRepository.createQueryBuilder.mockImplementation(() => {
+        const news = mockNewsItems[callIndex];
+        callIndex = (callIndex + 1) % mockNewsItems.length;
+        return {
+          leftJoin: jest.fn().mockReturnThis(),
+          select: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          getRawAndEntities: jest.fn().mockResolvedValue({
+            entities: [news],
+            raw: [{ category_name: '신제품' }],
+          }),
+        } as any;
       });
 
       mockRepository.save.mockImplementation((news) => Promise.resolve(news));
@@ -465,7 +488,7 @@ describe('NewsService', () => {
           // 첫 번째 호출: news-1 - 성공
           return {
             leftJoin: jest.fn().mockReturnThis(),
-            addSelect: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnThis(),
             where: jest.fn().mockReturnThis(),
             getRawAndEntities: jest.fn().mockResolvedValue({
               entities: [mockNews],
@@ -476,7 +499,7 @@ describe('NewsService', () => {
           // 두 번째 호출: non-existent - 실패
           return {
             leftJoin: jest.fn().mockReturnThis(),
-            addSelect: jest.fn().mockReturnThis(),
+            select: jest.fn().mockReturnThis(),
             where: jest.fn().mockReturnThis(),
             getRawAndEntities: jest.fn().mockResolvedValue({
               entities: [],
