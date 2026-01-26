@@ -93,6 +93,9 @@ export class GetAnnouncementListHandler implements IQueryHandler<GetAnnouncement
 
     // Survey 관계 조인 (설문조사 포함 여부 확인용)
     queryBuilder.leftJoinAndSelect('announcement.survey', 'survey');
+    
+    // Category 관계 조인 (카테고리 이름 조회용)
+    queryBuilder.leftJoinAndSelect('announcement.category', 'category');
 
     const [items, total] = await queryBuilder.getManyAndCount();
 

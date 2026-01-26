@@ -27,6 +27,7 @@ import {
   PositionListResult,
 } from '@context/company-context/interfaces/company-context.interface';
 import { ReplaceAnnouncementPermissionsDto } from '@interface/admin/announcement/dto/replace-announcement-permissions.dto';
+import { AnnouncementListItemDto } from '@interface/common/dto/announcement/announcement-response.dto';
 
 /**
  * 공지사항 비즈니스 서비스
@@ -78,7 +79,7 @@ export class AnnouncementBusinessService {
     startDate?: Date;
     endDate?: Date;
   }): Promise<{
-    items: Announcement[];
+    items: AnnouncementListItemDto[];
     total: number;
     page: number;
     limit: number;
@@ -88,9 +89,29 @@ export class AnnouncementBusinessService {
     const result =
       await this.announcementContextService.공지사항_목록을_조회한다(params);
 
+    // 엔티티를 DTO로 변환
+    const items: AnnouncementListItemDto[] = result.items.map((announcement) => ({
+      id: announcement.id,
+      categoryId: announcement.categoryId,
+      categoryName: announcement.category?.name || '',
+      title: announcement.title,
+      isFixed: announcement.isFixed,
+      isPublic: announcement.isPublic,
+      mustRead: announcement.mustRead,
+      order: announcement.order,
+      createdAt: announcement.createdAt,
+      updatedAt: announcement.updatedAt,
+      hasSurvey: !!announcement.survey,
+    }));
+
     this.logger.log(`공지사항 목록 조회 완료 - 총 ${result.total}개`);
 
-    return result;
+    return {
+      items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
   }
 
   /**
@@ -104,7 +125,7 @@ export class AnnouncementBusinessService {
     startDate?: Date;
     endDate?: Date;
   }): Promise<{
-    items: Announcement[];
+    items: AnnouncementListItemDto[];
     total: number;
     page: number;
     limit: number;
@@ -117,15 +138,35 @@ export class AnnouncementBusinessService {
         isFixed: true, // 고정 공지만 조회
       });
 
+    // 엔티티를 DTO로 변환
+    const items: AnnouncementListItemDto[] = result.items.map((announcement) => ({
+      id: announcement.id,
+      categoryId: announcement.categoryId,
+      categoryName: announcement.category?.name || '',
+      title: announcement.title,
+      isFixed: announcement.isFixed,
+      isPublic: announcement.isPublic,
+      mustRead: announcement.mustRead,
+      order: announcement.order,
+      createdAt: announcement.createdAt,
+      updatedAt: announcement.updatedAt,
+      hasSurvey: !!announcement.survey,
+    }));
+
     this.logger.log(`고정 공지사항 목록 조회 완료 - 총 ${result.total}개`);
 
-    return result;
+    return {
+      items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
   }
 
   /**
    * 공지사항 전체 목록을 조회한다 (페이지네이션 없음)
    */
-  async 공지사항_전체_목록을_조회한다(): Promise<Announcement[]> {
+  async 공지사항_전체_목록을_조회한다(): Promise<AnnouncementListItemDto[]> {
     this.logger.log('공지사항 전체 목록 조회 시작');
 
     // 매우 큰 limit을 사용하여 전체 목록 조회
@@ -134,9 +175,24 @@ export class AnnouncementBusinessService {
         limit: 10000,
       });
 
+    // 엔티티를 DTO로 변환
+    const items: AnnouncementListItemDto[] = result.items.map((announcement) => ({
+      id: announcement.id,
+      categoryId: announcement.categoryId,
+      categoryName: announcement.category?.name || '',
+      title: announcement.title,
+      isFixed: announcement.isFixed,
+      isPublic: announcement.isPublic,
+      mustRead: announcement.mustRead,
+      order: announcement.order,
+      createdAt: announcement.createdAt,
+      updatedAt: announcement.updatedAt,
+      hasSurvey: !!announcement.survey,
+    }));
+
     this.logger.log(`공지사항 전체 목록 조회 완료 - 총 ${result.total}개`);
 
-    return result.items;
+    return items;
   }
 
   /**

@@ -401,6 +401,17 @@ export class SeedDataContextService {
   ): Promise<number> {
     this.logger.log(`공지사항 시드 데이터 생성 시작 - 개수: ${count}`);
 
+    // 공지사항 카테고리 조회
+    const categories = await this.categoryService.엔티티_타입별_카테고리를_조회한다(
+      CategoryEntityType.ANNOUNCEMENT,
+      false,
+    );
+
+    if (categories.length === 0) {
+      this.logger.warn('공지사항 카테고리가 없습니다. 공지사항 생성을 건너뜁니다.');
+      return 0;
+    }
+
     // SSO에서 회사 정보 가져오기 (권한 설정용)
     let departments: string[] = [];
     let rankCodes: string[] = [];
@@ -443,6 +454,7 @@ export class SeedDataContextService {
     for (let i = 0; i < count; i++) {
       const isFixed = i < 3; // 처음 3개는 고정
       const mustRead = i < 3; // 처음 3개는 필독
+      const category = categories[i % categories.length]; // 카테고리 순환 할당
 
       // 공지사항 권한 설정 패턴
       let permissionEmployeeIds: string[] | null = null;
@@ -535,6 +547,7 @@ export class SeedDataContextService {
       }
 
       const announcement = await this.announcementService.공지사항을_생성한다({
+        categoryId: category.id,
         title: `${faker.lorem.sentence()} - 공지사항 ${i + 1}`,
         content: faker.lorem.paragraphs(3),
         isFixed,

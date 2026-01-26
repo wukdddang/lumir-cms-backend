@@ -176,8 +176,17 @@ describe('AnnouncementBusinessService', () => {
         items: [
           {
             id: 'announcement-1',
+            categoryId: 'cat-1',
+            category: { name: '일반 공지' },
             title: '테스트 공지',
             content: '테스트 내용',
+            isFixed: false,
+            isPublic: true,
+            mustRead: false,
+            order: 1,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            survey: null,
           } as Announcement,
         ],
         total: 1,
@@ -196,7 +205,8 @@ describe('AnnouncementBusinessService', () => {
       expect(
         announcementContextService.공지사항_목록을_조회한다,
       ).toHaveBeenCalledWith(params);
-      expect(result).toEqual(mockResult);
+      expect(result.items[0].categoryName).toBe('일반 공지');
+      expect(result.total).toBe(1);
     });
   });
 
@@ -205,8 +215,32 @@ describe('AnnouncementBusinessService', () => {
       // Given
       const mockResult = {
         items: [
-          { id: 'announcement-1' } as Announcement,
-          { id: 'announcement-2' } as Announcement,
+          { 
+            id: 'announcement-1',
+            categoryId: 'cat-1',
+            category: { name: '일반 공지' },
+            title: '공지1',
+            isFixed: false,
+            isPublic: true,
+            mustRead: false,
+            order: 1,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            survey: null,
+          } as Announcement,
+          { 
+            id: 'announcement-2',
+            categoryId: 'cat-2',
+            category: { name: '긴급 공지' },
+            title: '공지2',
+            isFixed: false,
+            isPublic: true,
+            mustRead: false,
+            order: 2,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            survey: null,
+          } as Announcement,
         ],
         total: 2,
         page: 1,
@@ -226,7 +260,9 @@ describe('AnnouncementBusinessService', () => {
       ).toHaveBeenCalledWith({
         limit: 10000,
       });
-      expect(result).toEqual(mockResult.items);
+      expect(result.length).toBe(2);
+      expect(result[0].categoryName).toBe('일반 공지');
+      expect(result[1].categoryName).toBe('긴급 공지');
     });
   });
 

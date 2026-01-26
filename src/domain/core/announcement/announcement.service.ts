@@ -49,7 +49,8 @@ export class AnnouncementService {
     this.logger.debug(`공지사항 목록 조회`);
 
     const queryBuilder =
-      this.announcementRepository.createQueryBuilder('announcement');
+      this.announcementRepository.createQueryBuilder('announcement')
+        .leftJoinAndSelect('announcement.category', 'category');
 
     if (options?.isFixed !== undefined) {
       queryBuilder.where('announcement.isFixed = :isFixed', {

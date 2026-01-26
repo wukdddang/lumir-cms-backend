@@ -140,6 +140,9 @@ export class AnnouncementListItemDto {
   @ApiProperty({ description: '공지사항 카테고리 ID (UUID)' })
   categoryId: string;
 
+  @ApiProperty({ description: '카테고리 이름', example: '일반 공지' })
+  categoryName: string;
+
   @ApiProperty({ description: '제목', example: '2024년 신년 인사' })
   title: string;
 
