@@ -77,6 +77,9 @@ export class NewsResponseDto {
 
   @ApiProperty({ description: '수정자 ID', required: false, nullable: true })
   updatedBy: string | null;
+
+  @ApiProperty({ description: '카테고리 이름', example: '신제품', required: false })
+  categoryName?: string;
 }
 
 /**

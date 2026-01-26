@@ -272,7 +272,9 @@ describe('GET /api/admin/news (뉴스 목록 조회)', () => {
         description: '뉴스 설명',
         url: 'https://news.example.com/article',
         isPublic: true,
+        categoryId: '123e4567-e89b-12d3-a456-426614174000',
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('잘못된 UUID 형식으로 조회 시 400을 반환해야 한다', async () => {

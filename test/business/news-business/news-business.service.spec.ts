@@ -379,6 +379,10 @@ describe('NewsBusinessService', () => {
         id: newsId,
         title: '뉴스 1',
         description: '뉴스 설명',
+        categoryId: 'category-1',
+        category: {
+          name: '신제품',
+        },
       } as News;
 
       mockNewsContextService.뉴스_상세_조회한다.mockResolvedValue(mockNews);
@@ -390,7 +394,9 @@ describe('NewsBusinessService', () => {
       expect(newsContextService.뉴스_상세_조회한다).toHaveBeenCalledWith(
         newsId,
       );
-      expect(result).toEqual(mockNews);
+      expect(result).toHaveProperty('categoryId', 'category-1');
+      expect(result).toHaveProperty('categoryName', '신제품');
+      expect(result).not.toHaveProperty('category');
     });
   });
 

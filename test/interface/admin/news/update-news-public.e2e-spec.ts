@@ -47,6 +47,7 @@ describe('PATCH /api/admin/news/:id/public (뉴스 공개 상태 수정)', () =>
         id: newsId,
         isPublic: true,
       });
+      expect(response.body.categoryName).toBeDefined();
 
       // 조회하여 확인
       const getResponse = await testSuite
@@ -81,6 +82,7 @@ describe('PATCH /api/admin/news/:id/public (뉴스 공개 상태 수정)', () =>
         id: newsId,
         isPublic: false,
       });
+      expect(response.body.categoryName).toBeDefined();
 
       // 조회하여 확인
       const getResponse = await testSuite

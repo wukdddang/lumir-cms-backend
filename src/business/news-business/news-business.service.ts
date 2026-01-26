@@ -200,14 +200,20 @@ export class NewsBusinessService {
   /**
    * 뉴스 상세 조회한다
    */
-  async 뉴스_상세_조회한다(id: string): Promise<NewsDetailResult> {
+  async 뉴스_상세_조회한다(id: string): Promise<any> {
     this.logger.log(`뉴스 상세 조회 시작 - ID: ${id}`);
 
     const result = await this.newsContextService.뉴스_상세_조회한다(id);
 
     this.logger.log(`뉴스 상세 조회 완료 - ID: ${id}`);
 
-    return result;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...newsData } = result as any;
+
+    return {
+      ...newsData,
+      categoryName: category?.name,
+    };
   }
 
   /**

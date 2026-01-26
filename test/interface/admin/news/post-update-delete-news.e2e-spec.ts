@@ -41,6 +41,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           order: expect.any(Number),
           attachments: null,
         });
+        expect(response.body.categoryName).toBeDefined();
       });
 
       it('파일과 함께 뉴스를 생성해야 한다', async () => {
@@ -78,6 +79,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
               }),
             ]),
           });
+          expect(response.body.categoryName).toBeDefined();
         } finally {
           // Cleanup
           if (fs.existsSync(testFilePath)) {
@@ -143,6 +145,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           categoryId: '123e4567-e89b-12d3-a456-426614174000',
           isPublic: true,
         });
+        expect(response.body.categoryName).toBeDefined();
       });
     });
 
@@ -201,6 +204,7 @@ describe('POST/PUT/DELETE /api/admin/news (뉴스 생성/수정/삭제)', () => 
           url: 'https://news.example.com/updated',
           categoryId: '123e4567-e89b-12d3-a456-426614174001',
         });
+        expect(response.body.categoryName).toBeDefined();
       });
 
       it('기존 파일을 삭제하고 새 파일로 교체해야 한다', async () => {

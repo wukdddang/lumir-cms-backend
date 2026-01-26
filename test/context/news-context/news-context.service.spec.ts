@@ -349,6 +349,10 @@ describe('NewsContextService', () => {
         title: '뉴스 1',
         description: '뉴스 설명',
         isPublic: true,
+        categoryId: 'category-1',
+        category: {
+          name: '신제품',
+        },
       } as News;
 
       mockQueryBus.execute.mockResolvedValue(mockNews);
@@ -363,6 +367,8 @@ describe('NewsContextService', () => {
         }),
       );
       expect(result).toEqual(mockNews);
+      expect(result.categoryId).toBe('category-1');
+      expect(result.category?.name).toBe('신제품');
     });
   });
 });
