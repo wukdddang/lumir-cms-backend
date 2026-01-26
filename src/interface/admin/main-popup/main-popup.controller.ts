@@ -381,12 +381,17 @@ export class MainPopupController {
       throw new BadRequestException('categoryId는 유효한 UUID 형식이어야 합니다.');
     }
 
-    return await this.mainPopupBusinessService.메인_팝업을_생성한다(
+    const mainPopup = await this.mainPopupBusinessService.메인_팝업을_생성한다(
       translations,
       categoryId,
       user.id,
       files,
     );
+
+    return {
+      ...mainPopup,
+      categoryName: mainPopup.category?.name,
+    };
   }
 
   /**
@@ -637,11 +642,16 @@ export class MainPopupController {
       throw new BadRequestException('isPublic은 boolean이어야 합니다.');
     }
 
-    return await this.mainPopupBusinessService.메인_팝업_공개를_수정한다(
+    const mainPopup = await this.mainPopupBusinessService.메인_팝업_공개를_수정한다(
       id,
       body.isPublic,
       user.id,
     );
+
+    return {
+      ...mainPopup,
+      categoryName: mainPopup.category?.name,
+    };
   }
 
   /**
