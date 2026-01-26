@@ -134,13 +134,31 @@ export class ElectronicDisclosureService {
   async ID로_전자공시를_조회한다(id: string): Promise<ElectronicDisclosure> {
     this.logger.debug(`전자공시 조회 - ID: ${id}`);
 
-    const disclosure = await this.electronicDisclosureRepository.findOne({
-      where: { id },
-      relations: ['translations', 'translations.language'],
-    });
+    const queryBuilder = this.electronicDisclosureRepository
+      .createQueryBuilder('disclosure')
+      .leftJoinAndSelect('disclosure.translations', 'translations')
+      .leftJoinAndSelect('translations.language', 'language')
+      .leftJoin('categories', 'category', 'disclosure.categoryId = category.id')
+      .addSelect(['category.name'])
+      .where('disclosure.id = :id', { id });
 
-    if (!disclosure) {
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+
+    if (!rawAndEntities.entities || rawAndEntities.entities.length === 0) {
       throw new NotFoundException(`전자공시를 찾을 수 없습니다. ID: ${id}`);
+    }
+
+    const disclosure = rawAndEntities.entities[0];
+    const raw = rawAndEntities.raw[0];
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    if (raw && raw.category_name) {
+      disclosure.category = {
+        name: raw.category_name,
+      };
+      this.logger.debug(`전자공시 ${disclosure.id}: 카테고리명 = ${raw.category_name}`);
+    } else {
+      this.logger.warn(`전자공시 ${disclosure.id}: 카테고리명을 찾을 수 없음. categoryId: ${disclosure.categoryId}`);
     }
 
     return disclosure;

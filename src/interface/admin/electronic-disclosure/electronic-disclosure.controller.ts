@@ -185,7 +185,7 @@ export class ElectronicDisclosureController {
   @ApiResponse({
     status: 200,
     description: '전자공시 상세 조회 성공',
-    type: ElectronicDisclosure,
+    type: ElectronicDisclosureResponseDto,
   })
   @ApiResponse({
     status: 404,
@@ -193,7 +193,7 @@ export class ElectronicDisclosureController {
   })
   async 전자공시_상세를_조회한다(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<ElectronicDisclosure> {
+  ): Promise<ElectronicDisclosureResponseDto> {
     return await this.electronicDisclosureBusinessService.전자공시_상세를_조회한다(
       id,
     );

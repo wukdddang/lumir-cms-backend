@@ -43,7 +43,7 @@ export class ElectronicDisclosureBusinessService {
   /**
    * 전자공시 상세를 조회한다
    */
-  async 전자공시_상세를_조회한다(id: string): Promise<ElectronicDisclosure> {
+  async 전자공시_상세를_조회한다(id: string): Promise<any> {
     this.logger.log(`전자공시 상세 조회 시작 - ID: ${id}`);
 
     const disclosure =
@@ -51,7 +51,13 @@ export class ElectronicDisclosureBusinessService {
 
     this.logger.log(`전자공시 상세 조회 완료 - ID: ${id}`);
 
-    return disclosure;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...disclosureData } = disclosure as any;
+
+    return {
+      ...disclosureData,
+      categoryName: category?.name,
+    };
   }
 
   /**
