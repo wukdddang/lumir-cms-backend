@@ -44,7 +44,7 @@ import { TransactionManagerService } from './transaction-manager.service';
           database,
           autoLoadEntities: true,
           // 마이그레이션으로 스키마 관리 (synchronize 비활성화)
-          synchronize: true,
+          synchronize: false,
           logging: configService.get<boolean>(
             'DB_LOGGING',
             isDevelopment && !isTest,

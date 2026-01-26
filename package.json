@@ -30,6 +30,8 @@
     "backup:cleanup": "ts-node -r tsconfig-paths/register scripts/backup/cleanup-backups.ts",
     "backup:list": "ts-node -r tsconfig-paths/register scripts/backup/list-backups.ts",
     "backup:restore": "ts-node -r tsconfig-paths/register scripts/backup/restore-backup.ts",
+    "migration:check-schema": "ts-node -r tsconfig-paths/register scripts/migration/check-schema.ts",
+    "migration:apply-schema": "ts-node -r tsconfig-paths/register scripts/migration/apply-schema-changes.ts",
     "migration:from-mongodb": "ts-node -r tsconfig-paths/register scripts/migration/migrate-from-mongodb.ts"
   },
   "dependencies": {
