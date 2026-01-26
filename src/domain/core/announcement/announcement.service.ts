@@ -85,7 +85,7 @@ export class AnnouncementService {
 
     const announcement = await this.announcementRepository.findOne({
       where: { id },
-      relations: ['survey', 'survey.questions'],
+      relations: ['category', 'survey', 'survey.questions'],
     });
 
     if (!announcement) {

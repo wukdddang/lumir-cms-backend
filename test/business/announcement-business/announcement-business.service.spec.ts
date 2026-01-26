@@ -274,6 +274,10 @@ describe('AnnouncementBusinessService', () => {
         id: announcementId,
         title: '테스트 공지',
         content: '테스트 내용',
+        categoryId: 'category-1',
+        category: {
+          name: '일반 공지',
+        },
       } as Announcement;
 
       mockAnnouncementContextService.공지사항을_조회한다.mockResolvedValue(
@@ -287,7 +291,9 @@ describe('AnnouncementBusinessService', () => {
       expect(
         announcementContextService.공지사항을_조회한다,
       ).toHaveBeenCalledWith(announcementId);
-      expect(result).toEqual(mockAnnouncement);
+      expect(result).toHaveProperty('categoryId', 'category-1');
+      expect(result).toHaveProperty('categoryName', '일반 공지');
+      expect(result).not.toHaveProperty('category');
     });
   });
 

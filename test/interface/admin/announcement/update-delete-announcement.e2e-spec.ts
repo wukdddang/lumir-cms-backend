@@ -49,7 +49,9 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
       expect(response.body).toMatchObject({
         id: announcementId,
         title: '수정된 제목',
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
       // content는 응답에 포함될 수도, 안 될 수도 있음
     });
 
@@ -72,7 +74,9 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
       // Then
       expect(response.body).toMatchObject({
         id: announcementId,
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
       // title, content는 응답에 포함될 수도, 안 될 수도 있음
     });
 
@@ -109,8 +113,10 @@ describe('PUT /api/admin/announcements/:id (공지사항 수정)', () => {
         id: announcementId,
         title: '수정된 제목',
         content: '수정된 내용',
+        categoryId: testCategoryId,
         mustRead: true,
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('공지사항의 날짜를 수정해야 한다', async () => {
@@ -260,7 +266,9 @@ describe('PATCH /api/admin/announcements/:id/public (공지사항 공개 상태 
       expect(response.body).toMatchObject({
         id: announcementId,
         isPublic: true,
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('공개 상태를 false로 변경해야 한다', async () => {
@@ -283,7 +291,9 @@ describe('PATCH /api/admin/announcements/:id/public (공지사항 공개 상태 
       expect(response.body).toMatchObject({
         id: announcementId,
         isPublic: false,
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
     });
   });
 
@@ -368,7 +378,9 @@ describe('PATCH /api/admin/announcements/:id/fixed (공지사항 고정 상태 �
       expect(response.body).toMatchObject({
         id: announcementId,
         isFixed: true,
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('고정 상태를 false로 변경해야 한다', async () => {
@@ -391,7 +403,9 @@ describe('PATCH /api/admin/announcements/:id/fixed (공지사항 고정 상태 �
       expect(response.body).toMatchObject({
         id: announcementId,
         isFixed: false,
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
     });
   });
 

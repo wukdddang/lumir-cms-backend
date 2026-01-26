@@ -121,6 +121,9 @@ export class AnnouncementResponseDto {
   @ApiProperty({ description: '수정자 ID', required: false, nullable: true })
   updatedBy: string | null;
 
+  @ApiProperty({ description: '카테고리 이름', example: '일반 공지', required: false })
+  categoryName?: string;
+
   @ApiProperty({
     description: '연결된 설문조사',
     type: SurveyResponseDto,

@@ -331,6 +331,10 @@ describe('AnnouncementContextService', () => {
         isPublic: true,
         isFixed: false,
         mustRead: false,
+        categoryId: 'category-1',
+        category: {
+          name: '일반 공지',
+        },
       } as Announcement;
 
       mockQueryBus.execute.mockResolvedValue(mockAnnouncement);
@@ -346,6 +350,8 @@ describe('AnnouncementContextService', () => {
         }),
       );
       expect(result).toEqual(mockAnnouncement);
+      expect(result.categoryId).toBe('category-1');
+      expect(result.category?.name).toBe('일반 공지');
     });
   });
 });

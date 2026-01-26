@@ -49,12 +49,14 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
         id: expect.any(String),
         title: '2024년 신년 인사',
         content: '새해 복 많이 받으세요.',
+        categoryId: testCategoryId,
         isFixed: false,
         isPublic: true,
         mustRead: false,
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('모든 필드를 포함한 공지사항을 생성해야 한다', async () => {
@@ -86,12 +88,14 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
         id: expect.any(String),
         title: '긴급 공지사항',
         content: '모든 직원은 필독하시기 바랍니다.',
+        categoryId: testCategoryId,
         isFixed: true,
         isPublic: false,
         mustRead: true,
         releasedAt: expect.any(String),
         expiredAt: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
 
       // 권한 정보는 응답 구조에 따라 다를 수 있음
       // permissions 필드가 있는 경우 확인, 없는 경우 생략
@@ -125,7 +129,9 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
         id: expect.any(String),
         title: '첨부파일 공지사항',
         content: '첨부파일을 확인해주세요.',
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
       expect(response.body.attachments).toBeDefined();
       expect(response.body.attachments).toHaveLength(1);
       expect(response.body.attachments[0]).toMatchObject({
@@ -417,7 +423,9 @@ describe('POST /api/admin/announcements (공지사항 생성)', () => {
         id: expect.any(String),
         title: '2024년 직원 만족도 조사',
         content: '우리 회사의 발전을 위한 소중한 의견을 들려주세요.',
+        categoryId: testCategoryId,
       });
+      expect(response.body.categoryName).toBeDefined();
 
       const announcementId = response.body.id;
 

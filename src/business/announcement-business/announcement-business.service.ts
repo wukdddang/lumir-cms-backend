@@ -213,7 +213,7 @@ export class AnnouncementBusinessService {
   /**
    * 공지사항을 조회한다
    */
-  async 공지사항을_조회한다(id: string): Promise<Announcement> {
+  async 공지사항을_조회한다(id: string): Promise<any> {
     this.logger.log(`공지사항 조회 시작 - ID: ${id}`);
 
     const announcement =
@@ -221,7 +221,13 @@ export class AnnouncementBusinessService {
 
     this.logger.log(`공지사항 조회 완료 - ID: ${id}`);
 
-    return announcement;
+    // category 객체는 제거하고 categoryName만 반환
+    const { category, ...announcementData } = announcement as any;
+
+    return {
+      ...announcementData,
+      categoryName: category?.name,
+    };
   }
 
   /**

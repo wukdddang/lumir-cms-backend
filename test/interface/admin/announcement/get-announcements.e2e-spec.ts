@@ -542,9 +542,11 @@ describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => 
         id: announcementId,
         title: '테스트 공지',
         content: '테스트 내용',
+        categoryId: testCategoryId,
         createdAt: expect.any(String),
         updatedAt: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
     });
 
     it('모든 필드가 포함된 공지사항을 조회해야 한다', async () => {
@@ -578,12 +580,14 @@ describe('GET /api/admin/announcements/:id (공지사항 상세 조회)', () => 
         id: announcementId,
         title: '상세 공지',
         content: '상세 내용',
+        categoryId: testCategoryId,
         isFixed: true,
         isPublic: false,
         mustRead: true,
         releasedAt: expect.any(String),
         expiredAt: expect.any(String),
       });
+      expect(response.body.categoryName).toBeDefined();
     });
   });
 
