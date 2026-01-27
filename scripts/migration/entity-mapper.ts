@@ -21,15 +21,24 @@ const LANGUAGE_CODE_MAP: Record<string, string> = {
 };
 
 /**
- * 언어 ID를 가져옵니다
- * 실제 DB의 언어 ID (languages 테이블 기준)
+ * 언어 ID 캐시
+ * setLanguageIds() 함수를 통해 DB에서 조회한 실제 ID로 설정됩니다.
  */
-const LANGUAGE_IDS: Record<string, string> = {
-  ko: 'ff065879-4f32-472c-9cd3-bd4d15601fd0', // 한국어 (실제 DB의 언어 ID)
-  en: 'ce34e780-1244-41d2-8b54-630d72553e8b', // 영어 (실제 DB의 언어 ID)
-  ja: '1c3232f0-b6f4-4739-87dc-42a211fbb660', // 일본어 (실제 DB의 언어 ID)
-  zh: '17bb8818-8c28-4b95-82d4-dab68d10f092', // 중문 (실제 DB의 언어 ID)
+let LANGUAGE_IDS: Record<string, string> = {
+  ko: '',
+  en: '',
+  ja: '',
+  zh: '',
 };
+
+/**
+ * DB에서 조회한 언어 ID로 캐시를 설정합니다.
+ * 마이그레이션 스크립트 시작 시 호출되어야 합니다.
+ */
+export function setLanguageIds(languageIds: Record<string, string>): void {
+  LANGUAGE_IDS = languageIds;
+  console.log('✅ 언어 ID 매핑 설정 완료:', LANGUAGE_IDS);
+}
 
 /**
  * .env에서 기본 언어 코드 가져오기

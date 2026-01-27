@@ -17,6 +17,7 @@ import {
   mapNotificationToMainPopup,
   mapPageView,
   createCategoryIdMap,
+  setLanguageIds,
 } from './entity-mapper';
 import {
   validateCategory,
@@ -107,7 +108,31 @@ async function bootstrap() {
     );
     console.log('');
 
-    // 4. 기본 카테고리 조회
+    // 4. DB에서 언어 ID 조회 및 설정
+    console.log('🌐 언어 ID 조회 중...\n');
+    const languages = await dataSource.query(
+      'SELECT id, code FROM languages ORDER BY code',
+    );
+    
+    const languageIdMap: Record<string, string> = {};
+    for (const lang of languages) {
+      languageIdMap[lang.code] = lang.id;
+      console.log(`  ✅ ${lang.code}: ${lang.id}`);
+    }
+    
+    // 필수 언어 확인
+    const requiredLanguages = ['ko', 'en', 'ja', 'zh'];
+    for (const langCode of requiredLanguages) {
+      if (!languageIdMap[langCode]) {
+        throw new Error(`필수 언어 '${langCode}'가 데이터베이스에 없습니다.`);
+      }
+    }
+    
+    // entity-mapper에 언어 ID 설정
+    setLanguageIds(languageIdMap);
+    console.log('');
+
+    // 5. 기본 카테고리 조회
     console.log('🔍 기본 카테고리 조회 중...\n');
     const defaultCategoryMap = new Map<string, string>();
     
@@ -135,10 +160,10 @@ async function bootstrap() {
     }
     console.log('');
 
-    // 5. 엔티티 매핑
+    // 6. 엔티티 매핑
     console.log('🔄 엔티티 매핑 중...\n');
 
-    // 5.1 Categories 매핑 (MongoDB의 공통 카테고리를 루미르스토리/비디오갤러리용으로 복제)
+    // 6.1 Categories 매핑 (MongoDB의 공통 카테고리를 루미르스토리/비디오갤러리용으로 복제)
     const targetEntityTypes = ['lumir_story', 'video_gallery'];
     
     const categories: any[] = [];
@@ -157,7 +182,7 @@ async function bootstrap() {
     }
     console.log(`✅ Categories: MongoDB ${collections.categories.length}개 → ${categories.length}개 매핑 완료 (루미르스토리/비디오갤러리용)`);
 
-    // 5.2 카테고리 ID 매핑 생성 (루미르스토리/비디오갤러리만)
+    // 6.2 카테고리 ID 매핑 생성 (루미르스토리/비디오갤러리만)
     const categoryIdMapByEntityType = new Map<string, Map<string, string>>();
     const UUID_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
     
@@ -181,33 +206,33 @@ async function bootstrap() {
     // 다른 모듈들은 빈 Map 사용 (기본 카테고리 사용)
     const emptyCategoryIdMap = new Map<string, string>();
 
-    // 5.3 LumirStory 매핑 (MongoDB news → PostgreSQL lumir_stories) - 복제 카테고리 사용
+    // 6.3 LumirStory 매핑 (MongoDB news → PostgreSQL lumir_stories) - 복제 카테고리 사용
     const lumirStoryCategoryIdMap = categoryIdMapByEntityType.get('lumir_story') || new Map();
     const lumirStories = collections.news.map((doc) =>
       mapLumirStory(doc, lumirStoryCategoryIdMap, defaultCategoryMap.get('lumir_story')),
     );
     console.log(`✅ LumirStories: ${lumirStories.length}개 매핑 완료 (MongoDB news → PostgreSQL lumir_stories)`);
 
-    // 5.4 News 매핑 (MongoDB pressreleases → PostgreSQL news) - 기본 카테고리 사용
+    // 6.4 News 매핑 (MongoDB pressreleases → PostgreSQL news) - 기본 카테고리 사용
     const news = collections.pressreleases.map((doc) =>
       mapPressReleaseToNews(doc, emptyCategoryIdMap, defaultCategoryMap.get('news')),
     );
     console.log(`✅ News: ${news.length}개 매핑 완료 (MongoDB pressreleases → PostgreSQL news)`);
 
-    // 5.5 VideoGallery 매핑 - 복제 카테고리 사용
+    // 6.5 VideoGallery 매핑 - 복제 카테고리 사용
     const videoGalleryCategoryIdMap = categoryIdMapByEntityType.get('video_gallery') || new Map();
     const videoGalleries = collections.videos.map((doc) =>
       mapVideoGallery(doc, videoGalleryCategoryIdMap, defaultCategoryMap.get('video_gallery')),
     );
     console.log(`✅ VideoGalleries: ${videoGalleries.length}개 매핑 완료`);
 
-    // 5.6 IR 매핑 - 기본 카테고리 사용
+    // 6.6 IR 매핑 - 기본 카테고리 사용
     const irs = collections.irmaterials.map((doc) => 
       mapIR(doc, emptyCategoryIdMap, defaultCategoryMap.get('ir'))
     );
     console.log(`✅ IRs: ${irs.length}개 매핑 완료`);
 
-    // 5.7 ElectronicDisclosure 매핑 - 기본 카테고리 사용
+    // 6.7 ElectronicDisclosure 매핑 - 기본 카테고리 사용
     const electronicDisclosures = collections.managementdisclosures.map(
       (doc) => mapElectronicDisclosure(doc, emptyCategoryIdMap, defaultCategoryMap.get('electronic_disclosure')),
     );
@@ -215,7 +240,7 @@ async function bootstrap() {
       `✅ ElectronicDisclosures: ${electronicDisclosures.length}개 매핑 완료`,
     );
 
-    // 5.8 ShareholdersMeeting 매핑 - 기본 카테고리 사용
+    // 6.8 ShareholdersMeeting 매핑 - 기본 카테고리 사용
     const shareholdersMeetings = collections.shareholdermeetings.map((doc) =>
       mapShareholdersMeeting(doc, emptyCategoryIdMap, defaultCategoryMap.get('shareholders_meeting')),
     );
@@ -223,17 +248,17 @@ async function bootstrap() {
       `✅ ShareholdersMeetings: ${shareholdersMeetings.length}개 매핑 완료`,
     );
 
-    // 5.9 MainPopup 매핑 (notifications) - 기본 카테고리 사용
+    // 6.9 MainPopup 매핑 (notifications) - 기본 카테고리 사용
     const mainPopups = collections.notifications.map((doc) =>
       mapNotificationToMainPopup(doc, emptyCategoryIdMap, defaultCategoryMap.get('main_popup')),
     );
     console.log(`✅ MainPopups: ${mainPopups.length}개 매핑 완료`);
 
-    // 5.10 PageView 매핑
+    // 6.10 PageView 매핑
     const pageViews = collections.pageviews.map(mapPageView);
     console.log(`✅ PageViews: ${pageViews.length}개 매핑 완료`);
 
-    // 5. 데이터 검증
+    // 7. 데이터 검증
     console.log('\n🔍 데이터 검증 중...\n');
 
     // DB에 이미 존재하는 카테고리 조회
@@ -248,7 +273,7 @@ async function bootstrap() {
 
     const validationResults: ValidationResult[] = [];
 
-    // 5.1 Categories 검증 (새로 추가할 카테고리만)
+    // 7.1 Categories 검증 (새로 추가할 카테고리만)
     const categoryValidation = mergeValidationResults([
       validateUniqueIds(categories, 'Categories'),
       ...categories.map(validateCategory),
@@ -256,7 +281,7 @@ async function bootstrap() {
     printValidationResult(categoryValidation, 'Categories');
     validationResults.push(categoryValidation);
 
-    // 5.2 LumirStory 검증
+    // 7.2 LumirStory 검증
     const lumirStoryValidation = mergeValidationResults([
       validateUniqueIds(lumirStories, 'LumirStories'),
       ...lumirStories.map((ls) => validateNews(ls, allCategories)),
@@ -264,7 +289,7 @@ async function bootstrap() {
     printValidationResult(lumirStoryValidation, 'LumirStories');
     validationResults.push(lumirStoryValidation);
 
-    // 5.3 News 검증 (전체 카테고리 목록 사용)
+    // 7.3 News 검증 (전체 카테고리 목록 사용)
     const newsValidation = mergeValidationResults([
       validateUniqueIds(news, 'News'),
       ...news.map((n) => validateNews(n, allCategories)),
@@ -272,7 +297,7 @@ async function bootstrap() {
     printValidationResult(newsValidation, 'News');
     validationResults.push(newsValidation);
 
-    // 5.4 VideoGallery 검증 (전체 카테고리 목록 사용)
+    // 7.4 VideoGallery 검증 (전체 카테고리 목록 사용)
     const videoValidation = mergeValidationResults([
       validateUniqueIds(videoGalleries, 'VideoGalleries'),
       ...videoGalleries.map((vg) => validateVideoGallery(vg, allCategories)),
@@ -280,7 +305,7 @@ async function bootstrap() {
     printValidationResult(videoValidation, 'VideoGalleries');
     validationResults.push(videoValidation);
 
-    // 5.5 MainPopup 검증 (전체 카테고리 목록 사용)
+    // 7.5 MainPopup 검증 (전체 카테고리 목록 사용)
     const popupValidation = mergeValidationResults([
       validateUniqueIds(mainPopups, 'MainPopups'),
       ...mainPopups.map((mp) => validateMainPopup(mp, allCategories)),
@@ -288,7 +313,7 @@ async function bootstrap() {
     printValidationResult(popupValidation, 'MainPopups');
     validationResults.push(popupValidation);
 
-    // 5.6 PageView 검증
+    // 7.6 PageView 검증
     const pageViewValidation = mergeValidationResults([
       validateUniqueIds(pageViews, 'PageViews'),
       ...pageViews.slice(0, 100).map(validatePageView), // 샘플만 검증 (대용량)
