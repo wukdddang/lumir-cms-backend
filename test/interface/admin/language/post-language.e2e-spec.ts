@@ -1,6 +1,6 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
 
-describe('POST /api/admin/languages (언어 생성)', () => {
+describe('POST /api/admin/languages (언어 추가)', () => {
   const testSuite = new BaseE2ETest();
 
   beforeAll(async () => {
@@ -17,7 +17,7 @@ describe('POST /api/admin/languages (언어 생성)', () => {
   });
 
   describe('성공 케이스', () => {
-    it('유효한 데이터로 언어를 생성해야 한다', async () => {
+    it('유효한 데이터로 언어를 추가해야 한다', async () => {
       // Given
       const createDto = {
         code: 'ko',
@@ -43,7 +43,7 @@ describe('POST /api/admin/languages (언어 생성)', () => {
       });
     });
 
-    it('여러 언어를 생성해야 한다', async () => {
+    it('여러 언어를 추가해야 한다', async () => {
       // Given
       const languages = [
         { code: 'ko', name: '한국어', isActive: true },
@@ -154,7 +154,7 @@ describe('POST /api/admin/languages (언어 생성)', () => {
   });
 
   describe('실패 케이스 - 중복 데이터', () => {
-    it('이미 존재하는 code로 생성 시 409 에러가 발생해야 한다', async () => {
+    it('이미 존재하는 code로 추가 시 409 에러가 발생해야 한다', async () => {
       // Given
       const createDto = {
         code: 'ko',

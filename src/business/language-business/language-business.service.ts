@@ -48,19 +48,19 @@ export class LanguageBusinessService {
   }
 
   /**
-   * 언어를 생성한다
+   * 언어를 추가한다
    */
-  async 언어를_생성한다(data: {
+  async 언어를_추가한다(data: {
     code: string;
     name: string;
     isActive: boolean;
     createdBy?: string;
   }): Promise<Language> {
-    this.logger.log(`언어 생성 시작 - 코드: ${data.code}`);
+    this.logger.log(`언어 추가 시작 - 코드: ${data.code}`);
 
     const result = await this.languageContextService.언어를_생성한다(data);
 
-    this.logger.log(`언어 생성 완료 - ID: ${result.id}`);
+    this.logger.log(`언어 추가 완료 - ID: ${result.id}`);
 
     // 상세 정보 조회
     return await this.languageContextService.언어_상세를_조회한다(result.id);
@@ -87,14 +87,14 @@ export class LanguageBusinessService {
   }
 
   /**
-   * 언어를 삭제한다
+   * 언어를 제외한다 (Soft Delete)
    */
-  async 언어를_삭제한다(id: string): Promise<boolean> {
-    this.logger.log(`언어 삭제 시작 - ID: ${id}`);
+  async 언어를_제외한다(id: string): Promise<boolean> {
+    this.logger.log(`언어 제외 시작 - ID: ${id}`);
 
     const result = await this.languageContextService.언어를_삭제한다(id);
 
-    this.logger.log(`언어 삭제 완료 - ID: ${id}`);
+    this.logger.log(`언어 제외 완료 - ID: ${id}`);
 
     return result;
   }
@@ -114,21 +114,36 @@ export class LanguageBusinessService {
   }
 
   /**
-   * 사용 가능한 모든 언어 코드 목록을 조회한다 (ISO 639-1)
+   * 사용 가능한 언어 코드 목록을 조회한다 (ISO 639-1)
+   * 이미 추가된 언어는 제외한다
    */
   async 사용_가능한_언어_코드_목록을_조회한다(): Promise<
     Array<{ code: string; name: string; nativeName: string }>
   > {
     this.logger.log('언어 코드 목록 조회 시작');
 
+    // 이미 추가된 언어 목록 조회
+    const existingLanguages =
+      await this.languageContextService.언어_목록을_조회한다(true); // 비활성 포함
+    const existingCodes = new Set(
+      existingLanguages.items.map((lang) => lang.code),
+    );
+
+    // 전체 ISO 639-1 코드에서 이미 추가된 코드 제외
     const allCodes = ISO6391.getAllCodes();
-    const result = allCodes.map((code) => ({
+    const availableCodes = allCodes.filter(
+      (code) => !existingCodes.has(code),
+    );
+
+    const result = availableCodes.map((code) => ({
       code,
       name: ISO6391.getName(code),
       nativeName: ISO6391.getNativeName(code),
     }));
 
-    this.logger.log(`언어 코드 목록 조회 완료 - 총 ${result.length}개`);
+    this.logger.log(
+      `언어 코드 목록 조회 완료 - 총 ${result.length}개 (${existingCodes.size}개 제외됨)`,
+    );
 
     return result;
   }

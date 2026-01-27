@@ -75,11 +75,11 @@ export class LanguageController {
    */
   @Get('available-codes')
   @ApiOperation({
-    summary: '사용 가능한 언어 코드 목록 조회',
+    summary: '추가 가능한 언어 코드 목록 조회',
     description:
-      'ISO 639-1 표준에 따른 사용 가능한 모든 언어 코드 목록을 조회합니다.\n\n' +
-      '언어 생성 시 참고할 수 있는 표준 언어 코드 목록입니다.\n' +
-      '총 184개의 언어 코드를 지원합니다.',
+      'ISO 639-1 표준에 따른 추가 가능한 언어 코드 목록을 조회합니다.\n\n' +
+      '이미 시스템에 추가된 언어는 제외됩니다.\n' +
+      '언어 추가 시 참고할 수 있는 표준 언어 코드 목록입니다.',
   })
   @ApiResponse({
     status: 200,
@@ -97,15 +97,15 @@ export class LanguageController {
   }
 
   /**
-   * 언어를 생성한다
+   * 언어를 추가한다
    */
   @Post()
   @ApiOperation({
-    summary: '언어 생성',
+    summary: '언어 추가',
     description:
-      '새로운 언어를 생성합니다.\n\n' +
+      '새로운 언어를 시스템에 추가합니다.\n\n' +
       '**필수 필드:**\n' +
-      '- `code`: 언어 코드 (enum: "ko", "en", "ja", "zh")\n' +
+      '- `code`: 언어 코드 (ISO 639-1 표준, 예: ko, en, ja, zh, fr, de 등)\n' +
       '- `name`: 언어 이름\n\n' +
       '**선택 필드:**\n' +
       '- `isActive`: 활성화 여부 (boolean, 기본값: true)\n\n' +
@@ -113,18 +113,18 @@ export class LanguageController {
   })
   @ApiResponse({
     status: 201,
-    description: '언어 생성 성공',
+    description: '언어 추가 성공',
     type: LanguageResponseDto,
   })
   @ApiResponse({
     status: 409,
     description: '이미 존재하는 언어 코드',
   })
-  async 언어를_생성한다(
+  async 언어를_추가한다(
     @CurrentUser() user: AuthenticatedUser,
     @Body() createDto: CreateLanguageDto,
   ): Promise<LanguageResponseDto> {
-    return await this.languageBusinessService.언어를_생성한다({
+    return await this.languageBusinessService.언어를_추가한다({
       ...createDto,
       isActive: createDto.isActive ?? true,
       createdBy: user.id,
@@ -215,25 +215,32 @@ export class LanguageController {
   }
 
   /**
-   * 언어를 삭제한다
+   * 언어를 제외한다
    */
   @Delete(':id')
   @ApiOperation({
-    summary: '언어 삭제',
-    description: '언어를 삭제합니다 (Soft Delete).',
+    summary: '언어 제외',
+    description:
+      '언어를 시스템에서 제외합니다 (Soft Delete).\n\n' +
+      '제외된 언어는 삭제되지 않고 비활성 상태로 변경됩니다.\n' +
+      '기본 언어는 제외할 수 없습니다.',
   })
   @ApiResponse({
     status: 200,
-    description: '언어 삭제 성공',
+    description: '언어 제외 성공',
   })
   @ApiResponse({
     status: 404,
     description: '언어를 찾을 수 없음',
   })
-  async 언어를_삭제한다(
+  @ApiResponse({
+    status: 400,
+    description: '기본 언어는 제외할 수 없음',
+  })
+  async 언어를_제외한다(
     @Param('id') id: string,
   ): Promise<{ success: boolean }> {
-    const result = await this.languageBusinessService.언어를_삭제한다(id);
+    const result = await this.languageBusinessService.언어를_제외한다(id);
     return { success: result };
   }
 }
