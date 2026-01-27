@@ -363,17 +363,24 @@ export class TranslationSyncTriggerService {
         syncResults.mainPopup.created +
         syncResults.shareholdersMeeting.created;
 
+      const totalModules = 5;
       const failedCount = Object.values(syncResults).filter((r) => r.failed)
         .length;
+      const successCount = totalModules - failedCount;
 
       this.logger.log(
         `언어 활성화로 인한 번역 생성 및 동기화 완료 - ` +
           `총 ${totalCreated}개 번역 생성, ` +
-          `실패: ${failedCount}/5 모듈 (언어: ${languageCode})`,
+          `성공: ${successCount}/${totalModules} 모듈, ` +
+          `실패: ${failedCount}/${totalModules} 모듈 ` +
+          `(언어: ${languageCode})`,
       );
 
       if (failedCount > 0) {
-        this.logger.warn(`일부 모듈 번역 동기화 실패`, syncResults);
+        this.logger.warn(
+          `일부 모듈 번역 동기화 실패 - 실패한 모듈: ${failedCount}개`,
+          syncResults,
+        );
       }
     } catch (error) {
       this.logger.error(
