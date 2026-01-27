@@ -503,6 +503,24 @@ export function mapPageView(mongoDoc: any): any {
 }
 
 /**
+ * users 컬렉션을 migration_users로 매핑
+ */
+export function mapMigrationUser(mongoDoc: any): any {
+  const doc = convertObjectIdsToUuids(mongoDoc);
+
+  return addBaseEntityFields(
+    {
+      id: doc.id,
+      accountId: doc.accountId,
+      password: doc.password,
+      name: doc.name,
+      email: doc.email || null,
+    },
+    mongoDoc,
+  );
+}
+
+/**
  * 카테고리 ID 매핑 맵 생성
  * MongoDB ObjectId → PostgreSQL UUID 매핑
  */

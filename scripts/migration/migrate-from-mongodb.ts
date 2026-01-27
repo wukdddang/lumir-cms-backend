@@ -16,6 +16,7 @@ import {
   mapShareholdersMeeting,
   mapNotificationToMainPopup,
   mapPageView,
+  mapMigrationUser,
   createCategoryIdMap,
   setLanguageIds,
 } from './entity-mapper';
@@ -53,6 +54,7 @@ const COLLECTIONS = {
   shareholdermeetings: 'shareholdermeetings',
   notifications: 'notifications',
   pageviews: 'pageviews',
+  users: 'users',
 };
 
 async function bootstrap() {
@@ -258,6 +260,10 @@ async function bootstrap() {
     const pageViews = collections.pageviews.map(mapPageView);
     console.log(`✅ PageViews: ${pageViews.length}개 매핑 완료`);
 
+    // 6.11 MigrationUser 매핑
+    const migrationUsers = collections.users.map(mapMigrationUser);
+    console.log(`✅ MigrationUsers: ${migrationUsers.length}개 매핑 완료`);
+
     // 7. 데이터 검증
     console.log('\n🔍 데이터 검증 중...\n');
 
@@ -331,7 +337,7 @@ async function bootstrap() {
 
     // 6. 데이터 삽입 확인
     const proceed = await confirm(
-      `총 ${categories.length + lumirStories.length + news.length + videoGalleries.length + irs.length + electronicDisclosures.length + shareholdersMeetings.length + mainPopups.length + pageViews.length}개의 레코드를 삽입하시겠습니까?`,
+      `총 ${categories.length + lumirStories.length + news.length + videoGalleries.length + irs.length + electronicDisclosures.length + shareholdersMeetings.length + mainPopups.length + pageViews.length + migrationUsers.length}개의 레코드를 삽입하시겠습니까?`,
     );
 
     if (!proceed) {
@@ -342,6 +348,7 @@ async function bootstrap() {
     // 6.5 기존 마이그레이션 데이터 정리
     console.log('\n🧹 기존 마이그레이션 데이터 정리 중...');
     await dataSource.query(`TRUNCATE TABLE page_views CASCADE`);
+    await dataSource.query(`TRUNCATE TABLE migration_users CASCADE`);
     await dataSource.query(`TRUNCATE TABLE lumir_stories CASCADE`);
     await dataSource.query(`TRUNCATE TABLE news CASCADE`);
     await dataSource.query(`TRUNCATE TABLE video_galleries CASCADE`);
@@ -553,6 +560,17 @@ async function bootstrap() {
         await insertInBatches(manager, 'page_views', pageViews, 5000);
         console.log(`✅ PageViews: ${pageViews.length}개 삽입 완료`);
       }
+
+      // 7.10 MigrationUser 삽입
+      if (migrationUsers.length > 0) {
+        await manager
+          .createQueryBuilder()
+          .insert()
+          .into('migration_users')
+          .values(migrationUsers)
+          .execute();
+        console.log(`✅ MigrationUsers: ${migrationUsers.length}개 삽입 완료`);
+      }
     });
 
     // 8. 삽입 결과 검증
@@ -580,6 +598,9 @@ async function bootstrap() {
       pageViews: await dataSource
         .getRepository('page_views')
         .count(),
+      migrationUsers: await dataSource
+        .getRepository('migration_users')
+        .count(),
     };
 
     console.log('데이터베이스 레코드 수:');
@@ -602,6 +623,9 @@ async function bootstrap() {
     console.log(
       `  PageViews: ${counts.pageViews} (예상: ${pageViews.length})`,
     );
+    console.log(
+      `  MigrationUsers: ${counts.migrationUsers} (예상: ${migrationUsers.length})`,
+    );
 
     const allMatch =
       counts.categories === categories.length &&
@@ -612,7 +636,8 @@ async function bootstrap() {
       counts.electronicDisclosures === electronicDisclosures.length &&
       counts.shareholdersMeetings === shareholdersMeetings.length &&
       counts.mainPopups === mainPopups.length &&
-      counts.pageViews === pageViews.length;
+      counts.pageViews === pageViews.length &&
+      counts.migrationUsers === migrationUsers.length;
 
     if (allMatch) {
       console.log('\n✅ 모든 레코드가 정상적으로 삽입되었습니다!');

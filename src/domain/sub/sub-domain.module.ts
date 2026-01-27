@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WikiFileSystemModule } from './wiki-file-system/wiki-file-system.module';
 import { PageViewModule } from './analytics/page-view.module';
+import { MigrationUserModule } from './migration-user/migration-user.module';
 
 /**
  * Sub Domain 통합 모듈
@@ -10,10 +11,12 @@ import { PageViewModule } from './analytics/page-view.module';
   imports: [
     WikiFileSystemModule,
     PageViewModule,
+    MigrationUserModule,
   ],
   exports: [
     WikiFileSystemModule,
     PageViewModule,
+    MigrationUserModule,
   ],
 })
 export class SubDomainModule {}
