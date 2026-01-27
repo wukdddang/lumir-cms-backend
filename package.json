@@ -32,7 +32,9 @@
     "backup:restore": "ts-node -r tsconfig-paths/register scripts/backup/restore-backup.ts",
     "migration:check-schema": "ts-node -r tsconfig-paths/register scripts/migration/check-schema.ts",
     "migration:apply-schema": "ts-node -r tsconfig-paths/register scripts/migration/apply-schema-changes.ts",
-    "migration:from-mongodb": "ts-node -r tsconfig-paths/register scripts/migration/migrate-from-mongodb.ts"
+    "migration:from-mongodb": "ts-node -r tsconfig-paths/register scripts/migration/migrate-from-mongodb.ts",
+    "migration:check-categories": "ts-node -r tsconfig-paths/register scripts/migration/check-default-categories.ts",
+    "migration:create-categories": "ts-node -r tsconfig-paths/register scripts/migration/create-default-categories.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.965.0",
