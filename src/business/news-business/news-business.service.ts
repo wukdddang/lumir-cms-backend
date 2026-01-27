@@ -111,7 +111,7 @@ export class NewsBusinessService {
     title: string,
     description: string | null,
     url: string | null,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<NewsDetailResult> {
@@ -344,7 +344,7 @@ export class NewsBusinessService {
     title: string,
     description: string | null,
     url: string | null,
-    categoryId: string,
+    categoryId: string | null,
     updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<News> {

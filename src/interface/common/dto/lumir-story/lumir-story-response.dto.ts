@@ -33,8 +33,8 @@ export class LumirStoryResponseDto {
   @ApiProperty({ description: '내용', example: '루미르는...' })
   content: string;
 
-  @ApiProperty({ description: '카테고리 ID' })
-  categoryId: string;
+  @ApiProperty({ description: '카테고리 ID', nullable: true })
+  categoryId: string | null;
 
   @ApiProperty({
     description: '썸네일/대표 이미지 URL',

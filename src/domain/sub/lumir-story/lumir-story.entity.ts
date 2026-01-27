@@ -26,10 +26,11 @@ export class LumirStory extends BaseEntity<LumirStory> {
 
   @Column({
     type: 'uuid',
-    comment: '카테고리 ID',
+    nullable: true,
+    comment: '카테고리 ID (선택)',
   })
   @Index('idx_lumir_story_category_id')
-  categoryId: string;
+  categoryId: string | null;
 
   @Column({
     type: 'text',

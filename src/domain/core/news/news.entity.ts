@@ -62,7 +62,7 @@ export class News extends BaseEntity<News> {
   @Column({
     type: 'uuid',
     nullable: true,
-    comment: '뉴스 카테고리 ID',
+    comment: '뉴스 카테고리 ID (선택)',
   })
   categoryId: string | null;
 

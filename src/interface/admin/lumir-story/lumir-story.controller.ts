@@ -205,7 +205,7 @@ export class LumirStoryController {
         },
         categoryId: {
           type: 'string',
-          description: '카테고리 ID (UUID)',
+          description: '카테고리 ID (UUID) - 선택사항',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
         imageUrl: {
@@ -219,7 +219,7 @@ export class LumirStoryController {
           description: '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능)',
         },
       },
-      required: ['title', 'content', 'categoryId'],
+      required: ['title', 'content'],
     },
   })
   @ApiResponse({
@@ -246,14 +246,10 @@ export class LumirStoryController {
       throw new BadRequestException('content 필드는 필수입니다.');
     }
 
-    if (!categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     const lumirStory = await this.lumirStoryBusinessService.루미르스토리를_생성한다(
       title,
       content,
-      categoryId,
+      categoryId || null,
       imageUrl || null,
       user.id,
       files,
@@ -342,13 +338,12 @@ export class LumirStoryController {
       '루미르스토리의 정보 및 파일을 수정합니다.\n\n' +
       '**필수 필드:**\n' +
       '- `title`: 제목\n' +
-      '- `content`: 내용\n' +
-      '- `categoryId`: 카테고리 ID (UUID)\n\n' +
+      '- `content`: 내용\n\n' +
       '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
   })
   @ApiBody({
     description:
-      '⚠️ **중요**: 제목, 내용, 카테고리 ID는 필수입니다.\n\n' +
+      '⚠️ **중요**: 제목과 내용은 필수입니다.\n\n' +
       '**파일 관리 방식**:\n' +
       '- `files`를 전송하면: 기존 파일 전부 삭제 → 새 파일들로 교체\n' +
       '- `files`를 전송하지 않으면: 기존 파일 전부 삭제 (파일 없음)\n' +
@@ -368,7 +363,7 @@ export class LumirStoryController {
         },
         categoryId: {
           type: 'string',
-          description: '카테고리 ID (UUID, 필수)',
+          description: '카테고리 ID (UUID) - 선택사항',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
         imageUrl: {
@@ -383,7 +378,7 @@ export class LumirStoryController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['title', 'content', 'categoryId'],
+      required: ['title', 'content'],
     },
   })
   @ApiResponse({
@@ -411,16 +406,12 @@ export class LumirStoryController {
       throw new BadRequestException('content 필드는 필수입니다.');
     }
 
-    if (!categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     return await this.lumirStoryBusinessService.루미르스토리를_수정한다(
       id,
       title,
       content,
       user.id,
-      categoryId,
+      categoryId || null,
       imageUrl || null,
       files,
     );

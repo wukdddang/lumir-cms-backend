@@ -212,7 +212,7 @@ export class NewsController {
         categoryId: {
           type: 'string',
           format: 'uuid',
-          description: '뉴스 카테고리 ID (필수)',
+          description: '뉴스 카테고리 ID (선택)',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
         files: {
@@ -221,7 +221,7 @@ export class NewsController {
           description: '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능)',
         },
       },
-      required: ['title', 'categoryId'],
+      required: ['title'],
     },
   })
   @ApiResponse({
@@ -244,15 +244,11 @@ export class NewsController {
       throw new BadRequestException('title 필드는 필수입니다.');
     }
 
-    if (!categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     return await this.newsBusinessService.뉴스를_생성한다(
       title,
       description || null,
       url || null,
-      categoryId,
+      categoryId || null,
       user.id,
       files,
     );
@@ -362,7 +358,7 @@ export class NewsController {
         categoryId: {
           type: 'string',
           format: 'uuid',
-          description: '뉴스 카테고리 ID (필수)',
+          description: '뉴스 카테고리 ID (선택)',
           example: '123e4567-e89b-12d3-a456-426614174000',
         },
         files: {
@@ -372,7 +368,7 @@ export class NewsController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['title', 'categoryId'],
+      required: ['title'],
     },
   })
   @ApiResponse({
@@ -403,16 +399,12 @@ export class NewsController {
       throw new BadRequestException('title 필드는 필수입니다.');
     }
 
-    if (!categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     return await this.newsBusinessService.뉴스를_수정한다(
       id,
       title,
       description || null,
       url || null,
-      categoryId,
+      categoryId || null,
       user.id,
       files,
     );

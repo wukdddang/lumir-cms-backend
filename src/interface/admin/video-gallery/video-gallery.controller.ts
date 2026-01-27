@@ -207,7 +207,7 @@ export class VideoGalleryController {
         },
         categoryId: {
           type: 'string',
-          description: '카테고리 ID (필수)',
+          description: '카테고리 ID (선택)',
           example: '550e8400-e29b-41d4-a716-446655440000',
         },
         description: {
@@ -227,7 +227,7 @@ export class VideoGalleryController {
           description: '비디오 파일 목록',
         },
       },
-      required: ['title', 'categoryId'],
+      required: ['title'],
     },
   })
   @ApiResponse({
@@ -272,7 +272,7 @@ export class VideoGalleryController {
 
     const videoGallery = await this.videoGalleryBusinessService.비디오갤러리를_생성한다(
       title,
-      categoryId,
+      categoryId || null,
       description || null,
       parsedYoutubeUrls,
       user.id,
@@ -412,7 +412,7 @@ export class VideoGalleryController {
         },
         categoryId: {
           type: 'string',
-          description: '카테고리 ID (필수)',
+          description: '카테고리 ID (선택)',
           example: '550e8400-e29b-41d4-a716-446655440000',
         },
         description: {
@@ -433,7 +433,7 @@ export class VideoGalleryController {
             '비디오 파일 목록 - 전송한 것으로 완전히 교체됩니다',
         },
       },
-      required: ['title', 'categoryId'],
+      required: ['title'],
     },
   })
   @ApiResponse({
@@ -481,7 +481,7 @@ export class VideoGalleryController {
       id,
       title,
       user.id,
-      categoryId,
+      categoryId || null,
       description || null,
       parsedYoutubeUrls,
       files,

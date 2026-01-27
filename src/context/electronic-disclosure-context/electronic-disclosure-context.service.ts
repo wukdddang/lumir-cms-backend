@@ -94,7 +94,7 @@ export class ElectronicDisclosureContextService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     attachments?: Array<{
       fileName: string;
@@ -104,11 +104,6 @@ export class ElectronicDisclosureContextService {
     }>,
   ): Promise<ElectronicDisclosure> {
     this.logger.log(`전자공시 생성 시작 - 번역 수: ${translations.length}`);
-
-    // categoryId 필수 검증
-    if (!categoryId) {
-      throw new BadRequestException('categoryId는 필수입니다.');
-    }
 
     // 1. 언어 ID 검증
     const languageIds = translations.map((t) => t.languageId);
@@ -174,16 +169,18 @@ export class ElectronicDisclosureContextService {
       );
     }
 
-    // 9. 카테고리 매핑 생성
-    this.logger.log(
-      `전자공시 카테고리 매핑 생성 시작 - 카테고리 ID: ${categoryId}`,
-    );
-    await this.categoryService.엔티티에_카테고리를_매핑한다(
-      disclosure.id,
-      categoryId,
-      createdBy,
-    );
-    this.logger.log(`전자공시 카테고리 매핑 생성 완료`);
+    // 9. 카테고리 매핑 생성 (categoryId가 있는 경우에만)
+    if (categoryId) {
+      this.logger.log(
+        `전자공시 카테고리 매핑 생성 시작 - 카테고리 ID: ${categoryId}`,
+      );
+      await this.categoryService.엔티티에_카테고리를_매핑한다(
+        disclosure.id,
+        categoryId,
+        createdBy,
+      );
+      this.logger.log(`전자공시 카테고리 매핑 생성 완료`);
+    }
 
     const totalTranslations = translations.length + remainingLanguages.length;
     this.logger.log(
@@ -204,7 +201,7 @@ export class ElectronicDisclosureContextService {
     data: {
       isPublic?: boolean;
       order?: number;
-      categoryId?: string;
+      categoryId?: string | null;
       translations?: Array<{
         id?: string;
         languageId: string;

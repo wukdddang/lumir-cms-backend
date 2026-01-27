@@ -687,7 +687,6 @@ export class AnnouncementController {
       '   - `survey.questions` 배열에 질문 추가\n' +
       '   - 각 질문의 `type`에 따라 필요한 `form` 데이터 다름\n\n' +
       '⚠️ **주의사항:**\n' +
-      '- `categoryId`는 필수 필드입니다. GET /admin/announcements/categories로 카테고리 목록을 조회하세요\n' +
       '- 날짜는 ISO 8601 형식 (예: `2024-01-01T00:00:00Z`)\n' +
       '- 설문 질문 타입별로 필요한 `form` 필드가 다릅니다\n' +
       '- 제한공개 시 최소 하나의 권한 필드는 필수입니다\n\n' +
@@ -705,6 +704,7 @@ export class AnnouncementController {
     // 날짜 변환
     const data = {
       ...dto,
+      categoryId: dto.categoryId || null,
       releasedAt: dto.releasedAt ? new Date(dto.releasedAt) : null,
       expiredAt: dto.expiredAt ? new Date(dto.expiredAt) : null,
       createdBy: user.id,
@@ -811,7 +811,6 @@ export class AnnouncementController {
       '5. **첨부파일 수정**\n' +
       '   - `attachments` 배열을 전송하면 기존 첨부파일 완전 교체\n\n' +
       '⚠️ **주의사항:**\n' +
-      '- `categoryId`는 필수 필드입니다. GET /admin/announcements/categories로 카테고리 목록을 조회하세요\n' +
       '- 공개된 공지사항은 수정 불가 (먼저 비공개로 전환 필요)\n' +
       '- 수정하지 않을 필드는 생략 가능합니다\n' +
       '- 날짜는 ISO 8601 형식 사용\n\n' +

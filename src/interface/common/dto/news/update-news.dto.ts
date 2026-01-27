@@ -42,13 +42,14 @@ export class UpdateNewsDto {
   url?: string | null;
 
   @ApiProperty({
-    description: '카테고리 ID (UUID)',
+    description: '카테고리 ID (UUID) - null 허용',
     example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     required: false,
+    nullable: true,
   })
   @IsOptional()
   @IsString()
-  categoryId?: string;
+  categoryId?: string | null;
 
   @ApiProperty({
     description: '공개 여부',

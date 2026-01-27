@@ -105,10 +105,12 @@ export class UpdateMainPopupDto {
   translations: UpdateMainPopupTranslationDto[];
 
   @ApiProperty({
-    description: '메인 팝업 카테고리 ID',
+    description: '메인 팝업 카테고리 ID (선택사항)',
     example: 'uuid-category',
+    required: false,
+    nullable: true,
   })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  categoryId: string;
+  categoryId?: string | null;
 }

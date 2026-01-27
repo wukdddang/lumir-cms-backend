@@ -196,8 +196,8 @@ export class ShareholdersMeetingResponseDto {
   @ApiProperty({ description: '수정자 ID', required: false, nullable: true })
   updatedBy: string | null;
 
-  @ApiProperty({ description: '카테고리 ID' })
-  categoryId: string;
+  @ApiProperty({ description: '카테고리 ID', nullable: true })
+  categoryId: string | null;
 
   @ApiProperty({ description: '카테고리 이름', example: '정기 주주총회', required: false })
   categoryName?: string;

@@ -92,7 +92,7 @@ export class MainPopupContextService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     attachments?: Array<{
       fileName: string;
@@ -184,7 +184,7 @@ export class MainPopupContextService {
     data: {
       isPublic?: boolean;
       order?: number;
-      categoryId: string;
+      categoryId?: string | null;
       translations?: Array<{
         id?: string;
         languageId: string;

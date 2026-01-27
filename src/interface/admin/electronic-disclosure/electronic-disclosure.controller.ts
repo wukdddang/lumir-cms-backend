@@ -270,9 +270,9 @@ export class ElectronicDisclosureController {
       '새로운 전자공시를 생성합니다. 제목, 설명, 카테고리와 함께 생성됩니다. 기본값: 비공개, DRAFT 상태\n\n' +
       '**필수 필드:**\n' +
       '- `translations`: JSON 배열 문자열 (다국어 정보)\n' +
-      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n' +
-      '- `categoryId`: 전자공시 카테고리 ID (필수)\n\n' +
+      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n\n' +
       '**선택 필드:**\n' +
+      '- `categoryId`: 전자공시 카테고리 ID\n' +
       '- `files`: 첨부파일 배열 (PDF/JPG/PNG/WEBP/XLSX/DOCX)\n\n' +
       '**참고**: `createdBy`는 토큰에서 자동으로 추출됩니다.',
   })
@@ -300,7 +300,7 @@ export class ElectronicDisclosureController {
         categoryId: {
           type: 'string',
           format: 'uuid',
-          description: '전자공시 카테고리 ID (필수)',
+          description: '전자공시 카테고리 ID (선택사항)',
           example: '31e6bbc6-2839-4477-9672-bb4b381e8914',
         },
         files: {
@@ -310,7 +310,7 @@ export class ElectronicDisclosureController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능)',
         },
       },
-      required: ['translations', 'categoryId'],
+      required: ['translations'],
     },
   })
   @ApiResponse({
@@ -372,14 +372,9 @@ export class ElectronicDisclosureController {
       }
     }
 
-    // categoryId 필수 검증
-    if (!body.categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     return await this.electronicDisclosureBusinessService.전자공시를_생성한다(
       translations,
-      body.categoryId,
+      body.categoryId || null,
       user.id,
       files,
     );
@@ -470,9 +465,9 @@ export class ElectronicDisclosureController {
       '전자공시의 번역 정보 및 파일을 수정합니다.\n\n' +
       '**필수 필드:**\n' +
       '- `translations`: JSON 배열 문자열 (다국어 정보)\n' +
-      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n' +
-      '- `categoryId`: 전자공시 카테고리 ID (UUID)\n\n' +
+      '  - 각 객체: `{ languageId: string (필수), title: string (필수), description?: string }`\n\n' +
       '**선택 필드:**\n' +
+      '- `categoryId`: 전자공시 카테고리 ID (UUID)\n' +
       '- `files`: 첨부파일 배열 (PDF/JPG/PNG/WEBP/XLSX/DOCX)\n\n' +
       '**파라미터:**\n' +
       '- `id`: 전자공시 ID (UUID, 필수)\n\n' +
@@ -502,7 +497,7 @@ export class ElectronicDisclosureController {
         categoryId: {
           type: 'string',
           format: 'uuid',
-          description: '전자공시 카테고리 ID (필수)',
+          description: '전자공시 카테고리 ID (선택사항)',
           example: '31e6bbc6-2839-4477-9672-bb4b381e8914',
         },
         files: {
@@ -512,7 +507,7 @@ export class ElectronicDisclosureController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['translations', 'categoryId'],
+      required: ['translations'],
     },
   })
   @ApiResponse({
@@ -575,16 +570,11 @@ export class ElectronicDisclosureController {
       }
     }
 
-    // categoryId 필수 검증
-    if (!body.categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
-    }
-
     return await this.electronicDisclosureBusinessService.전자공시를_수정한다(
       id,
       translations,
       user.id,
-      body.categoryId,
+      body.categoryId || null,
       files,
     );
   }

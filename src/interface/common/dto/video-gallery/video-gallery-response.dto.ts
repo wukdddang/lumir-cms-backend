@@ -129,16 +129,18 @@ export class VideoGalleryListItemDto {
   })
   description: string | null;
 
-  @ApiProperty({ description: '카테고리 ID' })  categoryId: string | null;
+  @ApiProperty({ description: '카테고리 ID', nullable: true })  categoryId: string | null;
 
-  @ApiProperty({ description: '카테고리 이름', example: '제품 소개' })
+  @ApiProperty({ description: '카테고리 이름', example: '제품 소개', required: false })
   categoryName: string;
 
   @ApiProperty({ 
     description: '카테고리 정보',
     type: VideoGalleryCategoryResponseDto,
+    nullable: true,
+    required: false,
   })
-  category: VideoGalleryCategoryResponseDto;
+  category: VideoGalleryCategoryResponseDto | null;
 
   @ApiProperty({ description: '공개 여부', example: true })
   isPublic: boolean;

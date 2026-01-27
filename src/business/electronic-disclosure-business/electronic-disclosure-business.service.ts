@@ -106,7 +106,7 @@ export class ElectronicDisclosureBusinessService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<ElectronicDisclosure> {
@@ -163,7 +163,7 @@ export class ElectronicDisclosureBusinessService {
       description?: string;
     }>,
     updatedBy: string,
-    categoryId: string,
+    categoryId: string | null,
     files?: Express.Multer.File[],
   ): Promise<ElectronicDisclosure> {
     this.logger.log(

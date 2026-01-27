@@ -48,10 +48,10 @@ export class MainPopup extends BaseEntity<MainPopup> {
 
   @Column({
     type: 'uuid',
-    nullable: false,
-    comment: '메인 팝업 카테고리 ID',
+    nullable: true,
+    comment: '메인 팝업 카테고리 ID (선택)',
   })
-  categoryId: string;
+  categoryId: string | null;
 
   @OneToMany(
     () => MainPopupTranslation,

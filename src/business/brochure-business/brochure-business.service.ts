@@ -116,7 +116,7 @@ export class BrochureBusinessService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<BrochureDetailResult> {
@@ -397,7 +397,7 @@ export class BrochureBusinessService {
       description?: string;
     }>,
     updatedBy: string,
-    categoryId: string,
+    categoryId: string | null,
     files?: Express.Multer.File[],
   ): Promise<BrochureTranslation[]> {
     if (!translations || translations.length === 0) {

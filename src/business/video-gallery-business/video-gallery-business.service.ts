@@ -111,7 +111,7 @@ export class VideoGalleryBusinessService {
    */
   async 비디오갤러리를_생성한다(
     title: string,
-    categoryId: string,
+    categoryId: string | null,
     description?: string | null,
     youtubeUrls?: string[],
     createdBy?: string,
@@ -375,7 +375,7 @@ export class VideoGalleryBusinessService {
     videoGalleryId: string,
     title: string,
     updatedBy: string,
-    categoryId: string,
+    categoryId: string | null,
     description?: string | null,
     youtubeUrls?: string[],
     files?: Express.Multer.File[],

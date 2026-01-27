@@ -106,7 +106,7 @@ export class ShareholdersMeetingBusinessService {
       description?: string;
     }>,
     meetingData: {
-      categoryId: string;
+      categoryId: string | null;
       location: string;
       meetingDate: Date;
     },
@@ -179,7 +179,7 @@ export class ShareholdersMeetingBusinessService {
       description?: string;
     }>,
     updatedBy: string,
-    categoryId: string,
+    categoryId: string | null,
     meetingData?: {
       location?: string;
       meetingDate?: Date;

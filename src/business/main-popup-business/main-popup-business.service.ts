@@ -102,7 +102,7 @@ export class MainPopupBusinessService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     createdBy?: string,
     files?: Express.Multer.File[],
   ): Promise<MainPopup> {
@@ -157,7 +157,7 @@ export class MainPopupBusinessService {
       title: string;
       description?: string;
     }>,
-    categoryId: string,
+    categoryId: string | null,
     updatedBy?: string,
     files?: Express.Multer.File[],
   ): Promise<MainPopup> {

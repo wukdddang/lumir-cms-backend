@@ -120,7 +120,7 @@ export class IRBusinessService {
     }>,
     createdBy: string | undefined,
     files: Express.Multer.File[] | undefined,
-    categoryId: string,
+    categoryId: string | null,
   ): Promise<IR> {
     this.logger.log(`IR 생성 시작 - 번역 수: ${translations.length}`);
 
@@ -177,7 +177,7 @@ export class IRBusinessService {
       description?: string;
     }>,
     updatedBy: string,
-    categoryId: string,
+    categoryId: string | null,
     files?: Express.Multer.File[],
   ): Promise<any> {
     this.logger.log(`IR 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`);

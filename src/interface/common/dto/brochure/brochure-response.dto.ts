@@ -76,8 +76,8 @@ export class BrochureResponseDto {
   @ApiProperty({ description: '수정자 ID', required: false, nullable: true })
   updatedBy: string | null;
 
-  @ApiProperty({ description: '카테고리 ID' })
-  categoryId: string;
+  @ApiProperty({ description: '카테고리 ID', nullable: true })
+  categoryId: string | null;
 
   @ApiProperty({ description: '카테고리 이름', example: '회사 소개', required: false })
   categoryName?: string;

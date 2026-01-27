@@ -23,13 +23,14 @@ import { Category } from '../../common/category/category.entity';
 export class Announcement extends BaseEntity<Announcement> {
   @Column({
     type: 'uuid',
-    comment: '공지사항 카테고리 ID',
+    nullable: true,
+    comment: '공지사항 카테고리 ID (선택)',
   })
-  categoryId: string;
+  categoryId: string | null;
 
-  @ManyToOne(() => Category, { nullable: false })
+  @ManyToOne(() => Category, { nullable: true })
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category: Category | null;
 
   @Column({
     type: 'varchar',

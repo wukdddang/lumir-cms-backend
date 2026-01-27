@@ -28,9 +28,10 @@ export class ElectronicDisclosure extends BaseEntity<ElectronicDisclosure> {
 
   @Column({
     type: 'uuid',
-    comment: '전자공시 카테고리 ID',
+    nullable: true,
+    comment: '전자공시 카테고리 ID (선택)',
   })
-  categoryId: string;
+  categoryId: string | null;
 
   @Column({
     type: 'jsonb',

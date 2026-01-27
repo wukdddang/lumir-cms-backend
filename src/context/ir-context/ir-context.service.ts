@@ -101,7 +101,7 @@ export class IRContextService {
       fileSize: number;
       mimeType: string;
     }> | undefined,
-    categoryId: string,
+    categoryId: string | null,
   ): Promise<IR> {
     this.logger.log(`IR 생성 시작 - 번역 수: ${translations.length}`);
 
@@ -117,8 +117,10 @@ export class IRContextService {
       throw new BadRequestException('중복된 언어 ID가 있습니다.');
     }
 
-    // 3. 카테고리 ID 검증 (필수)
-    await this.categoryService.ID로_카테고리를_조회한다(categoryId);
+    // 3. 카테고리 ID 검증 (categoryId가 있는 경우에만)
+    if (categoryId) {
+      await this.categoryService.ID로_카테고리를_조회한다(categoryId);
+    }
 
     // 4. 모든 활성 언어 조회 (자동 동기화용)
     const allLanguages = await this.languageService.모든_언어를_조회한다(false);
@@ -135,13 +137,15 @@ export class IRContextService {
       createdBy,
     });
 
-    // 7. 카테고리 매핑 생성
-    await this.categoryService.엔티티에_카테고리를_매핑한다(
-      ir.id,
-      categoryId,
-      createdBy,
-    );
-    this.logger.log(`IR에 카테고리 매핑 완료 - 카테고리 ID: ${categoryId}`);
+    // 7. 카테고리 매핑 생성 (categoryId가 있는 경우에만)
+    if (categoryId) {
+      await this.categoryService.엔티티에_카테고리를_매핑한다(
+        ir.id,
+        categoryId,
+        createdBy,
+      );
+      this.logger.log(`IR에 카테고리 매핑 완료 - 카테고리 ID: ${categoryId}`);
+    }
 
     // 8. 전달받은 언어들에 대한 번역 생성 (isSynced: false, 개별 설정됨)
     await this.irService.IR_번역을_생성한다(
@@ -197,7 +201,7 @@ export class IRContextService {
     data: {
       isPublic?: boolean;
       order?: number;
-      categoryId?: string;
+      categoryId?: string | null;
       translations?: Array<{
         id?: string;
         languageId: string;

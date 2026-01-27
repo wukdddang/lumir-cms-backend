@@ -98,7 +98,7 @@ export class ShareholdersMeetingContextService {
       description?: string;
     }>,
     meetingData: {
-      categoryId: string;
+      categoryId: string | null;
       location: string;
       meetingDate: Date;
     },
@@ -124,13 +124,15 @@ export class ShareholdersMeetingContextService {
   ): Promise<ShareholdersMeeting> {
     this.logger.log(`주주총회 생성 시작 - 번역 수: ${translations.length}`);
 
-    // 1. 카테고리 유효성 검증
-    const category = await this.categoryService.ID로_카테고리를_조회한다(meetingData.categoryId);
-    if (category.entityType !== CategoryEntityType.SHAREHOLDERS_MEETING) {
-      throw new BadRequestException('주주총회 카테고리가 아닙니다.');
-    }
-    if (!category.isActive) {
-      throw new BadRequestException('비활성화된 카테고리입니다.');
+    // 1. 카테고리 유효성 검증 (categoryId가 있는 경우에만)
+    if (meetingData.categoryId) {
+      const category = await this.categoryService.ID로_카테고리를_조회한다(meetingData.categoryId);
+      if (category.entityType !== CategoryEntityType.SHAREHOLDERS_MEETING) {
+        throw new BadRequestException('주주총회 카테고리가 아닙니다.');
+      }
+      if (!category.isActive) {
+        throw new BadRequestException('비활성화된 카테고리입니다.');
+      }
     }
 
     // 2. 언어 ID 검증
@@ -277,7 +279,7 @@ export class ShareholdersMeetingContextService {
   async 주주총회를_수정한다(
     id: string,
     data: {
-      categoryId?: string;
+      categoryId?: string | null;
       location?: string;
       meetingDate?: Date;
       isPublic?: boolean;

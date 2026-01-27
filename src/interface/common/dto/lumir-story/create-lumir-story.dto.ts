@@ -54,12 +54,13 @@ export class CreateLumirStoryDto {
   content: string;
 
   @ApiProperty({
-    description: '카테고리 ID (UUID)',
+    description: '카테고리 ID (UUID) - 선택사항',
     example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    required: false,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  categoryId: string;
+  categoryId?: string | null;
 
   @ApiProperty({
     description: '이미지 URL',

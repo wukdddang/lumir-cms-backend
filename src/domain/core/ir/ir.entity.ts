@@ -40,9 +40,10 @@ export class IR extends BaseEntity<IR> {
 
   @Column({
     type: 'uuid',
-    comment: 'IR 카테고리 ID',
+    nullable: true,
+    comment: 'IR 카테고리 ID (선택)',
   })
-  categoryId: string;
+  categoryId: string | null;
 
   @OneToMany(() => IRTranslation, (translation) => translation.ir, {
     cascade: true,

@@ -18,13 +18,14 @@ import { Category } from '../../common/category/category.entity';
 export class ShareholdersMeeting extends BaseEntity<ShareholdersMeeting> {
   @Column({
     type: 'uuid',
-    comment: '주주총회 카테고리 ID',
+    nullable: true,
+    comment: '주주총회 카테고리 ID (선택)',
   })
-  categoryId: string;
+  categoryId: string | null;
 
-  @ManyToOne(() => Category, { nullable: false })
+  @ManyToOne(() => Category, { nullable: true })
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category: Category | null;
 
   @Column({
     type: 'boolean',
