@@ -41,7 +41,8 @@ export class GetLanguageListHandler implements IQueryHandler<GetLanguageListQuer
     }
 
     const [items, total] = await queryBuilder
-      .orderBy('language.createdAt', 'ASC')
+      .orderBy('language.order', 'ASC')
+      .addOrderBy('language.createdAt', 'ASC')
       .getManyAndCount();
 
     return { items, total };

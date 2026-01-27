@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateLanguageCommand } from './handlers/commands/create-language.handler';
 import { UpdateLanguageCommand } from './handlers/commands/update-language.handler';
+import { UpdateLanguageActiveCommand } from './handlers/commands/update-language-active.handler';
+import { UpdateLanguageOrderCommand } from './handlers/commands/update-language-order.handler';
 import { DeleteLanguageCommand } from './handlers/commands/delete-language.handler';
 import { InitializeDefaultLanguagesCommand } from './handlers/commands/initialize-default-languages.handler';
 import { GetLanguageListQuery } from './handlers/queries/get-language-list.handler';
@@ -107,6 +109,28 @@ export class LanguageContextService implements OnModuleInit {
     data: UpdateLanguageDto,
   ): Promise<Language> {
     const command = new UpdateLanguageCommand(id, data);
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 언어 활성 상태를 수정한다
+   */
+  async 언어_활성_상태를_수정한다(
+    id: string,
+    data: { isActive: boolean; updatedBy: string },
+  ): Promise<Language> {
+    const command = new UpdateLanguageActiveCommand(id, data);
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 언어 순서를 변경한다
+   */
+  async 언어_순서를_변경한다(
+    id: string,
+    data: { order: number; updatedBy: string },
+  ): Promise<Language> {
+    const command = new UpdateLanguageOrderCommand(id, data);
     return await this.commandBus.execute(command);
   }
 

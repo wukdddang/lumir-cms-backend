@@ -68,6 +68,44 @@ export class LanguageBusinessService {
   }
 
   /**
+   * 언어 활성 상태를 수정한다
+   */
+  async 언어_활성_상태를_수정한다(
+    id: string,
+    data: { isActive: boolean; updatedBy: string },
+  ): Promise<Language> {
+    this.logger.log(`언어 활성 상태 수정 시작 - ID: ${id}, 활성: ${data.isActive}`);
+
+    const result = await this.languageContextService.언어_활성_상태를_수정한다(
+      id,
+      data,
+    );
+
+    this.logger.log(`언어 활성 상태 수정 완료 - ID: ${id}`);
+
+    return result;
+  }
+
+  /**
+   * 언어 순서를 변경한다
+   */
+  async 언어_순서를_변경한다(
+    id: string,
+    data: { order: number; updatedBy: string },
+  ): Promise<Language> {
+    this.logger.log(`언어 순서 변경 시작 - ID: ${id}, 순서: ${data.order}`);
+
+    const result = await this.languageContextService.언어_순서를_변경한다(
+      id,
+      data,
+    );
+
+    this.logger.log(`언어 순서 변경 완료 - ID: ${id}`);
+
+    return result;
+  }
+
+  /**
    * 언어를 제외한다 (Soft Delete)
    */
   async 언어를_제외한다(id: string): Promise<boolean> {

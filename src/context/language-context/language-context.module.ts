@@ -6,6 +6,8 @@ import { LanguageContextService } from './language-context.service';
 import {
   CreateLanguageHandler,
   UpdateLanguageHandler,
+  UpdateLanguageActiveHandler,
+  UpdateLanguageOrderHandler,
   DeleteLanguageHandler,
   GetLanguageListHandler,
   GetLanguageDetailHandler,
@@ -23,6 +25,8 @@ import {
     LanguageContextService,
     CreateLanguageHandler,
     UpdateLanguageHandler,
+    UpdateLanguageActiveHandler,
+    UpdateLanguageOrderHandler,
     DeleteLanguageHandler,
     GetLanguageListHandler,
     GetLanguageDetailHandler,

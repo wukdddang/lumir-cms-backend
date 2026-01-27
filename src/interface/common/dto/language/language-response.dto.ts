@@ -16,6 +16,9 @@ export class LanguageResponseDto {
   @ApiProperty({ description: '활성화 여부', example: true })
   isActive: boolean;
 
+  @ApiProperty({ description: '정렬 순서', example: 0 })
+  order: number;
+
   @ApiProperty({ description: '생성 일시' })
   createdAt: Date;
 

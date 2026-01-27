@@ -33,6 +33,13 @@ export class Language extends BaseEntity<Language> {
   })
   isActive: boolean;
 
+  @Column({
+    type: 'int',
+    default: 0,
+    comment: '정렬 순서',
+  })
+  order: number;
+
   /**
    * 엔티티를 DTO로 변환한다
    */

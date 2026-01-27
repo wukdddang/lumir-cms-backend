@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Delete,
+  Patch,
   Body,
   Param,
   Query,
@@ -20,6 +20,10 @@ import { Roles, CurrentUser } from '@interface/common/decorators';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { LanguageBusinessService } from '@business/language-business/language-business.service';
 import { CreateLanguageDto } from '@interface/common/dto/language/create-language.dto';
+import {
+  UpdateLanguageActiveDto,
+  UpdateLanguageOrderDto,
+} from '@interface/common/dto/language/update-language.dto';
 import {
   LanguageResponseDto,
   LanguageListResponseDto,
@@ -97,36 +101,71 @@ export class LanguageController {
   /**
    * 언어를 추가한다
    */
-  @Post()
+  @Patch(':id/active')
   @ApiOperation({
-    summary: '언어 추가',
+    summary: '언어 활성 상태 수정',
     description:
-      '새로운 언어를 시스템에 추가합니다.\n\n' +
-      '이미 제외된 언어 코드를 사용하면 해당 언어가 복원됩니다.\n\n' +
+      '언어의 활성 상태를 변경합니다.\n\n' +
       '**필수 필드:**\n' +
-      '- `code`: 언어 코드 (ISO 639-1 표준, 예: ko, en, ja, zh, fr, de 등)\n' +
-      '- `name`: 언어 이름\n\n' +
-      '**선택 필드:**\n' +
-      '- `isActive`: 활성화 여부 (boolean, 기본값: true)\n\n' +
-      '**참고**: `createdBy`는 토큰에서 자동으로 추출됩니다.',
+      '- `isActive`: 활성화 여부 (boolean)\n' +
+      '  - `true`: 활성화 (언어 추가)\n' +
+      '  - `false`: 비활성화 (언어 제외)\n\n' +
+      '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.\n' +
+      '**주의**: 기본 언어는 비활성화할 수 없습니다.',
   })
   @ApiResponse({
-    status: 201,
-    description: '언어 추가 성공 (새 언어 생성 또는 제외된 언어 복원)',
+    status: 200,
+    description: '언어 활성 상태 수정 성공',
     type: LanguageResponseDto,
   })
   @ApiResponse({
-    status: 409,
-    description: '이미 활성 상태인 언어 코드',
+    status: 404,
+    description: '언어를 찾을 수 없음',
   })
-  async 언어를_추가한다(
+  @ApiResponse({
+    status: 400,
+    description: '기본 언어는 비활성화할 수 없음',
+  })
+  async 언어_활성_상태를_수정한다(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() createDto: CreateLanguageDto,
+    @Param('id') id: string,
+    @Body() updateDto: UpdateLanguageActiveDto,
   ): Promise<LanguageResponseDto> {
-    return await this.languageBusinessService.언어를_추가한다({
-      ...createDto,
-      isActive: createDto.isActive ?? true,
-      createdBy: user.id,
+    return await this.languageBusinessService.언어_활성_상태를_수정한다(id, {
+      ...updateDto,
+      updatedBy: user.id,
+    });
+  }
+
+  /**
+   * 언어 순서를 변경한다
+   */
+  @Patch(':id/order')
+  @ApiOperation({
+    summary: '언어 순서 변경',
+    description:
+      '언어의 정렬 순서를 변경합니다.\n\n' +
+      '**필수 필드:**\n' +
+      '- `order`: 정렬 순서 (숫자)\n\n' +
+      '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '언어 순서 변경 성공',
+    type: LanguageResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: '언어를 찾을 수 없음',
+  })
+  async 언어_순서를_변경한다(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() updateDto: UpdateLanguageOrderDto,
+  ): Promise<LanguageResponseDto> {
+    return await this.languageBusinessService.언어_순서를_변경한다(id, {
+      ...updateDto,
+      updatedBy: user.id,
     });
   }
 
@@ -176,35 +215,5 @@ export class LanguageController {
     @Param('id') id: string,
   ): Promise<LanguageResponseDto> {
     return await this.languageBusinessService.언어_상세를_조회한다(id);
-  }
-
-  /**
-   * 언어를 제외한다
-   */
-  @Delete(':id')
-  @ApiOperation({
-    summary: '언어 제외',
-    description:
-      '언어를 시스템에서 제외합니다 (Soft Delete).\n\n' +
-      '제외된 언어는 삭제되지 않고 비활성 상태로 변경됩니다.\n' +
-      '기본 언어는 제외할 수 없습니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '언어 제외 성공',
-  })
-  @ApiResponse({
-    status: 404,
-    description: '언어를 찾을 수 없음',
-  })
-  @ApiResponse({
-    status: 400,
-    description: '기본 언어는 제외할 수 없음',
-  })
-  async 언어를_제외한다(
-    @Param('id') id: string,
-  ): Promise<{ success: boolean }> {
-    const result = await this.languageBusinessService.언어를_제외한다(id);
-    return { success: result };
   }
 }
