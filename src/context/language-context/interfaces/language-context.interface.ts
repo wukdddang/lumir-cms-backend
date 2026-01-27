@@ -28,6 +28,10 @@ export interface CreateLanguageResult {
   name: string;
   isActive: boolean;
   createdAt: Date;
+  updatedAt: Date;
+  createdBy: string | null;
+  updatedBy: string | null;
+  deletedAt?: Date;
 }
 
 /**

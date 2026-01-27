@@ -62,8 +62,9 @@ export class LanguageBusinessService {
 
     this.logger.log(`언어 추가 완료 - ID: ${result.id}`);
 
-    // 상세 정보 조회
-    return await this.languageContextService.언어_상세를_조회한다(result.id);
+    // CreateLanguageResult를 Language로 변환하여 반환
+    // 복원된 경우에도 핸들러에서 직접 반환하므로 상세 조회 불필요
+    return result as Language;
   }
 
   /**

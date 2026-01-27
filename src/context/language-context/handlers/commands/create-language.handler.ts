@@ -48,10 +48,10 @@ export class CreateLanguageHandler implements ICommandHandler<CreateLanguageComm
         // 복원 및 데이터 업데이트
         existing.name = data.name;
         existing.isActive = data.isActive ?? true;
-        existing.deletedAt = undefined;
         existing.updatedBy = data.createdBy ?? null;
 
-        const restored = await this.languageRepository.save(existing);
+        // TypeORM의 recover 메서드 사용하여 soft delete 복원
+        const restored = await this.languageRepository.recover(existing);
 
         this.logger.log(`언어 복원 완료 - ID: ${restored.id}`);
 
@@ -61,6 +61,10 @@ export class CreateLanguageHandler implements ICommandHandler<CreateLanguageComm
           name: restored.name,
           isActive: restored.isActive,
           createdAt: restored.createdAt,
+          updatedAt: restored.updatedAt,
+          createdBy: restored.createdBy,
+          updatedBy: restored.updatedBy,
+          deletedAt: restored.deletedAt,
         };
       }
 
@@ -85,6 +89,10 @@ export class CreateLanguageHandler implements ICommandHandler<CreateLanguageComm
       name: saved.name,
       isActive: saved.isActive,
       createdAt: saved.createdAt,
+      updatedAt: saved.updatedAt,
+      createdBy: saved.createdBy,
+      updatedBy: saved.updatedBy,
+      deletedAt: saved.deletedAt,
     };
   }
 }
