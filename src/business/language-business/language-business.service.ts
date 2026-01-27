@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { LanguageContextService } from '@context/language-context/language-context.service';
 import { Language } from '@domain/common/language/language.entity';
-import { LanguageCode } from '@domain/common/language/language-code.types';
+import ISO6391 from 'iso-639-1';
 
 /**
  * 언어 비즈니스 서비스
@@ -51,7 +51,7 @@ export class LanguageBusinessService {
    * 언어를 생성한다
    */
   async 언어를_생성한다(data: {
-    code: LanguageCode;
+    code: string;
     name: string;
     isActive: boolean;
     createdBy?: string;
@@ -109,6 +109,26 @@ export class LanguageBusinessService {
       await this.languageContextService.기본_언어들을_추가한다(createdBy);
 
     this.logger.log(`기본 언어 추가 완료 - 총 ${result.length}개 추가됨`);
+
+    return result;
+  }
+
+  /**
+   * 사용 가능한 모든 언어 코드 목록을 조회한다 (ISO 639-1)
+   */
+  async 사용_가능한_언어_코드_목록을_조회한다(): Promise<
+    Array<{ code: string; name: string; nativeName: string }>
+  > {
+    this.logger.log('언어 코드 목록 조회 시작');
+
+    const allCodes = ISO6391.getAllCodes();
+    const result = allCodes.map((code) => ({
+      code,
+      name: ISO6391.getName(code),
+      nativeName: ISO6391.getNativeName(code),
+    }));
+
+    this.logger.log(`언어 코드 목록 조회 완료 - 총 ${result.length}개`);
 
     return result;
   }

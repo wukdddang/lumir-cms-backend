@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Language } from '@domain/common/language/language.entity';
 import { Logger, NotFoundException, BadRequestException } from '@nestjs/common';
-import { LanguageCode } from '@domain/common/language/language-code.types';
 
 /**
  * 언어 삭제 커맨드

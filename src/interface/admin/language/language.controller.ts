@@ -26,6 +26,7 @@ import {
   LanguageResponseDto,
   LanguageListResponseDto,
 } from '@interface/common/dto/language/language-response.dto';
+import { LanguageCodeListResponseDto } from '@interface/common/dto/language/language-code-response.dto';
 
 @ApiTags('공통. 관리자 - 언어')
 @ApiBearerAuth('Bearer')
@@ -66,6 +67,32 @@ export class LanguageController {
     return {
       items,
       total: items.length,
+    };
+  }
+
+  /**
+   * 사용 가능한 언어 코드 목록을 조회한다
+   */
+  @Get('available-codes')
+  @ApiOperation({
+    summary: '사용 가능한 언어 코드 목록 조회',
+    description:
+      'ISO 639-1 표준에 따른 사용 가능한 모든 언어 코드 목록을 조회합니다.\n\n' +
+      '언어 생성 시 참고할 수 있는 표준 언어 코드 목록입니다.\n' +
+      '총 184개의 언어 코드를 지원합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '언어 코드 목록 조회 성공',
+    type: LanguageCodeListResponseDto,
+  })
+  async 사용_가능한_언어_코드_목록을_조회한다(): Promise<LanguageCodeListResponseDto> {
+    const codes =
+      await this.languageBusinessService.사용_가능한_언어_코드_목록을_조회한다();
+
+    return {
+      codes,
+      total: codes.length,
     };
   }
 

@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsBoolean, IsOptional } from 'class-validator';
-import { LanguageCode } from '@domain/common/language/language-code.types';
+import { IsString, IsBoolean, IsOptional } from 'class-validator';
+import { IsLanguageCode } from '@interface/common/validators/is-language-code.validator';
 
 /**
  * 언어 생성 DTO
  */
 export class CreateLanguageDto {
   @ApiProperty({
-    description: '언어 코드',
+    description: '언어 코드 (ISO 639-1 표준)',
     example: 'ko',
-    enum: ['ko', 'en', 'ja', 'zh'],
+    type: String,
   })
-  @IsEnum(['ko', 'en', 'ja', 'zh'])
-  code: LanguageCode;
+  @IsLanguageCode()
+  code: string;
 
   @ApiProperty({ description: '언어 이름', example: '한국어' })
   @IsString()

@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Language } from './language.entity';
-import { LanguageCode } from './language-code.types';
 
 /**
  * 언어 서비스
@@ -23,7 +22,7 @@ export class LanguageService {
    * 언어를 생성한다
    */
   async 언어를_생성한다(data: {
-    code: LanguageCode;
+    code: string;
     name: string;
     isActive: boolean;
     createdBy?: string;
@@ -72,7 +71,7 @@ export class LanguageService {
   /**
    * 코드로 언어를 조회한다
    */
-  async 코드로_언어를_조회한다(code: LanguageCode): Promise<Language> {
+  async 코드로_언어를_조회한다(code: string): Promise<Language> {
     this.logger.debug(`언어 조회 - 코드: ${code}`);
 
     const language = await this.repository.findOne({ where: { code } });
@@ -132,7 +131,7 @@ export class LanguageService {
   /**
    * 언어가 존재하는지 확인한다
    */
-  async 언어가_존재하는가(code: LanguageCode): Promise<boolean> {
+  async 언어가_존재하는가(code: string): Promise<boolean> {
     const count = await this.repository.count({ where: { code } });
     return count > 0;
   }
@@ -152,7 +151,7 @@ export class LanguageService {
    * 예: DEFAULT_LANGUAGE_CODE=ko (한국어), DEFAULT_LANGUAGE_CODE=en (영어)
    */
   async 기본_언어를_조회한다(): Promise<Language> {
-    const defaultCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en') as LanguageCode;
+    const defaultCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
     this.logger.debug(`기본 언어 조회 - 코드: ${defaultCode}`);
     
     return await this.코드로_언어를_조회한다(defaultCode);

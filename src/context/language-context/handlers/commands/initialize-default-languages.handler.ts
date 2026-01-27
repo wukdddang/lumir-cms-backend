@@ -2,7 +2,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Language } from '@domain/common/language/language.entity';
-import { LanguageCode } from '@domain/common/language/language-code.types';
 import { Logger } from '@nestjs/common';
 
 /**
@@ -33,10 +32,10 @@ export class InitializeDefaultLanguagesHandler
 
     // 기본 언어 목록 (English를 첫 번째로 설정)
     const defaultLanguages = [
-      { code: LanguageCode.ENGLISH, name: 'English' }, // 기본 언어
-      { code: LanguageCode.KOREAN, name: '한국어' },
-      { code: LanguageCode.JAPANESE, name: '日本語' },
-      { code: LanguageCode.CHINESE, name: '中文' },
+      { code: 'en', name: 'English' }, // 기본 언어
+      { code: 'ko', name: '한국어' },
+      { code: 'ja', name: '日本語' },
+      { code: 'zh', name: '中文' },
     ];
 
     const createdLanguages: Language[] = [];
@@ -57,13 +56,13 @@ export class InitializeDefaultLanguagesHandler
         const saved = await this.languageRepository.save(language);
         createdLanguages.push(saved);
         
-        if (lang.code === LanguageCode.ENGLISH) {
+        if (lang.code === 'en') {
           this.logger.log(`✅ 기본 언어 추가 완료 - ${lang.name} (${lang.code}) [기본]`);
         } else {
           this.logger.log(`기본 언어 추가 완료 - ${lang.name} (${lang.code})`);
         }
       } else {
-        if (lang.code === LanguageCode.ENGLISH) {
+        if (lang.code === 'en') {
           this.logger.log(
             `✅ 기본 언어 확인 완료 - ${lang.name} (${lang.code}) [기본, 이미 존재]`,
           );

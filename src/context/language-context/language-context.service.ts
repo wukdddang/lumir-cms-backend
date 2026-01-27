@@ -15,7 +15,6 @@ import {
   LanguageListResult,
 } from './interfaces/language-context.interface';
 import { Language } from '@domain/common/language/language.entity';
-import { LanguageCode } from '@domain/common/language/language-code.types';
 
 /**
  * 언어 컨텍스트 서비스
@@ -43,10 +42,10 @@ export class LanguageContextService implements OnModuleInit {
       
       // 기본 언어 목록 (English를 첫 번째로 설정)
       const defaultLanguages = [
-        { code: LanguageCode.ENGLISH, name: 'English' }, // 기본 언어
-        { code: LanguageCode.KOREAN, name: '한국어' },
-        { code: LanguageCode.JAPANESE, name: '日本語' },
-        { code: LanguageCode.CHINESE, name: '中文' },
+        { code: 'en', name: 'English' }, // 기본 언어
+        { code: 'ko', name: '한국어' },
+        { code: 'ja', name: '日本語' },
+        { code: 'zh', name: '中文' },
       ];
 
       const createdLanguages: Language[] = [];
@@ -67,13 +66,13 @@ export class LanguageContextService implements OnModuleInit {
           const saved = await this.languageRepository.save(language);
           createdLanguages.push(saved);
           
-          if (lang.code === LanguageCode.ENGLISH) {
+          if (lang.code === 'en') {
             this.logger.log(`✅ 기본 언어 추가 완료 - ${lang.name} (${lang.code}) [기본]`);
           } else {
             this.logger.log(`   - ${lang.name} (${lang.code})`);
           }
         } else {
-          if (lang.code === LanguageCode.ENGLISH) {
+          if (lang.code === 'en') {
             this.logger.log(`✅ 기본 언어 확인 완료 - ${lang.name} (${lang.code}) [기본, 이미 존재]`);
           }
         }

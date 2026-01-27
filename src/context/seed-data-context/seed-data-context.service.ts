@@ -45,7 +45,6 @@ import { WikiContextService } from '@context/wiki-context/wiki-context.service';
 
 // Types
 import { SeedScenario } from '@interface/common/dto/seed-data/seed-data-config.dto';
-import { LanguageCode } from '@domain/common/language/language-code.types';
 import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
 import { GetSeedDataStatusDto } from '@interface/common/dto/seed-data';
 import { InqueryType } from '@domain/sub/survey/inquery-type.types';
@@ -232,11 +231,11 @@ export class SeedDataContextService {
   private async 언어_시드_데이터를_생성한다(): Promise<number> {
     this.logger.log(`언어 시드 데이터 생성 시작`);
 
-    const languages: Array<{ code: LanguageCode; name: string }> = [
-      { code: 'ko' as LanguageCode, name: '한국어' },
-      { code: 'en' as LanguageCode, name: 'English' },
-      { code: 'ja' as LanguageCode, name: '日本語' },
-      { code: 'zh' as LanguageCode, name: '中文' },
+    const languages: Array<{ code: string; name: string }> = [
+      { code: 'ko', name: '한국어' },
+      { code: 'en', name: 'English' },
+      { code: 'ja', name: '日本語' },
+      { code: 'zh', name: '中文' },
     ];
 
     let created = 0;

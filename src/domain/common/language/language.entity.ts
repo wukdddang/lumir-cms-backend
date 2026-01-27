@@ -1,11 +1,11 @@
 import { Entity, Column, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
-import { LanguageCode } from './language-code.types';
 
 /**
  * Language Entity (언어)
  *
  * 다국어 지원을 위한 언어 정보 관리
+ * ISO 639-1 표준 언어 코드 지원
  */
 @Entity('languages')
 @Index('idx_language_code', ['code'])
@@ -15,9 +15,9 @@ export class Language extends BaseEntity<Language> {
     type: 'varchar',
     length: 10,
     unique: true,
-    comment: '언어 코드 (ko|en|ja|zh)',
+    comment: '언어 코드 (ISO 639-1 표준: ko, en, ja, zh 등)',
   })
-  code: LanguageCode;
+  code: string;
 
   @Column({
     type: 'varchar',
