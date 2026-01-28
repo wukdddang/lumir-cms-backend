@@ -137,9 +137,17 @@ describe('BrochureService', () => {
       ];
 
       const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockBrochures),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockBrochures,
+          raw: [
+            { brochure_id: 'brochure-1', category_name: '제품 소개' },
+            { brochure_id: 'brochure-2', category_name: '제품 소개' },
+          ],
+        }),
       };
 
       mockBrochureRepository.createQueryBuilder.mockReturnValue(
@@ -153,6 +161,8 @@ describe('BrochureService', () => {
       expect(brochureRepository.createQueryBuilder).toHaveBeenCalledWith(
         'brochure',
       );
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalled();
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalled();
       expect(result).toEqual(mockBrochures);
     });
 
@@ -167,9 +177,16 @@ describe('BrochureService', () => {
       ];
 
       const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockBrochures),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockBrochures,
+          raw: [
+            { brochure_id: 'brochure-1', category_name: '제품 소개' },
+          ],
+        }),
       };
 
       mockBrochureRepository.createQueryBuilder.mockReturnValue(
@@ -180,6 +197,8 @@ describe('BrochureService', () => {
       const result = await service.모든_브로슈어를_조회한다({ isPublic: true });
 
       // Then
+      expect(mockQueryBuilder.leftJoin).toHaveBeenCalled();
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalled();
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
         'brochure.isPublic = :isPublic',
         { isPublic: true },
@@ -195,9 +214,17 @@ describe('BrochureService', () => {
       ];
 
       const mockQueryBuilder = {
+        leftJoin: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockBrochures),
+        getRawAndEntities: jest.fn().mockResolvedValue({
+          entities: mockBrochures,
+          raw: [
+            { brochure_id: 'brochure-1', category_name: '제품 소개' },
+            { brochure_id: 'brochure-2', category_name: '제품 소개' },
+          ],
+        }),
       };
 
       mockBrochureRepository.createQueryBuilder.mockReturnValue(

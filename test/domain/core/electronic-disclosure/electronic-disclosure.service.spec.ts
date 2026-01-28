@@ -150,8 +150,8 @@ describe('ElectronicDisclosureService', () => {
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: mockDisclosures,
           raw: [
-            { category_name: '실적 공시' },
-            { category_name: '재무제표' },
+            { disclosure_id: 'disclosure-1', category_name: '실적 공시' },
+            { disclosure_id: 'disclosure-2', category_name: '재무제표' },
           ],
         }),
       };
@@ -193,7 +193,7 @@ describe('ElectronicDisclosureService', () => {
         orderBy: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: mockDisclosures,
-          raw: [{ category_name: '실적 공시' }],
+          raw: [{ disclosure_id: 'disclosure-1', category_name: '실적 공시' }],
         }),
       };
 
@@ -304,7 +304,7 @@ describe('ElectronicDisclosureService', () => {
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockDisclosure],
-          raw: [{ category_name: '사업보고서' }],
+          raw: [{ disclosure_id: mockDisclosure.id, category_name: '사업보고서' }],
         }),
       };
 
@@ -379,7 +379,7 @@ describe('ElectronicDisclosureService', () => {
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockExistingDisclosure],
-          raw: [{ category_name: '사업보고서' }],
+          raw: [{ disclosure_id: disclosureId, category_name: '사업보고서' }],
         }),
       };
 
@@ -431,7 +431,7 @@ describe('ElectronicDisclosureService', () => {
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockExistingDisclosure],
-          raw: [{ category_name: '기존 카테고리' }],
+          raw: [{ disclosure_id: disclosureId, category_name: '기존 카테고리' }],
         }),
       };
 
@@ -476,7 +476,7 @@ describe('ElectronicDisclosureService', () => {
         where: jest.fn().mockReturnThis(),
         getRawAndEntities: jest.fn().mockResolvedValue({
           entities: [mockDisclosure],
-          raw: [{ category_name: '사업보고서' }],
+          raw: [{ disclosure_id: mockDisclosure.id, category_name: '사업보고서' }],
         }),
       };
 

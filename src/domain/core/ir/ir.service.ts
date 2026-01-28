@@ -96,10 +96,13 @@ export class IRService {
     const raw = rawAndEntities.raw;
 
     // raw 데이터에서 category name을 엔티티에 매핑
-    items.forEach((ir, index) => {
-      if (raw[index] && raw[index].category_name) {
+    // 주의: translations를 leftJoinAndSelect하면 각 IR마다 여러 row가 생기므로
+    // ir.id를 기준으로 raw 데이터를 찾아야 함
+    items.forEach((ir) => {
+      const matchingRaw = raw.find((r) => r.ir_id === ir.id);
+      if (matchingRaw && matchingRaw.category_name) {
         ir.category = {
-          name: raw[index].category_name,
+          name: matchingRaw.category_name,
         };
       }
     });

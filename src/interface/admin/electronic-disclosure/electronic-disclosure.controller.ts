@@ -344,8 +344,8 @@ export class ElectronicDisclosureController {
   ): Promise<ElectronicDisclosureResponseDto> {
     this.logger.log(`========================================`);
     this.logger.log(`✨ [전자공시 생성 요청]`);
-    this.logger.log(`  - 요청 Body: ${JSON.stringify(body, null, 2)}`);
-    this.logger.log(`  - categoryId: ${body.categoryId || 'null'}`);
+    this.logger.log(`  - 요청 Body: ${body ? JSON.stringify(body, null, 2) : 'undefined'}`);
+    this.logger.log(`  - categoryId: ${body?.categoryId || 'null'}`);
     this.logger.log(`  - 파일 개수: ${files?.length || 0}`);
     this.logger.log(`========================================`);
 
@@ -559,8 +559,8 @@ export class ElectronicDisclosureController {
     this.logger.log(`========================================`);
     this.logger.log(`✏️ [전자공시 수정 요청]`);
     this.logger.log(`  - 전자공시 ID: ${id}`);
-    this.logger.log(`  - 요청 Body: ${JSON.stringify(body, null, 2)}`);
-    this.logger.log(`  - categoryId: ${body.categoryId || 'null'}`);
+    this.logger.log(`  - 요청 Body: ${body ? JSON.stringify(body, null, 2) : 'undefined'}`);
+    this.logger.log(`  - categoryId: ${body?.categoryId || 'null'}`);
     this.logger.log(`  - 파일 개수: ${files?.length || 0}`);
     this.logger.log(`========================================`);
 

@@ -44,6 +44,10 @@ export class BrochureService {
     const queryBuilder =
       this.brochureRepository.createQueryBuilder('brochure');
 
+    // category 조인
+    queryBuilder.leftJoin('categories', 'category', 'brochure.categoryId = category.id');
+    queryBuilder.addSelect(['category.name']);
+
     if (options?.isPublic !== undefined) {
       queryBuilder.where('brochure.isPublic = :isPublic', {
         isPublic: options.isPublic,
@@ -57,7 +61,22 @@ export class BrochureService {
       queryBuilder.orderBy('brochure.createdAt', 'DESC');
     }
 
-    return await queryBuilder.getMany();
+    const rawAndEntities = await queryBuilder.getRawAndEntities();
+    const items = rawAndEntities.entities;
+    const raw = rawAndEntities.raw;
+
+    // raw 데이터에서 category name을 엔티티에 매핑
+    // Brochure는 translations가 없지만, 일관성을 위해 id로 매핑
+    items.forEach((brochure) => {
+      const matchingRaw = raw.find((r) => r.brochure_id === brochure.id);
+      if (matchingRaw && matchingRaw.category_name) {
+        brochure.category = {
+          name: matchingRaw.category_name,
+        };
+      }
+    });
+
+    return items;
   }
 
   /**

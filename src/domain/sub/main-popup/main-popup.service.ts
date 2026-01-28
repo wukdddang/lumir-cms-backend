@@ -96,10 +96,13 @@ export class MainPopupService {
     const raw = rawAndEntities.raw;
 
     // raw 데이터에서 category name을 엔티티에 매핑
-    items.forEach((popup, index) => {
-      if (raw[index] && raw[index].category_name) {
+    // 주의: translations를 leftJoinAndSelect하면 각 popup마다 여러 row가 생기므로
+    // popup.id를 기준으로 raw 데이터를 찾아야 함
+    items.forEach((popup) => {
+      const matchingRaw = raw.find((r) => r.popup_id === popup.id);
+      if (matchingRaw && matchingRaw.category_name) {
         popup.category = {
-          name: raw[index].category_name,
+          name: matchingRaw.category_name,
         };
       }
     });

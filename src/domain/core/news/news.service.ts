@@ -56,10 +56,12 @@ export class NewsService {
     const raw = rawAndEntities.raw;
 
     // raw 데이터에서 category name을 엔티티에 매핑
-    items.forEach((news, index) => {
-      if (raw[index] && raw[index].category_name) {
+    // News는 translations가 없지만, 일관성을 위해 id로 매핑
+    items.forEach((news) => {
+      const matchingRaw = raw.find((r) => r.news_id === news.id);
+      if (matchingRaw && matchingRaw.category_name) {
         news.category = {
-          name: raw[index].category_name,
+          name: matchingRaw.category_name,
         };
       }
     });
