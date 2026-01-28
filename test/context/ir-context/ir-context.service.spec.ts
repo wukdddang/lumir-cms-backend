@@ -38,8 +38,6 @@ describe('IRContextService', () => {
 
   const mockCategoryService = {
     ID로_카테고리를_조회한다: jest.fn(),
-    엔티티에_카테고리를_매핑한다: jest.fn(),
-    엔티티의_카테고리_매핑을_조회한다: jest.fn(),
   };
 
   const mockConfigService = {
@@ -292,8 +290,6 @@ describe('IRContextService', () => {
         attachments,
         createdBy,
       });
-      // 카테고리 매핑은 더 이상 호출되지 않아야 함 (categoryId 필드 사용)
-      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).not.toHaveBeenCalled();
       expect(irService.IR_번역을_생성한다).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockIR);
     });
@@ -364,8 +360,6 @@ describe('IRContextService', () => {
 
       // Then
       expect(mockCategoryService.ID로_카테고리를_조회한다).toHaveBeenCalledWith(categoryId);
-      // CategoryMapping은 더 이상 사용하지 않음 (IR 엔티티의 categoryId 필드 사용)
-      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).not.toHaveBeenCalled();
       expect(irService.IR을_생성한다).toHaveBeenCalledWith(
         expect.objectContaining({
           categoryId,

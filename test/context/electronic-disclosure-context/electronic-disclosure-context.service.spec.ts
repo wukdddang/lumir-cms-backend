@@ -4,7 +4,6 @@ import { EventBus } from '@nestjs/cqrs';
 import { ElectronicDisclosureContextService } from '@context/electronic-disclosure-context/electronic-disclosure-context.service';
 import { ElectronicDisclosureService } from '@domain/core/electronic-disclosure/electronic-disclosure.service';
 import { LanguageService } from '@domain/common/language/language.service';
-import { CategoryService } from '@domain/common/category/category.service';
 import { ElectronicDisclosure } from '@domain/core/electronic-disclosure/electronic-disclosure.entity';
 import { ElectronicDisclosureTranslation } from '@domain/core/electronic-disclosure/electronic-disclosure-translation.entity';
 import { Language } from '@domain/common/language/language.entity';
@@ -14,7 +13,6 @@ describe('ElectronicDisclosureContextService', () => {
   let service: ElectronicDisclosureContextService;
   let electronicDisclosureService: jest.Mocked<ElectronicDisclosureService>;
   let languageService: jest.Mocked<LanguageService>;
-  let categoryService: jest.Mocked<CategoryService>;
 
   const mockElectronicDisclosureService = {
     전자공시를_생성한다: jest.fn(),
@@ -35,10 +33,6 @@ describe('ElectronicDisclosureContextService', () => {
     ID로_언어를_조회한다: jest.fn(),
     모든_언어를_조회한다: jest.fn(),
     기본_언어를_조회한다: jest.fn(),
-  };
-
-  const mockCategoryService = {
-    엔티티에_카테고리를_매핑한다: jest.fn(),
   };
 
   const mockConfigService = {
@@ -66,10 +60,6 @@ describe('ElectronicDisclosureContextService', () => {
           useValue: mockLanguageService,
         },
         {
-          provide: CategoryService,
-          useValue: mockCategoryService,
-        },
-        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -85,7 +75,6 @@ describe('ElectronicDisclosureContextService', () => {
     );
     electronicDisclosureService = module.get(ElectronicDisclosureService);
     languageService = module.get(LanguageService);
-    categoryService = module.get(CategoryService);
   });
 
   afterEach(() => {
@@ -310,8 +299,6 @@ describe('ElectronicDisclosureContextService', () => {
         attachments,
         createdBy,
       });
-      // 카테고리 매핑은 더 이상 호출되지 않아야 함 (categoryId 필드 사용)
-      expect(categoryService.엔티티에_카테고리를_매핑한다).not.toHaveBeenCalled();
       expect(electronicDisclosureService.전자공시_번역을_생성한다).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockDisclosure);
     });

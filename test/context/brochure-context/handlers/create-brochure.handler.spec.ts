@@ -8,7 +8,6 @@ import {
 } from '@context/brochure-context/handlers/commands/create-brochure.handler';
 import { BrochureService } from '@domain/core/brochure/brochure.service';
 import { LanguageService } from '@domain/common/language/language.service';
-import { CategoryService } from '@domain/common/category/category.service';
 import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { Language } from '@domain/common/language/language.entity';
@@ -18,7 +17,6 @@ describe('CreateBrochureHandler', () => {
   let handler: CreateBrochureHandler;
   let brochureService: jest.Mocked<BrochureService>;
   let languageService: jest.Mocked<LanguageService>;
-  let categoryService: jest.Mocked<CategoryService>;
   let translationRepository: jest.Mocked<Repository<BrochureTranslation>>;
 
   const mockBrochureService = {
@@ -29,10 +27,6 @@ describe('CreateBrochureHandler', () => {
   const mockLanguageService = {
     ID로_언어를_조회한다: jest.fn(),
     모든_언어를_조회한다: jest.fn(),
-  };
-
-  const mockCategoryService = {
-    엔티티에_카테고리를_매핑한다: jest.fn(),
   };
 
   const mockTranslationRepository = {
@@ -60,10 +54,6 @@ describe('CreateBrochureHandler', () => {
           useValue: mockLanguageService,
         },
         {
-          provide: CategoryService,
-          useValue: mockCategoryService,
-        },
-        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -77,7 +67,6 @@ describe('CreateBrochureHandler', () => {
     handler = module.get<CreateBrochureHandler>(CreateBrochureHandler);
     brochureService = module.get(BrochureService);
     languageService = module.get(LanguageService);
-    categoryService = module.get(CategoryService);
     translationRepository = module.get(getRepositoryToken(BrochureTranslation));
   });
 

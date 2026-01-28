@@ -28,7 +28,6 @@ describe('IRBusinessService', () => {
 
   const mockCategoryService = {
     엔티티_타입별_카테고리를_조회한다: jest.fn(),
-    엔티티의_카테고리_매핑을_조회한다: jest.fn(),
     카테고리를_생성한다: jest.fn(),
     카테고리를_업데이트한다: jest.fn(),
     카테고리를_삭제한다: jest.fn(),
