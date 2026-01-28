@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Category } from './category.entity';
-import { CategoryMapping } from './category-mapping.entity';
 import { CategoryService } from './category.service';
 import { CategoryContextService } from './category-context.service';
 
@@ -10,7 +9,7 @@ import { CategoryContextService } from './category-context.service';
  * 통합 카테고리 관리 기능을 제공합니다.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Category, CategoryMapping])],
+  imports: [TypeOrmModule.forFeature([Category])],
   providers: [CategoryService, CategoryContextService],
   exports: [CategoryService, CategoryContextService],
 })

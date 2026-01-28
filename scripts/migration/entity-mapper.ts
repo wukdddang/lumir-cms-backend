@@ -10,6 +10,70 @@ import {
  */
 
 /**
+ * URL에서 파일 크기를 가져옵니다 (HTTP HEAD 요청 사용)
+ * 실패 시 최대 3회 재시도합니다.
+ */
+async function getFileSizeFromUrl(url: string, retries: number = 3): Promise<number> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const https = require('https');
+      const http = require('http');
+      const urlModule = require('url');
+      
+      const parsedUrl = urlModule.parse(url);
+      const protocol = parsedUrl.protocol === 'https:' ? https : http;
+      
+      const size = await new Promise<number>((resolve, reject) => {
+        const request = protocol.request(
+          url,
+          { method: 'HEAD' },
+          (response: any) => {
+            const contentLength = response.headers['content-length'];
+            if (contentLength) {
+              resolve(parseInt(contentLength, 10));
+            } else {
+              resolve(0);
+            }
+          },
+        );
+        
+        request.on('error', (error: any) => {
+          reject(error);
+        });
+        
+        // 타임아웃을 15초로 증가
+        request.setTimeout(15000, () => {
+          request.destroy();
+          reject(new Error('Timeout'));
+        });
+        
+        request.end();
+      });
+
+      // 성공하면 크기 반환
+      if (size > 0) {
+        return size;
+      }
+      
+      // 크기가 0이면 다음 시도
+      if (attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 재시도 전 대기
+      }
+    } catch (error) {
+      if (attempt === retries) {
+        // 마지막 시도에서도 실패하면 경고 메시지 출력
+        console.warn(`⚠️  파일 크기 조회 실패 (${attempt}회 시도): ${url}`);
+        return 0;
+      }
+      // 재시도 전 대기
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
+  }
+  
+  return 0;
+}
+
+/**
  * 언어 코드 매핑 (MongoDB → PostgreSQL)
  */
 const LANGUAGE_CODE_MAP: Record<string, string> = {
@@ -85,18 +149,45 @@ function createTranslationsFromSingleLanguage(
 
 /**
  * MongoDB files 배열을 PostgreSQL attachments 배열로 변환
+ * - fileSize가 없는 경우 실제 파일에서 크기를 가져옵니다.
+ * - fileUrl을 전체 URL 형식으로 저장합니다 (AWS_ENDPOINT와 결합)
  */
-function mapFiles(mongoFiles: any[]): any[] | null {
+async function mapFiles(mongoFiles: any[]): Promise<any[] | null> {
   if (!mongoFiles || !Array.isArray(mongoFiles) || mongoFiles.length === 0) {
     return null;
   }
 
-  return mongoFiles.map((file) => ({
-    fileName: file.fileName || '',
-    fileUrl: file.filePath || file.url || '',
-    fileSize: file.fileSize || 0,
-    mimeType: file.mimeType || getMimeTypeFromFileName(file.fileName),
-  }));
+  const awsEndpoint = process.env.AWS_ENDPOINT || '';
+  
+  const mappedFiles = await Promise.all(
+    mongoFiles.map(async (file) => {
+      const fileUrl = file.filePath || file.url || '';
+      let fileSize = file.fileSize || 0;
+      
+      // fileUrl을 전체 URL로 변환 (상대 경로인 경우 AWS_ENDPOINT와 결합)
+      const fullUrl = fileUrl.startsWith('http') 
+        ? fileUrl 
+        : (awsEndpoint ? `${awsEndpoint}/${fileUrl}` : fileUrl);
+      
+      // fileSize가 0이고 AWS_ENDPOINT가 설정되어 있으면 실제 파일에서 크기 가져오기
+      if (fileSize === 0 && awsEndpoint && fullUrl) {
+        fileSize = await getFileSizeFromUrl(fullUrl);
+        
+        if (fileSize > 0) {
+          console.log(`  ✅ 파일 크기 조회 성공: ${fileUrl} (${(fileSize / 1024).toFixed(2)} KB)`);
+        }
+      }
+      
+      return {
+        fileName: file.fileName || '',
+        fileUrl: fullUrl, // 전체 URL 저장
+        fileSize: fileSize,
+        mimeType: file.mimeType || getMimeTypeFromFileName(file.fileName),
+      };
+    })
+  );
+
+  return mappedFiles;
 }
 
 /**
@@ -296,11 +387,11 @@ export function mapVideoGallery(
 /**
  * irmaterials 컬렉션을 irs로 매핑
  */
-export function mapIR(
+export async function mapIR(
   mongoDoc: any, 
   categoryIdMap: Map<string, string>,
   defaultCategoryId?: string,
-): any {
+): Promise<any> {
   const doc = convertObjectIdsToUuids(mongoDoc);
 
   let categoryId = doc.categoryId;
@@ -314,7 +405,7 @@ export function mapIR(
   }
 
   // files 배열을 attachments로 변환
-  const attachments = mapFiles(mongoDoc.files);
+  const attachments = await mapFiles(mongoDoc.files);
 
   const baseEntity = addBaseEntityFields(
     {
@@ -342,11 +433,11 @@ export function mapIR(
 /**
  * managementdisclosures 컬렉션을 electronic_disclosures로 매핑
  */
-export function mapElectronicDisclosure(
+export async function mapElectronicDisclosure(
   mongoDoc: any,
   categoryIdMap: Map<string, string>,
   defaultCategoryId?: string,
-): any {
+): Promise<any> {
   const doc = convertObjectIdsToUuids(mongoDoc);
 
   let categoryId = doc.categoryId;
@@ -360,7 +451,7 @@ export function mapElectronicDisclosure(
   }
 
   // files 배열을 attachments로 변환
-  const attachments = mapFiles(mongoDoc.files);
+  const attachments = await mapFiles(mongoDoc.files);
 
   const baseEntity = addBaseEntityFields(
     {
@@ -432,11 +523,11 @@ export function mapShareholdersMeeting(
 /**
  * notifications 컬렉션을 main_popups로 매핑
  */
-export function mapNotificationToMainPopup(
+export async function mapNotificationToMainPopup(
   mongoDoc: any,
   categoryIdMap: Map<string, string>,
   defaultCategoryId?: string,
-): any {
+): Promise<any> {
   const doc = convertObjectIdsToUuids(mongoDoc);
 
   let categoryId = doc.categoryId;
@@ -454,7 +545,7 @@ export function mapNotificationToMainPopup(
     ...(mongoDoc.pcFiles || []),
     ...(mongoDoc.mobileFiles || []),
   ];
-  const attachments = mapFiles(allFiles);
+  const attachments = await mapFiles(allFiles);
 
   const baseEntity = addBaseEntityFields(
     {

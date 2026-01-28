@@ -52,18 +52,6 @@ erDiagram
         int version
     }
 
-    CategoryMapping {
-        uuid id PK "description"
-        uuid entityId "엔티티 ID - UK composite: (entityId, categoryId)"
-        uuid categoryId FK "UK composite: (entityId, categoryId)"
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt "nullable"
-        uuid createdBy "nullable - 외부 시스템 직원 ID (SSO)"
-        uuid updatedBy "nullable - 외부 시스템 직원 ID (SSO)"
-        int version
-    }
-
     DismissedPermissionLog {
         uuid id PK "description"
         varchar logType "announcement|wiki"
@@ -80,6 +68,7 @@ erDiagram
     
     ShareholdersMeeting {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         boolean isPublic
         varchar location
         timestamp meetingDate "주주총회 일시"
@@ -144,6 +133,7 @@ erDiagram
 
     ElectronicDisclosure {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         boolean isPublic
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
@@ -171,6 +161,7 @@ erDiagram
 
     IR {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         boolean isPublic
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
@@ -198,6 +189,7 @@ erDiagram
 
     Brochure {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         boolean isPublic
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
         int order
@@ -226,6 +218,7 @@ erDiagram
 
     News {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         varchar title
         text description "설명"
         text url "외부 링크 또는 상세 페이지 URL"
@@ -242,6 +235,7 @@ erDiagram
 
     Announcement {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         varchar title
         text content
         boolean isFixed "상단 고정 여부"
@@ -300,6 +294,7 @@ erDiagram
     
     MainPopup {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         boolean isPublic
         timestamp releasedAt "nullable"
         jsonb attachments "nullable - 첨부파일 목록 (AWS S3 URLs)"
@@ -328,6 +323,7 @@ erDiagram
 
     LumirStory {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         varchar title
         text content
         text imageUrl "nullable - AWS S3 URL (썸네일/대표 이미지)"
@@ -344,6 +340,7 @@ erDiagram
 
     VideoGallery {
         uuid id PK "description"
+        uuid categoryId FK "nullable - Category 참조 (1:1)"
         varchar title
         text description
         boolean isPublic
@@ -590,29 +587,28 @@ erDiagram
     %% Relationships - Core Domain
     %% ==========================================
     
-    ShareholdersMeeting ||--o{ CategoryMapping : "has"
-    CategoryMapping }o--|| Category : "references"
+    ShareholdersMeeting }o--|| Category : "references (1:1)"
     ShareholdersMeeting ||--o{ VoteResult : "has vote results"
     VoteResult ||--o{ VoteResultTranslation : "has translations"
     VoteResultTranslation }o--|| Language : "in language"
     ShareholdersMeeting ||--o{ ShareholdersMeetingTranslation : "has translations"
     ShareholdersMeetingTranslation }o--|| Language : "in language"
     
-    ElectronicDisclosure ||--o{ CategoryMapping : "has"
+    ElectronicDisclosure }o--|| Category : "references (1:1)"
     ElectronicDisclosure ||--o{ ElectronicDisclosureTranslation : "has translations"
     ElectronicDisclosureTranslation }o--|| Language : "in language"
     
-    IR ||--o{ CategoryMapping : "has"
+    IR }o--|| Category : "references (1:1)"
     IR ||--o{ IRTranslation : "has translations"
     IRTranslation }o--|| Language : "in language"
     
-    Brochure ||--o{ CategoryMapping : "has"
+    Brochure }o--|| Category : "references (1:1)"
     Brochure ||--o{ BrochureTranslation : "has translations"
     BrochureTranslation }o--|| Language : "in language"
     
-    News ||--o{ CategoryMapping : "has"
+    News }o--|| Category : "references (1:1)"
     
-    Announcement ||--o{ CategoryMapping : "has"
+    Announcement }o--|| Category : "references (1:1)"
     Announcement ||--o{ AnnouncementRead : "has reads (lazy)"
     Announcement ||--o{ AnnouncementPermissionLog : "has permission logs"
     Announcement ||--o| Survey : "has survey (optional)"
@@ -622,13 +618,13 @@ erDiagram
     %% Relationships - Sub Domain
     %% ==========================================
     
-    MainPopup ||--o{ CategoryMapping : "has"
+    MainPopup }o--|| Category : "references (1:1)"
     MainPopup ||--o{ MainPopupTranslation : "has translations"
     MainPopupTranslation }o--|| Language : "in language"
     
-    LumirStory ||--o{ CategoryMapping : "has"
+    LumirStory }o--|| Category : "references (1:1)"
     
-    VideoGallery ||--o{ CategoryMapping : "has"
+    VideoGallery }o--|| Category : "references (1:1)"
 
     Survey ||--o{ SurveyQuestion : "has many"
     Survey ||--o{ SurveyCompletion : "has completions"
@@ -641,7 +637,6 @@ erDiagram
     SurveyQuestion ||--o{ SurveyResponseFile : "has file responses"
     SurveyQuestion ||--o{ SurveyResponseDatetime : "has datetime responses"
     
-    EducationManagement ||--o{ CategoryMapping : "has"
     EducationManagement ||--o{ Attendee : "has many"
     
     WikiFileSystem }o--o| WikiFileSystem : "parentId (self-reference)"
@@ -662,7 +657,6 @@ erDiagram
 |--------|------|
 | **Language** | 다국어 지원을 위한 언어 관리 |
 | **Category** | 통합 카테고리 관리 (모든 도메인 공유) |
-| **CategoryMapping** | 엔티티-카테고리 간 다대다 관계 |
 | **DismissedPermissionLog** | 권한 로그 "다시 보지 않기" 관리 (공지사항/위키) |
 
 ### Core Domain (핵심 비즈니스)
@@ -818,7 +812,7 @@ enum DismissedPermissionLogType {
 ### 1. 통합 카테고리 관리
 - **단일 Category 테이블**: 모든 도메인의 카테고리를 하나의 테이블로 관리
 - **entityType 필드**: 도메인 구분 (announcement, news, survey 등)
-- **CategoryMapping**: 엔티티와 카테고리 간 다대다 관계 (정규화)
+- **직접 FK 관계**: 각 엔티티가 `categoryId` 컬럼으로 Category를 직접 참조 (1:1 관계)
 
 ### 2. 다국어 지원
 - **번역 테이블**: 언어별 콘텐츠를 별도 테이블로 관리
@@ -1024,5 +1018,5 @@ enum DismissedPermissionLogType {
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 15일  
-**버전**: v5.20
+**최종 업데이트**: 2026년 1월 28일  
+**버전**: v5.23

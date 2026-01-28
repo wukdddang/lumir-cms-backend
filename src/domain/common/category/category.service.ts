@@ -2,7 +2,6 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
-import { CategoryMapping } from './category-mapping.entity';
 import { CategoryEntityType } from './category-entity-type.types';
 
 /**
@@ -16,8 +15,6 @@ export class CategoryService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
-    @InjectRepository(CategoryMapping)
-    private readonly mappingRepository: Repository<CategoryMapping>,
   ) {}
 
   /**
@@ -123,108 +120,5 @@ export class CategoryService {
 
     this.logger.log(`카테고리 삭제 완료 - ID: ${id}`);
     return true;
-  }
-
-  /**
-   * 엔티티에 카테고리를 매핑한다
-   */
-  async 엔티티에_카테고리를_매핑한다(
-    entityId: string,
-    categoryId: string,
-    createdBy?: string,
-  ): Promise<CategoryMapping> {
-    this.logger.log(
-      `카테고리 매핑 생성 시작 - 엔티티: ${entityId}, 카테고리: ${categoryId}`,
-    );
-
-    // 카테고리 존재 확인
-    await this.ID로_카테고리를_조회한다(categoryId);
-
-    // 중복 확인
-    const existing = await this.mappingRepository.findOne({
-      where: { entityId, categoryId },
-    });
-
-    if (existing) {
-      this.logger.warn(`이미 매핑된 카테고리입니다.`);
-      return existing;
-    }
-
-    const mapping = this.mappingRepository.create({
-      entityId,
-      categoryId,
-      createdBy,
-    });
-
-    const saved = await this.mappingRepository.save(mapping);
-
-    this.logger.log(`카테고리 매핑 생성 완료 - ID: ${saved.id}`);
-    return saved;
-  }
-
-  /**
-   * 엔티티의 카테고리 매핑을 조회한다
-   */
-  async 엔티티의_카테고리_매핑을_조회한다(
-    entityId: string,
-  ): Promise<Category[]> {
-    this.logger.debug(`엔티티 카테고리 매핑 조회 - 엔티티: ${entityId}`);
-
-    const mappings = await this.mappingRepository.find({
-      where: { entityId },
-      relations: ['category'],
-    });
-
-    return mappings.map((m) => m.category).filter((c) => c !== null);
-  }
-
-  /**
-   * 카테고리 매핑을 삭제한다
-   */
-  async 카테고리_매핑을_삭제한다(
-    entityId: string,
-    categoryId: string,
-  ): Promise<boolean> {
-    this.logger.log(
-      `카테고리 매핑 삭제 시작 - 엔티티: ${entityId}, 카테고리: ${categoryId}`,
-    );
-
-    const mapping = await this.mappingRepository.findOne({
-      where: { entityId, categoryId },
-    });
-
-    if (!mapping) {
-      throw new NotFoundException('카테고리 매핑을 찾을 수 없습니다.');
-    }
-
-    await this.mappingRepository.softRemove(mapping);
-
-    this.logger.log(`카테고리 매핑 삭제 완료`);
-    return true;
-  }
-
-  /**
-   * 엔티티의 모든 카테고리 매핑을 삭제한다
-   */
-  async 엔티티의_모든_카테고리_매핑을_삭제한다(
-    entityId: string,
-  ): Promise<number> {
-    this.logger.log(
-      `엔티티의 모든 카테고리 매핑 삭제 시작 - 엔티티: ${entityId}`,
-    );
-
-    const result = await this.mappingRepository
-      .createQueryBuilder()
-      .softDelete()
-      .where('entityId = :entityId', { entityId })
-      .execute();
-
-    const deletedCount = result.affected || 0;
-
-    this.logger.log(
-      `엔티티의 모든 카테고리 매핑 삭제 완료 - 삭제 수: ${deletedCount}`,
-    );
-
-    return deletedCount;
   }
 }

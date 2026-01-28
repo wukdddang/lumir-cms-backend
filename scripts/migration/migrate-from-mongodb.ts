@@ -229,14 +229,20 @@ async function bootstrap() {
     console.log(`✅ VideoGalleries: ${videoGalleries.length}개 매핑 완료`);
 
     // 6.6 IR 매핑 - 기본 카테고리 사용
-    const irs = collections.irmaterials.map((doc) => 
-      mapIR(doc, emptyCategoryIdMap, defaultCategoryMap.get('ir'))
+    console.log('\n📄 IR 파일 크기 조회 중...');
+    const irs = await Promise.all(
+      collections.irmaterials.map((doc) => 
+        mapIR(doc, emptyCategoryIdMap, defaultCategoryMap.get('ir'))
+      )
     );
     console.log(`✅ IRs: ${irs.length}개 매핑 완료`);
 
     // 6.7 ElectronicDisclosure 매핑 - 기본 카테고리 사용
-    const electronicDisclosures = collections.managementdisclosures.map(
-      (doc) => mapElectronicDisclosure(doc, emptyCategoryIdMap, defaultCategoryMap.get('electronic_disclosure')),
+    console.log('\n📄 전자공시 파일 크기 조회 중...');
+    const electronicDisclosures = await Promise.all(
+      collections.managementdisclosures.map(
+        (doc) => mapElectronicDisclosure(doc, emptyCategoryIdMap, defaultCategoryMap.get('electronic_disclosure')),
+      )
     );
     console.log(
       `✅ ElectronicDisclosures: ${electronicDisclosures.length}개 매핑 완료`,
@@ -251,8 +257,11 @@ async function bootstrap() {
     );
 
     // 6.9 MainPopup 매핑 (notifications) - 기본 카테고리 사용
-    const mainPopups = collections.notifications.map((doc) =>
-      mapNotificationToMainPopup(doc, emptyCategoryIdMap, defaultCategoryMap.get('main_popup')),
+    console.log('\n📄 메인 팝업 파일 크기 조회 중...');
+    const mainPopups = await Promise.all(
+      collections.notifications.map((doc) =>
+        mapNotificationToMainPopup(doc, emptyCategoryIdMap, defaultCategoryMap.get('main_popup')),
+      )
     );
     console.log(`✅ MainPopups: ${mainPopups.length}개 매핑 완료`);
 

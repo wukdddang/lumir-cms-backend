@@ -192,12 +192,13 @@ function canAccess(announcement: Announcement, employee: Employee): boolean {
 **구조**:
 - **단일 Category 테이블**: 모든 도메인의 카테고리를 하나의 테이블로 관리
 - **entityType 필드**: 도메인 구분
-- **CategoryMapping 중간 테이블**: 엔티티-카테고리 간 다대다 관계
+- **직접 FK 관계**: 각 엔티티가 `categoryId` 컬럼으로 Category를 직접 참조 (1:1 관계)
 
 **장점**:
 - 카테고리 관리 일원화
 - 동일한 구조 공유 (name, description, isActive, order)
 - 복합 인덱스 활용 가능
+- 중간 테이블 없이 직접 JOIN 가능
 
 **예시**:
 ```sql
@@ -206,11 +207,21 @@ SELECT * FROM category
 WHERE entity_type = 'announcement' AND is_active = true
 ORDER BY "order";
 
--- 특정 공지사항의 카테고리 목록
+-- 특정 전자공시의 카테고리 조회
 SELECT c.* FROM category c
-JOIN category_mapping cm ON c.id = cm.category_id
-WHERE cm.entity_id = 'announcement-uuid-123';
+JOIN electronic_disclosures ed ON c.id = ed.category_id
+WHERE ed.id = 'disclosure-uuid-123';
+
+-- 특정 카테고리의 모든 뉴스 조회
+SELECT n.* FROM news n
+WHERE n.category_id = 'category-uuid-456' 
+  AND n.deleted_at IS NULL;
 ```
+
+**⚠️ CategoryMapping 레거시 테이블**:
+- 이전에는 CategoryMapping 중간 테이블로 다대다 관계를 구현
+- 현재는 각 엔티티가 categoryId로 직접 참조 (1:1 관계)
+- CategoryMapping은 향후 제거 예정
 
 ---
 
@@ -382,25 +393,6 @@ WHERE deleted_at IS NULL;
 
 -- 생성자별 조회
 CREATE INDEX idx_{table}_created_by ON {table}(created_by) 
-WHERE deleted_at IS NULL;
-```
-
-### CategoryMapping
-
-```sql
--- 특정 엔티티의 카테고리 조회
-CREATE INDEX idx_category_mapping_entity 
-ON category_mapping(entity_id) 
-WHERE deleted_at IS NULL;
-
--- 특정 카테고리의 엔티티 조회
-CREATE INDEX idx_category_mapping_category 
-ON category_mapping(category_id) 
-WHERE deleted_at IS NULL;
-
--- 유니크 제약조건
-CREATE UNIQUE INDEX idx_category_mapping_unique 
-ON category_mapping(entity_id, category_id) 
 WHERE deleted_at IS NULL;
 ```
 
@@ -795,6 +787,23 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 
 ## 변경 이력
 
+### v5.23 (2026-01-28)
+- ✅ **CategoryMapping 테이블 완전 제거**
+  - 엔티티 파일 삭제 (`category-mapping.entity.ts`)
+  - CategoryModule에서 TypeORM 등록 제거
+  - CategoryService에서 매핑 관련 메서드 4개 제거
+  - 마이그레이션 생성 (`1738132800000-DropCategoryMappingTable.ts`)
+  - 모든 엔티티가 `categoryId`로 직접 참조 (1:1 관계)
+  - ER 다이어그램에서 완전 제거
+
+### v5.22 (2026-01-28)
+- ✅ **카테고리 관계를 1:1로 변경**
+  - 모든 엔티티에 `categoryId` 컬럼 추가 (직접 FK)
+  - CategoryMapping 테이블을 레거시로 표시 (향후 제거 예정)
+  - 엔티티당 하나의 카테고리만 할당 가능 (1:1 관계)
+  - 변경된 엔티티: ShareholdersMeeting, ElectronicDisclosure, IR, Brochure, News, Announcement, MainPopup, LumirStory, VideoGallery
+  - 조회 성능 향상: 중간 테이블 없이 직접 JOIN
+
 ### v5.21 (2026-01-20)
 - ✅ **권한 로그 "다시 보지 않기" 기능 추가**
   - `dismissed_permission_logs` 테이블 추가
@@ -933,5 +942,5 @@ ALTER TABLE attendee ADD CONSTRAINT chk_attendee_completed
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 15일  
-**버전**: v5.20
+**최종 업데이트**: 2026년 1월 28일  
+**버전**: v5.23

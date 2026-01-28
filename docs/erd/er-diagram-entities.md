@@ -108,58 +108,7 @@ erDiagram
 
 ---
 
-### 3. 카테고리 매핑 (CategoryMapping)
-
-```mermaid
-erDiagram
-    CategoryMapping {
-        uuid id PK
-        uuid entityId "엔티티 ID"
-        uuid categoryId FK "Category 참조"
-        timestamp createdAt
-        timestamp updatedAt
-        timestamp deletedAt "nullable"
-        uuid createdBy "nullable"
-        uuid updatedBy "nullable"
-        int version
-    }
-    
-    Category {
-        uuid id PK
-        varchar entityType
-        varchar name
-        boolean isActive
-        int order
-    }
-    
-    CategoryMapping }o--|| Category : "references"
-```
-
-**설명**:
-- 엔티티와 카테고리 간의 **다대다(Many-to-Many) 관계**를 정규화
-- 하나의 엔티티는 여러 카테고리에 속할 수 있음
-- 하나의 카테고리는 여러 엔티티를 포함할 수 있음
-
-**유니크 제약조건**:
-- `(entityId, categoryId)` 복합 유니크 키
-- 같은 엔티티가 같은 카테고리를 중복으로 가질 수 없음
-
-**예시 쿼리**:
-```sql
--- 특정 공지사항의 모든 카테고리 조회
-SELECT c.* FROM category c
-JOIN category_mapping cm ON c.id = cm.category_id
-WHERE cm.entity_id = 'announcement-uuid-123';
-
--- 특정 카테고리의 모든 엔티티 조회 (announcement만)
-SELECT cm.entity_id FROM category_mapping cm
-JOIN category c ON cm.category_id = c.id
-WHERE c.id = 'category-uuid-456' AND c.entity_type = 'announcement';
-```
-
----
-
-### 4. 권한 로그 무시 (DismissedPermissionLog)
+### 3. 권한 로그 무시 (DismissedPermissionLog)
 
 ```mermaid
 erDiagram
@@ -241,6 +190,7 @@ WHERE apl.action = 'detected'
 erDiagram
     ShareholdersMeeting {
         uuid id PK
+        uuid categoryId FK "nullable"
         boolean isPublic
         varchar location
         date meetingDate
@@ -306,6 +256,7 @@ erDiagram
 erDiagram
     ElectronicDisclosure {
         uuid id PK
+        uuid categoryId FK "nullable"
         boolean isPublic
         int order
     }
@@ -338,6 +289,7 @@ erDiagram
 erDiagram
     IR {
         uuid id PK
+        uuid categoryId FK "nullable"
         boolean isPublic
         jsonb attachments "nullable - 첨부파일"
         int order
@@ -372,6 +324,7 @@ erDiagram
 erDiagram
     Brochure {
         uuid id PK
+        uuid categoryId FK "nullable"
         boolean isPublic
         jsonb attachments "nullable - 첨부파일"
         int order
@@ -406,6 +359,7 @@ erDiagram
 erDiagram
     News {
         uuid id PK
+        uuid categoryId FK "nullable"
         varchar title
         text description "설명"
         text url "외부 링크"
@@ -426,8 +380,7 @@ erDiagram
         varchar name
     }
     
-    News ||--o{ CategoryMapping : "has"
-    CategoryMapping }o--|| Category : "references"
+    News }o--|| Category : "references (1:1)"
 ```
 
 **특징**:
@@ -443,6 +396,7 @@ erDiagram
 erDiagram
     Announcement {
         uuid id PK
+        uuid categoryId FK "nullable"
         varchar title
         text content
         boolean isFixed "상단 고정"
@@ -531,6 +485,7 @@ function canSubmitSurvey(
 erDiagram
     MainPopup {
         uuid id PK
+        uuid categoryId FK "nullable"
         boolean isPublic
         timestamp releasedAt "nullable"
         jsonb attachments "nullable"
@@ -566,6 +521,7 @@ erDiagram
 erDiagram
     LumirStory {
         uuid id PK
+        uuid categoryId FK "nullable"
         varchar title
         text content
         text imageUrl "nullable - 썸네일"
@@ -580,7 +536,7 @@ erDiagram
         uuid categoryId FK
     }
     
-    LumirStory ||--o{ CategoryMapping : "has"
+    LumirStory }o--|| Category : "references (1:1)"
 ```
 
 **특징**:
@@ -595,6 +551,7 @@ erDiagram
 erDiagram
     VideoGallery {
         uuid id PK
+        uuid categoryId FK "nullable"
         varchar title
         text description
         boolean isPublic
@@ -608,7 +565,7 @@ erDiagram
         uuid categoryId FK
     }
     
-    VideoGallery ||--o{ CategoryMapping : "has"
+    VideoGallery }o--|| Category : "references (1:1)"
 ```
 
 **특징**:
@@ -1201,5 +1158,5 @@ FOR EACH ROW EXECUTE FUNCTION maintain_closure_on_move();
 ---
 
 **문서 생성일**: 2026년 1월 6일  
-**최종 업데이트**: 2026년 1월 15일  
-**버전**: v5.20
+**최종 업데이트**: 2026년 1월 28일  
+**버전**: v5.23
