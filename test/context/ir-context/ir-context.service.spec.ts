@@ -292,6 +292,8 @@ describe('IRContextService', () => {
         attachments,
         createdBy,
       });
+      // 카테고리 매핑은 더 이상 호출되지 않아야 함 (categoryId 필드 사용)
+      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).not.toHaveBeenCalled();
       expect(irService.IR_번역을_생성한다).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockIR);
     });
@@ -326,7 +328,7 @@ describe('IRContextService', () => {
       );
     });
 
-    it('categoryId가 제공되면 카테고리 매핑을 생성해야 한다', async () => {
+    it('categoryId가 제공되면 카테고리를 검증하고 IR 엔티티에 저장해야 한다', async () => {
       // Given
       const translations = [
         {
@@ -346,6 +348,7 @@ describe('IRContextService', () => {
         id: 'ir-1',
         isPublic: true,
         order: 0,
+        categoryId, // IR 엔티티에 직접 저장됨
       } as any as IR;
 
       mockLanguageService.ID로_언어를_조회한다.mockResolvedValue(mockLanguage);
@@ -354,19 +357,21 @@ describe('IRContextService', () => {
       mockIRService.다음_순서를_계산한다.mockResolvedValue(0);
       mockIRService.IR을_생성한다.mockResolvedValue(mockIR);
       mockIRService.IR_번역을_생성한다.mockResolvedValue(undefined);
-      mockCategoryService.엔티티에_카테고리를_매핑한다.mockResolvedValue({});
       mockIRService.ID로_IR을_조회한다.mockResolvedValue(mockIR);
 
       // When
-      await service.IR을_생성한다(translations, createdBy, undefined, categoryId);
+      const result = await service.IR을_생성한다(translations, createdBy, undefined, categoryId);
 
       // Then
       expect(mockCategoryService.ID로_카테고리를_조회한다).toHaveBeenCalledWith(categoryId);
-      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).toHaveBeenCalledWith(
-        'ir-1',
-        categoryId,
-        createdBy,
+      // CategoryMapping은 더 이상 사용하지 않음 (IR 엔티티의 categoryId 필드 사용)
+      expect(mockCategoryService.엔티티에_카테고리를_매핑한다).not.toHaveBeenCalled();
+      expect(irService.IR을_생성한다).toHaveBeenCalledWith(
+        expect.objectContaining({
+          categoryId,
+        }),
       );
+      expect(result.categoryId).toBe(categoryId);
     });
 
     it('기준 번역으로 나머지 언어를 자동 동기화해야 한다', async () => {
@@ -414,7 +419,6 @@ describe('IRContextService', () => {
         mockJapaneseLanguage,
       ]);
       mockCategoryService.ID로_카테고리를_조회한다.mockResolvedValue({ id: categoryId } as any);
-      mockCategoryService.엔티티에_카테고리를_매핑한다.mockResolvedValue({} as any);
       mockIRService.다음_순서를_계산한다.mockResolvedValue(0);
       mockIRService.IR을_생성한다.mockResolvedValue(mockIR);
       mockIRService.IR_번역을_생성한다.mockResolvedValue(undefined);

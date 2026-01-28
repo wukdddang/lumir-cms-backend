@@ -346,4 +346,83 @@ describe('POST /api/admin/irs (IR 생성)', () => {
       expect(foundIR.id).toBe(irId);
     });
   });
+
+  describe('카테고리 개별 설정', () => {
+    it('각 IR이 개별적인 카테고리를 가져야 한다', async () => {
+      // Given - 두 개의 카테고리 생성
+      const category1Response = await testSuite
+        .request()
+        .post('/api/admin/irs/categories')
+        .send({
+          name: '재무정보',
+          description: '재무정보 카테고리',
+        })
+        .expect(201);
+
+      const category2Response = await testSuite
+        .request()
+        .post('/api/admin/irs/categories')
+        .send({
+          name: '투자정보',
+          description: '투자정보 카테고리',
+        })
+        .expect(201);
+
+      const category1Id = category1Response.body.id;
+      const category2Id = category2Response.body.id;
+
+      // 두 개의 IR 생성 (같은 카테고리로)
+      const translations1 = [{ languageId, title: 'IR 1' }];
+      const translations2 = [{ languageId, title: 'IR 2' }];
+
+      const ir1Response = await testSuite
+        .request()
+        .post('/api/admin/irs')
+        .field('categoryId', category1Id)
+        .field('translations', JSON.stringify(translations1))
+        .expect(201);
+
+      const ir2Response = await testSuite
+        .request()
+        .post('/api/admin/irs')
+        .field('categoryId', category1Id)
+        .field('translations', JSON.stringify(translations2))
+        .expect(201);
+
+      const ir1Id = ir1Response.body.id;
+      const ir2Id = ir2Response.body.id;
+
+      // 두 IR 모두 카테고리 1을 가지고 있어야 함
+      expect(ir1Response.body.categoryId).toBe(category1Id);
+      expect(ir2Response.body.categoryId).toBe(category1Id);
+
+      // When - IR 1의 카테고리만 변경
+      const updatedTranslations1 = [{ languageId, title: 'IR 1' }];
+
+      const updateResponse1 = await testSuite
+        .request()
+        .put(`/api/admin/irs/${ir1Id}`)
+        .field('categoryId', category2Id)
+        .field('translations', JSON.stringify(updatedTranslations1))
+        .expect(200);
+
+      // Then - IR 1만 카테고리가 변경되어야 함
+      expect(updateResponse1.body.categoryId).toBe(category2Id);
+
+      // IR 2는 여전히 카테고리 1을 가지고 있어야 함
+      const getIR2Response = await testSuite
+        .request()
+        .get(`/api/admin/irs/${ir2Id}`)
+        .expect(200);
+
+      expect(getIR2Response.body.categoryId).toBe(category1Id);
+
+      // 두 IR이 서로 다른 카테고리를 가져야 함
+      expect(updateResponse1.body.categoryId).not.toBe(getIR2Response.body.categoryId);
+
+      console.log(`✅ IR 1 카테고리: ${updateResponse1.body.categoryId}`);
+      console.log(`✅ IR 2 카테고리: ${getIR2Response.body.categoryId}`);
+      console.log(`✅ 각 IR이 개별적인 카테고리를 가지고 있습니다!`);
+    });
+  });
 });
