@@ -1,8 +1,12 @@
-import { Injectable, Logger, Inject, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  Inject,
+  BadRequestException,
+} from '@nestjs/common';
 import { BrochureContextService } from '@context/brochure-context/brochure-context.service';
 import { CategoryService } from '@domain/common/category/category.service';
 import { CategoryEntityType } from '@domain/common/category/category-entity-type.types';
-import { Brochure } from '@domain/core/brochure/brochure.entity';
 import { BrochureTranslation } from '@domain/core/brochure/brochure-translation.entity';
 import { Category } from '@domain/common/category/category.entity';
 import { STORAGE_SERVICE } from '@libs/storage/storage.module';
@@ -102,7 +106,9 @@ export class BrochureBusinessService {
       1000, // 충분히 큰 숫자
     );
 
-    this.logger.log(`브로슈어 전체 목록 조회 완료 - 총 ${result.items.length}개`);
+    this.logger.log(
+      `브로슈어 전체 목록 조회 완료 - 총 ${result.items.length}개`,
+    );
 
     return result.items;
   }
@@ -196,10 +202,7 @@ export class BrochureBusinessService {
   ): Promise<BrochureDetailResult> {
     this.logger.log(`브로슈어 공개 수정 시작 - ID: ${id}`);
 
-    await this.brochureContextService.브로슈어_공개를_수정한다(
-      id,
-      data,
-    );
+    await this.brochureContextService.브로슈어_공개를_수정한다(id, data);
 
     this.logger.log(`브로슈어 공개 수정 완료 - ID: ${id}`);
 
@@ -236,7 +239,9 @@ export class BrochureBusinessService {
   /**
    * 기본 브로슈어들을 생성한다
    */
-  async 기본_브로슈어들을_생성한다(createdBy?: string): Promise<BrochureDetailResult[]> {
+  async 기본_브로슈어들을_생성한다(
+    createdBy?: string,
+  ): Promise<BrochureDetailResult[]> {
     this.logger.log(
       `기본 브로슈어 생성 시작 - 생성자: ${createdBy || 'Unknown'}`,
     );
@@ -248,7 +253,9 @@ export class BrochureBusinessService {
 
     // 각 브로슈어의 상세 정보 조회하여 categoryName 포함
     const results = await Promise.all(
-      brochures.map(brochure => this.brochureContextService.브로슈어_상세_조회한다(brochure.id))
+      brochures.map((brochure) =>
+        this.brochureContextService.브로슈어_상세_조회한다(brochure.id),
+      ),
     );
 
     return results;
@@ -401,7 +408,9 @@ export class BrochureBusinessService {
     files?: Express.Multer.File[],
   ): Promise<BrochureTranslation[]> {
     if (!translations || translations.length === 0) {
-      throw new BadRequestException('translations는 비어있지 않은 배열이어야 합니다.');
+      throw new BadRequestException(
+        'translations는 비어있지 않은 배열이어야 합니다.',
+      );
     }
 
     this.logger.log(
@@ -464,7 +473,9 @@ export class BrochureBusinessService {
       categoryId,
       updatedBy,
     });
-    this.logger.log(`브로슈어 카테고리 업데이트 완료 - 카테고리 ID: ${categoryId}`);
+    this.logger.log(
+      `브로슈어 카테고리 업데이트 완료 - 카테고리 ID: ${categoryId}`,
+    );
 
     // 6. 번역 수정
     const result = await this.brochureContextService.브로슈어_번역들을_수정한다(
