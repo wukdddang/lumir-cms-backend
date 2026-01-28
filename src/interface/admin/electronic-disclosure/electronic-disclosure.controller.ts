@@ -13,6 +13,7 @@ import {
   BadRequestException,
   ParseUUIDPipe,
   UseGuards,
+  Logger,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,6 +50,8 @@ import {
 @Roles('admin')
 @Controller('admin/electronic-disclosures')
 export class ElectronicDisclosureController {
+  private readonly logger = new Logger(ElectronicDisclosureController.name);
+
   constructor(
     private readonly electronicDisclosureBusinessService: ElectronicDisclosureBusinessService,
   ) {}
@@ -194,9 +197,21 @@ export class ElectronicDisclosureController {
   async 전자공시_상세를_조회한다(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ElectronicDisclosureResponseDto> {
-    return await this.electronicDisclosureBusinessService.전자공시_상세를_조회한다(
-      id,
-    );
+    this.logger.log(`========================================`);
+    this.logger.log(`📖 [전자공시 조회 요청]`);
+    this.logger.log(`  - 전자공시 ID: ${id}`);
+    this.logger.log(`========================================`);
+    
+    const result = await this.electronicDisclosureBusinessService.전자공시_상세를_조회한다(id);
+    
+    this.logger.log(`========================================`);
+    this.logger.log(`📖 [전자공시 조회 응답]`);
+    this.logger.log(`  - 전자공시 ID: ${result.id}`);
+    this.logger.log(`  - 카테고리 ID: ${result.categoryId || 'null'}`);
+    this.logger.log(`  - 카테고리명: ${result.category?.name || 'null'}`);
+    this.logger.log(`========================================`);
+    
+    return result;
   }
 
   /**
@@ -327,6 +342,13 @@ export class ElectronicDisclosureController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<ElectronicDisclosureResponseDto> {
+    this.logger.log(`========================================`);
+    this.logger.log(`✨ [전자공시 생성 요청]`);
+    this.logger.log(`  - 요청 Body: ${JSON.stringify(body, null, 2)}`);
+    this.logger.log(`  - categoryId: ${body.categoryId || 'null'}`);
+    this.logger.log(`  - 파일 개수: ${files?.length || 0}`);
+    this.logger.log(`========================================`);
+
     // body 존재 여부 확인
     if (!body) {
       throw new BadRequestException('요청 본문이 필요합니다.');
@@ -372,12 +394,21 @@ export class ElectronicDisclosureController {
       }
     }
 
-    return await this.electronicDisclosureBusinessService.전자공시를_생성한다(
+    const result = await this.electronicDisclosureBusinessService.전자공시를_생성한다(
       translations,
       body.categoryId || null,
       user.id,
       files,
     );
+
+    this.logger.log(`========================================`);
+    this.logger.log(`✨ [전자공시 생성 응답]`);
+    this.logger.log(`  - 생성된 전자공시 ID: ${result.id}`);
+    this.logger.log(`  - 응답 categoryId: ${result.categoryId || 'null'}`);
+    this.logger.log(`  - 응답 categoryName: ${result.category?.name || 'null'}`);
+    this.logger.log(`========================================`);
+
+    return result;
   }
 
   /**
@@ -525,6 +556,14 @@ export class ElectronicDisclosureController {
     @Body() body: any,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<ElectronicDisclosureResponseDto> {
+    this.logger.log(`========================================`);
+    this.logger.log(`✏️ [전자공시 수정 요청]`);
+    this.logger.log(`  - 전자공시 ID: ${id}`);
+    this.logger.log(`  - 요청 Body: ${JSON.stringify(body, null, 2)}`);
+    this.logger.log(`  - categoryId: ${body.categoryId || 'null'}`);
+    this.logger.log(`  - 파일 개수: ${files?.length || 0}`);
+    this.logger.log(`========================================`);
+
     // body 존재 여부 확인
     if (!body) {
       throw new BadRequestException('요청 본문이 필요합니다.');
@@ -570,13 +609,22 @@ export class ElectronicDisclosureController {
       }
     }
 
-    return await this.electronicDisclosureBusinessService.전자공시를_수정한다(
+    const result = await this.electronicDisclosureBusinessService.전자공시를_수정한다(
       id,
       translations,
       user.id,
       body.categoryId || null,
       files,
     );
+
+    this.logger.log(`========================================`);
+    this.logger.log(`✏️ [전자공시 수정 응답]`);
+    this.logger.log(`  - 전자공시 ID: ${result.id}`);
+    this.logger.log(`  - 응답 categoryId: ${result.categoryId || 'null'}`);
+    this.logger.log(`  - 응답 categoryName: ${result.category?.name || 'null'}`);
+    this.logger.log(`========================================`);
+
+    return result;
   }
 
   /**

@@ -117,10 +117,15 @@ export class ElectronicDisclosureService {
     const raw = rawAndEntities.raw;
 
     // raw 데이터에서 category name을 엔티티에 매핑
-    items.forEach((disclosure, index) => {
-      if (raw[index] && raw[index].category_name) {
+    // 주의: translations를 leftJoinAndSelect하면 각 disclosure마다 여러 row가 생기므로
+    // disclosure.id를 기준으로 raw 데이터를 찾아야 함
+    items.forEach((disclosure) => {
+      const matchingRaw = raw.find(
+        (r) => r.disclosure_id === disclosure.id,
+      );
+      if (matchingRaw && matchingRaw.category_name) {
         disclosure.category = {
-          name: raw[index].category_name,
+          name: matchingRaw.category_name,
         };
       }
     });
@@ -171,16 +176,18 @@ export class ElectronicDisclosureService {
     id: string,
     data: Partial<ElectronicDisclosure>,
   ): Promise<ElectronicDisclosure> {
-    this.logger.log(`전자공시 업데이트 시작 - ID: ${id}`);
+    this.logger.log(`전자공시 업데이트 시작 - ID: ${id}, 업데이트 데이터: ${JSON.stringify(data)}`);
 
     const disclosure = await this.ID로_전자공시를_조회한다(id);
+    this.logger.debug(`업데이트 전 - ID: ${disclosure.id}, categoryId: ${disclosure.categoryId}`);
 
     Object.assign(disclosure, data);
+    this.logger.debug(`업데이트 후 (저장 전) - ID: ${disclosure.id}, categoryId: ${disclosure.categoryId}`);
 
     try {
       const updated = await this.electronicDisclosureRepository.save(disclosure);
-
-      this.logger.log(`전자공시 업데이트 완료 - ID: ${id}`);
+      this.logger.log(`전자공시 업데이트 완료 - ID: ${updated.id}, categoryId: ${updated.categoryId}`);
+      
       return updated;
     } catch (error) {
       if (error instanceof QueryFailedError) {
