@@ -213,45 +213,52 @@ export class UserAnnouncementController {
   })
   @ApiBody({
     type: SubmitSurveyAnswerDto,
-    description: '설문 응답 데이터',
+    description:
+      '설문 응답 데이터\n\n' +
+      '**중요 사항**:\n' +
+      '1. 질문 타입에 맞는 응답 배열에 데이터를 추가해야 합니다.\n' +
+      '2. 필수 질문(`isRequired: true`)은 반드시 응답해야 합니다.\n' +
+      '3. 선택형/체크박스 응답은 질문의 `form.options`에 정의된 값만 사용 가능합니다.\n' +
+      '4. 파일은 먼저 S3에 업로드 후 URL을 전달합니다.',
     examples: {
-      'mixed-example': {
-        summary: '혼합 응답 예시',
-        description: '텍스트, 선택형, 체크박스, 척도 응답을 포함한 예시',
+      'complete-survey': {
+        summary: '전체 응답 예시 (모든 질문 타입 포함)',
+        description:
+          '설문조사의 모든 질문 타입에 대한 응답 예시입니다.\n' +
+          '실제로는 설문에 있는 질문들에만 응답하면 됩니다.',
         value: {
           textAnswers: [
             {
               questionId: '123e4567-e89b-12d3-a456-426614174001',
-              textValue: '이것은 단답형 응답입니다.',
+              textValue: '홍길동',
+            },
+            {
+              questionId: '123e4567-e89b-12d3-a456-426614174002',
+              textValue:
+                '제품 품질이 우수하며, 지속적인 개선이 필요한 부분은 사용자 경험 개선입니다.',
             },
           ],
           choiceAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174002',
-              selectedOption: '옵션 1',
+              questionId: '123e4567-e89b-12d3-a456-426614174003',
+              selectedOption: '매우 만족',
             },
           ],
           checkboxAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174003',
-              selectedOptions: ['옵션 1', '옵션 3'],
+              questionId: '123e4567-e89b-12d3-a456-426614174004',
+              selectedOptions: ['가격', '품질', '디자인'],
             },
           ],
           scaleAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174004',
-              scaleValue: 7,
+              questionId: '123e4567-e89b-12d3-a456-426614174005',
+              scaleValue: 8,
             },
           ],
-        },
-      },
-      'grid-example': {
-        summary: '그리드 응답 예시',
-        description: '그리드 척도 질문에 대한 응답 예시',
-        value: {
           gridAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174005',
+              questionId: '123e4567-e89b-12d3-a456-426614174006',
               gridAnswers: [
                 {
                   rowName: '서비스 품질',
@@ -261,38 +268,101 @@ export class UserAnnouncementController {
                   rowName: '응답 속도',
                   columnValue: '만족',
                 },
+                {
+                  rowName: '친절도',
+                  columnValue: '매우 만족',
+                },
               ],
+            },
+          ],
+          fileAnswers: [
+            {
+              questionId: '123e4567-e89b-12d3-a456-426614174007',
+              files: [
+                {
+                  fileUrl:
+                    'https://s3.amazonaws.com/bucket/surveys/proposal.pdf',
+                  fileName: '개선제안서.pdf',
+                  fileSize: 2048000,
+                  mimeType: 'application/pdf',
+                },
+              ],
+            },
+          ],
+          datetimeAnswers: [
+            {
+              questionId: '123e4567-e89b-12d3-a456-426614174008',
+              datetimeValue: '2024-02-15T14:00:00+09:00',
             },
           ],
         },
       },
-      'file-example': {
-        summary: '파일 응답 예시',
-        description: '파일 업로드 질문에 대한 응답 예시',
+      'simple-survey': {
+        summary: '간단한 설문 응답 예시',
+        description: '텍스트, 선택형, 척도 질문만 포함된 간단한 설문 응답',
         value: {
-          fileAnswers: [
+          textAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174006',
-              files: [
+              questionId: '31e6bbc6-2839-4477-9672-bb4b381e8914',
+              textValue: '영업팀',
+            },
+          ],
+          choiceAnswers: [
+            {
+              questionId: '42e6bbc6-2839-4477-9672-bb4b381e8915',
+              selectedOption: '만족',
+            },
+          ],
+          scaleAnswers: [
+            {
+              questionId: '53e6bbc6-2839-4477-9672-bb4b381e8916',
+              scaleValue: 7,
+            },
+          ],
+        },
+      },
+      'grid-survey': {
+        summary: '그리드 척도 설문 응답 예시',
+        description: '여러 항목을 동일한 척도로 평가하는 그리드 형식 설문',
+        value: {
+          gridAnswers: [
+            {
+              questionId: '64e6bbc6-2839-4477-9672-bb4b381e8917',
+              gridAnswers: [
                 {
-                  fileUrl: 'https://s3.amazonaws.com/bucket/file1.pdf',
-                  fileName: 'document1.pdf',
-                  fileSize: 1024000,
-                  mimeType: 'application/pdf',
+                  rowName: '제품 품질',
+                  columnValue: '매우 만족',
+                },
+                {
+                  rowName: '가격 대비 성능',
+                  columnValue: '만족',
+                },
+                {
+                  rowName: '고객 지원',
+                  columnValue: '보통',
+                },
+                {
+                  rowName: '배송 속도',
+                  columnValue: '만족',
                 },
               ],
             },
           ],
         },
       },
-      'datetime-example': {
-        summary: '날짜/시간 응답 예시',
-        description: '날짜/시간 질문에 대한 응답 예시',
+      'multi-select-survey': {
+        summary: '다중 선택 설문 응답 예시',
+        description: '체크박스를 사용한 다중 선택 질문 응답',
         value: {
-          datetimeAnswers: [
+          checkboxAnswers: [
             {
-              questionId: '123e4567-e89b-12d3-a456-426614174007',
-              datetimeValue: '2024-01-28T10:00:00Z',
+              questionId: '75e6bbc6-2839-4477-9672-bb4b381e8918',
+              selectedOptions: [
+                '제품 품질 개선',
+                '가격 인하',
+                '배송 서비스 개선',
+                '고객센터 운영시간 확대',
+              ],
             },
           ],
         },
