@@ -69,7 +69,8 @@ export class AnnouncementController {
   @Get()
   @ApiOperation({
     summary: '공지사항 목록 조회 (비고정 공지)',
-    description: '비고정 공지사항 목록을 조회합니다. isFixed=false인 공지사항만 반환됩니다.',
+    description:
+      '비고정 공지사항 목록을 조회합니다. isFixed=false인 공지사항만 반환됩니다.',
   })
   @ApiResponse({
     status: 200,
@@ -155,7 +156,8 @@ export class AnnouncementController {
   @Get('fixed')
   @ApiOperation({
     summary: '고정 공지사항 목록 조회',
-    description: '고정 공지사항 목록을 조회합니다. isFixed=true인 공지사항만 반환됩니다.',
+    description:
+      '고정 공지사항 목록을 조회합니다. isFixed=true인 공지사항만 반환됩니다.',
   })
   @ApiResponse({
     status: 200,
@@ -248,7 +250,8 @@ export class AnnouncementController {
     type: [AnnouncementListItemDto],
   })
   async 공지사항_전체_목록을_조회한다(): Promise<AnnouncementListItemDto[]> {
-    const items = await this.announcementBusinessService.공지사항_전체_목록을_조회한다();
+    const items =
+      await this.announcementBusinessService.공지사항_전체_목록을_조회한다();
 
     return items;
   }
@@ -259,7 +262,8 @@ export class AnnouncementController {
   @Get('department-change-targets')
   @ApiOperation({
     summary: '부서 변경 대상 목록 조회',
-    description: 'permissionDepartmentIds가 null이거나 빈 배열인 공지사항 목록을 조회합니다.',
+    description:
+      'permissionDepartmentIds가 null이거나 빈 배열인 공지사항 목록을 조회합니다.',
   })
   @ApiResponse({
     status: 200,
@@ -464,7 +468,12 @@ export class AnnouncementController {
     const where: any = {};
 
     // 쿼리 파라미터를 boolean으로 변환
-    const resolved = resolvedParam === 'true' ? true : resolvedParam === 'false' ? false : undefined;
+    const resolved =
+      resolvedParam === 'true'
+        ? true
+        : resolvedParam === 'false'
+          ? false
+          : undefined;
 
     if (resolved === true) {
       where.resolvedAt = Not(IsNull());
@@ -531,6 +540,8 @@ export class AnnouncementController {
     description:
       '여러 권한 로그에 대한 모달을 더 이상 표시하지 않도록 설정합니다. ' +
       '권한 로그 관리 페이지에서는 여전히 조회 가능합니다.\n\n' +
+      '⚠️ **중요**: 이 설정은 호출한 개별 사용자에게만 적용됩니다. ' +
+      '다른 사용자에게는 영향을 주지 않으며, 각 사용자가 독립적으로 "다시 보지 않기"를 설정할 수 있습니다.\n\n' +
       '**필수 필드:**\n' +
       '- `logIds`: 무시할 권한 로그 ID 배열 (UUID[])',
   })
@@ -706,8 +717,9 @@ export class AnnouncementController {
       createdBy: user.id,
     };
 
-    const announcement = await this.announcementBusinessService.공지사항을_생성한다(data);
-    
+    const announcement =
+      await this.announcementBusinessService.공지사항을_생성한다(data);
+
     return {
       ...announcement,
       categoryName: announcement.category?.name,
@@ -844,8 +856,9 @@ export class AnnouncementController {
       data.expiredAt = new Date(dto.expiredAt);
     }
 
-    const announcement = await this.announcementBusinessService.공지사항을_수정한다(id, data);
-    
+    const announcement =
+      await this.announcementBusinessService.공지사항을_수정한다(id, data);
+
     return {
       ...announcement,
       categoryName: announcement.category?.name,
@@ -904,12 +917,13 @@ export class AnnouncementController {
     @Body() dto: UpdateAnnouncementPublicDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<AnnouncementResponseDto> {
-    const announcement = await this.announcementBusinessService.공지사항_공개를_수정한다(
-      id,
-      dto.isPublic,
-      user.id,
-    );
-    
+    const announcement =
+      await this.announcementBusinessService.공지사항_공개를_수정한다(
+        id,
+        dto.isPublic,
+        user.id,
+      );
+
     return {
       ...announcement,
       categoryName: announcement.category?.name,
@@ -968,12 +982,13 @@ export class AnnouncementController {
     @Body() dto: UpdateAnnouncementFixedDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<AnnouncementResponseDto> {
-    const announcement = await this.announcementBusinessService.공지사항_고정을_수정한다(
-      id,
-      dto.isFixed,
-      user.id,
-    );
-    
+    const announcement =
+      await this.announcementBusinessService.공지사항_고정을_수정한다(
+        id,
+        dto.isFixed,
+        user.id,
+      );
+
     return {
       ...announcement,
       categoryName: announcement.category?.name,
