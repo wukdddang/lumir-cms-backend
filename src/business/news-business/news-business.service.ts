@@ -37,6 +37,7 @@ export class NewsBusinessService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: NewsListItemDto[];
     total: number;
@@ -45,7 +46,7 @@ export class NewsBusinessService {
     totalPages: number;
   }> {
     this.logger.log(
-      `뉴스 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `뉴스 목록 조회 시작 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const result = await this.newsContextService.뉴스_목록을_조회한다(
@@ -55,6 +56,7 @@ export class NewsBusinessService {
       limit,
       startDate,
       endDate,
+      categoryId,
     );
 
     const totalPages = Math.ceil(result.total / limit);
@@ -322,7 +324,9 @@ export class NewsBusinessService {
     news: Array<{ id: string; order: number }>,
     updatedBy?: string,
   ): Promise<{ success: boolean; updatedCount: number }> {
-    this.logger.log(`뉴스 일괄 오더 수정 시작 - 수정할 뉴스 수: ${news.length}`);
+    this.logger.log(
+      `뉴스 일괄 오더 수정 시작 - 수정할 뉴스 수: ${news.length}`,
+    );
 
     const result = await this.newsContextService.뉴스_오더를_일괄_수정한다({
       news,

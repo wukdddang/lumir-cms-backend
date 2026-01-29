@@ -306,6 +306,45 @@ describe('NewsContextService', () => {
       expect(result).toEqual(mockResult);
     });
 
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const mockResult = {
+        items: [
+          {
+            id: 'news-1',
+            categoryId: 'category-1',
+            title: '뉴스 1',
+            isPublic: true,
+          } as News,
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      };
+
+      mockQueryBus.execute.mockResolvedValue(mockResult);
+
+      // When
+      const result = await service.뉴스_목록을_조회한다(
+        undefined,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      // Then
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          categoryId,
+        }),
+      );
+      expect(result.items[0].categoryId).toBe('category-1');
+    });
+
     it('날짜 범위로 필터링하여 조회해야 한다', async () => {
       // Given
       const startDate = new Date('2024-01-01');

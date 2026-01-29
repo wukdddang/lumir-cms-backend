@@ -100,6 +100,7 @@ export class NewsContextService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<NewsListResult> {
     const query = new GetNewsListQuery(
       isPublic,
@@ -108,6 +109,7 @@ export class NewsContextService {
       limit,
       startDate,
       endDate,
+      categoryId,
     );
     return await this.queryBus.execute(query);
   }

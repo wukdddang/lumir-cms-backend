@@ -121,12 +121,68 @@ describe('NewsBusinessService', () => {
         10,
         undefined,
         undefined,
+        undefined,
       );
       expect(result.total).toBe(2);
       expect(result.totalPages).toBe(1);
       expect(result.items[0].categoryName).toBe('신제품');
       expect(result.items[1].categoryName).toBe('수상');
       expect(result.items.length).toBe(2);
+    });
+
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'cat-1';
+      const mockNews = [
+        {
+          id: 'news-1',
+          title: '뉴스 1',
+          description: '설명 1',
+          url: 'https://news1.com',
+          categoryId: 'cat-1',
+          category: { name: '신제품' },
+          isPublic: true,
+          order: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as News,
+      ];
+
+      const contextResult = {
+        items: mockNews,
+        total: 1,
+        page: 1,
+        limit: 10,
+      };
+
+      mockNewsContextService.뉴스_목록을_조회한다.mockResolvedValue(
+        contextResult,
+      );
+
+      // When
+      const result = await service.뉴스_목록을_조회한다(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      // Then
+      expect(newsContextService.뉴스_목록을_조회한다).toHaveBeenCalledWith(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+      expect(result.items[0].categoryId).toBe('cat-1');
+      expect(result.items[0].categoryName).toBe('신제품');
+      expect(result.total).toBe(1);
     });
 
     it('날짜 범위로 필터링하여 조회해야 한다', async () => {
@@ -163,6 +219,7 @@ describe('NewsBusinessService', () => {
         10,
         startDate,
         endDate,
+        undefined,
       );
     });
   });
@@ -381,7 +438,9 @@ describe('NewsBusinessService', () => {
         newsId,
         data,
       );
-      expect(newsContextService.뉴스_상세_조회한다).toHaveBeenCalledWith(newsId);
+      expect(newsContextService.뉴스_상세_조회한다).toHaveBeenCalledWith(
+        newsId,
+      );
       expect(result).toEqual({
         ...mockNews,
         categoryName: '신제품',
@@ -576,12 +635,12 @@ describe('NewsBusinessService', () => {
       const result = await service.뉴스_오더를_일괄_수정한다(news, updatedBy);
 
       // Then
-      expect(
-        newsContextService.뉴스_오더를_일괄_수정한다,
-      ).toHaveBeenCalledWith({
-        news,
-        updatedBy,
-      });
+      expect(newsContextService.뉴스_오더를_일괄_수정한다).toHaveBeenCalledWith(
+        {
+          news,
+          updatedBy,
+        },
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -740,10 +799,7 @@ describe('NewsBusinessService', () => {
       // Then
       // 소프트 삭제로 변경되어 deleteFiles 호출되지 않음
       expect(storageService.deleteFiles).not.toHaveBeenCalled();
-      expect(storageService.uploadFiles).toHaveBeenCalledWith(
-        newFiles,
-        'news',
-      );
+      expect(storageService.uploadFiles).toHaveBeenCalledWith(newFiles, 'news');
       expect(newsContextService.뉴스_파일을_수정한다).toHaveBeenCalledWith(
         newsId,
         {

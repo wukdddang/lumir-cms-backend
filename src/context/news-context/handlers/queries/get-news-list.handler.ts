@@ -16,6 +16,7 @@ export class GetNewsListQuery {
     public readonly limit: number = 10,
     public readonly startDate?: Date,
     public readonly endDate?: Date,
+    public readonly categoryId?: string,
   ) {}
 }
 
@@ -32,16 +33,21 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
   ) {}
 
   async execute(query: GetNewsListQuery): Promise<NewsListResult> {
-    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate, categoryId } =
+      query;
 
     this.logger.debug(
-      `뉴스 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `뉴스 목록 조회 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const queryBuilder = this.newsRepository.createQueryBuilder('news');
 
     // category 조인
-    queryBuilder.leftJoin('categories', 'category', 'news.categoryId = category.id');
+    queryBuilder.leftJoin(
+      'categories',
+      'category',
+      'news.categoryId = category.id',
+    );
     queryBuilder.addSelect(['category.name']);
 
     let hasWhere = false;
@@ -49,6 +55,15 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
     if (isPublic !== undefined) {
       queryBuilder.where('news.isPublic = :isPublic', { isPublic });
       hasWhere = true;
+    }
+
+    if (categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('news.categoryId = :categoryId', { categoryId });
+      } else {
+        queryBuilder.where('news.categoryId = :categoryId', { categoryId });
+        hasWhere = true;
+      }
     }
 
     if (startDate) {
@@ -94,9 +109,11 @@ export class GetNewsListHandler implements IQueryHandler<GetNewsListQuery> {
     });
 
     // deletedAt이 null인 파일만 필터링
-    items.forEach(item => {
+    items.forEach((item) => {
       if (item.attachments) {
-        item.attachments = item.attachments.filter((att: any) => !att.deletedAt);
+        item.attachments = item.attachments.filter(
+          (att: any) => !att.deletedAt,
+        );
       }
     });
 
