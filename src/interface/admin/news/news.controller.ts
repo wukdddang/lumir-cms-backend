@@ -584,13 +584,10 @@ export class NewsController {
       throw new BadRequestException('id는 유효한 UUID 형식이어야 합니다.');
     }
 
-    return await this.newsBusinessService.뉴스_카테고리를_수정한다(
-      id,
-      {
-        ...updateDto,
-        updatedBy: user.id,
-      },
-    );
+    return await this.newsBusinessService.뉴스_카테고리를_수정한다(id, {
+      ...updateDto,
+      updatedBy: user.id,
+    });
   }
 
   /**

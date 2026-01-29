@@ -44,7 +44,9 @@ export class AdminGuard implements CanActivate {
 
     // JwtAuthGuard를 먼저 적용해야 함
     if (!user) {
-      this.logger.warn('사용자 정보가 없습니다. JwtAuthGuard를 먼저 적용해주세요.');
+      this.logger.warn(
+        '사용자 정보가 없습니다. JwtAuthGuard를 먼저 적용해주세요.',
+      );
       throw new ForbiddenException('인증이 필요합니다.');
     }
 

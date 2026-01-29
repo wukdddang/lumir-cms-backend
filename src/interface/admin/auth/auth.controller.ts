@@ -88,7 +88,8 @@ export class AuthController {
   @ApiBearerAuth('Bearer')
   @ApiOperation({
     summary: '현재 사용자 정보 조회',
-    description: 'SSO /api/auth/verify로 토큰을 검증하고 사용자 정보를 조회합니다.',
+    description:
+      'SSO /api/auth/verify로 토큰을 검증하고 사용자 정보를 조회합니다.',
   })
   @ApiResponse({
     status: 200,
