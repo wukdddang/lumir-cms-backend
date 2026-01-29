@@ -273,7 +273,7 @@ export class MainPopupController {
         },
         categoryId: {
           type: 'string',
-          description: '메인 팝업 카테고리 ID (필수)',
+          description: '메인 팝업 카테고리 ID (선택사항)',
           example: '31e6bbc6-2839-4477-9672-bb4b381e8914',
         },
         files: {
@@ -282,7 +282,7 @@ export class MainPopupController {
           description: '첨부파일 목록 (PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능)',
         },
       },
-      required: ['translations', 'categoryId'],
+      required: ['translations'],
     },
   })
   @ApiResponse({
@@ -521,7 +521,7 @@ export class MainPopupController {
             '첨부파일 목록 (PDF/JPG/PNG/WEBP/XLSX/DOCX만 가능) - 전송한 파일들로 완전히 교체됩니다',
         },
       },
-      required: ['translations', 'categoryId'],
+      required: ['translations'],
     },
   })
   @ApiResponse({

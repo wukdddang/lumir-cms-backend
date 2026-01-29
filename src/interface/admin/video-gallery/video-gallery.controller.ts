@@ -388,8 +388,12 @@ export class VideoGalleryController {
     description:
       '비디오갤러리의 정보 및 파일을 수정합니다.\n\n' +
       '**필수 필드:**\n' +
-      '- `title`: 제목\n' +
-      '- `categoryId`: 카테고리 ID (UUID)\n\n' +
+      '- `title`: 제목\n\n' +
+      '**선택 필드:**\n' +
+      '- `categoryId`: 카테고리 ID (UUID)\n' +
+      '- `description`: 설명\n' +
+      '- `youtubeUrls`: YouTube URL 목록\n' +
+      '- `files`: 첨부파일\n\n' +
       '**참고**: `updatedBy`는 토큰에서 자동으로 추출됩니다.',
   })
   @ApiBody({
@@ -455,10 +459,6 @@ export class VideoGalleryController {
 
     if (!title) {
       throw new BadRequestException('title 필드는 필수입니다.');
-    }
-
-    if (!categoryId) {
-      throw new BadRequestException('categoryId 필드는 필수입니다.');
     }
 
     // youtubeUrls가 JSON 문자열로 전달될 수 있으므로 파싱

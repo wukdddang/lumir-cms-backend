@@ -691,9 +691,10 @@ export class AnnouncementController {
       '새로운 공지사항을 생성합니다.\n\n' +
       '**📋 Request Body 작성 가이드:**\n\n' +
       '1. **기본 정보** (필수)\n' +
-      '   - `categoryId`: 공지사항 카테고리 ID (UUID) - **필수**\n' +
       '   - `title`: 공지사항 제목\n' +
       '   - `content`: 공지사항 내용 (HTML 지원)\n\n' +
+      '2. **카테고리** (선택)\n' +
+      '   - `categoryId`: 공지사항 카테고리 ID (UUID)\n\n' +
       '2. **공개 설정**\n' +
       '   - `isPublic`: `true`(전사공개) 또는 `false`(제한공개)\n' +
       '   - `isFixed`: 상단 고정 여부\n' +
@@ -814,9 +815,8 @@ export class AnnouncementController {
     description:
       '공지사항을 수정합니다. (비공개 상태에서만 가능)\n\n' +
       '**📋 Request Body 작성 가이드:**\n\n' +
-      '1. **필수 필드**\n' +
-      '   - `categoryId`: 공지사항 카테고리 ID (UUID) - **필수**\n\n' +
-      '2. **수정 가능한 필드** (선택사항)\n' +
+      '1. **수정 가능한 필드** (선택사항)\n' +
+      '   - `categoryId`: 공지사항 카테고리 ID (UUID)\n' +
       '   - `title`: 공지사항 제목\n' +
       '   - `content`: 공지사항 내용 (HTML 지원)\n' +
       '   - `isFixed`: 상단 고정 여부\n' +
