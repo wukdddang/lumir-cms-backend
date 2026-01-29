@@ -101,6 +101,12 @@ export class BrochureController {
     type: String,
     example: '2024-12-31',
   })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    description: '카테고리 ID (UUID)',
+    type: String,
+  })
   async 브로슈어_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
@@ -108,6 +114,7 @@ export class BrochureController {
     @Query('limit') limit?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('categoryId') categoryId?: string,
   ): Promise<BrochureListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
@@ -121,6 +128,7 @@ export class BrochureController {
       limitNum,
       startDate ? new Date(startDate) : undefined,
       endDate ? new Date(endDate) : undefined,
+      categoryId || undefined,
     );
 
     return result;

@@ -42,6 +42,7 @@ export class BrochureBusinessService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: BrochureListItemDto[];
     total: number;
@@ -50,7 +51,7 @@ export class BrochureBusinessService {
     totalPages: number;
   }> {
     this.logger.log(
-      `브로슈어 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `브로슈어 목록 조회 시작 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const result = await this.brochureContextService.브로슈어_목록을_조회한다(
@@ -60,6 +61,7 @@ export class BrochureBusinessService {
       limit,
       startDate,
       endDate,
+      categoryId,
     );
 
     const totalPages = Math.ceil(result.total / limit);

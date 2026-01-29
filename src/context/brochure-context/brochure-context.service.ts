@@ -112,8 +112,17 @@ export class BrochureContextService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<BrochureListResult> {
-    const query = new GetBrochureListQuery(isPublic, orderBy, page, limit, startDate, endDate);
+    const query = new GetBrochureListQuery(
+      isPublic,
+      orderBy,
+      page,
+      limit,
+      startDate,
+      endDate,
+      categoryId,
+    );
     return await this.queryBus.execute(query);
   }
 

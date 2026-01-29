@@ -38,20 +38,40 @@ export class BrochureService {
   async 모든_브로슈어를_조회한다(options?: {
     isPublic?: boolean;
     orderBy?: 'order' | 'createdAt';
+    categoryId?: string;
   }): Promise<Brochure[]> {
     this.logger.debug(`브로슈어 목록 조회`);
 
-    const queryBuilder =
-      this.brochureRepository.createQueryBuilder('brochure');
+    const queryBuilder = this.brochureRepository.createQueryBuilder('brochure');
 
     // category 조인
-    queryBuilder.leftJoin('categories', 'category', 'brochure.categoryId = category.id');
+    queryBuilder.leftJoin(
+      'categories',
+      'category',
+      'brochure.categoryId = category.id',
+    );
     queryBuilder.addSelect(['category.name']);
+
+    let hasWhere = false;
 
     if (options?.isPublic !== undefined) {
       queryBuilder.where('brochure.isPublic = :isPublic', {
         isPublic: options.isPublic,
       });
+      hasWhere = true;
+    }
+
+    if (options?.categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('brochure.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+      } else {
+        queryBuilder.where('brochure.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+        hasWhere = true;
+      }
     }
 
     const orderBy = options?.orderBy || 'order';
@@ -107,9 +127,13 @@ export class BrochureService {
       brochure.category = {
         name: raw.category_name,
       };
-      this.logger.debug(`브로슈어 ${brochure.id}: 카테고리명 = ${raw.category_name}`);
+      this.logger.debug(
+        `브로슈어 ${brochure.id}: 카테고리명 = ${raw.category_name}`,
+      );
     } else {
-      this.logger.warn(`브로슈어 ${brochure.id}: 카테고리명을 찾을 수 없음. categoryId: ${brochure.categoryId}`);
+      this.logger.warn(
+        `브로슈어 ${brochure.id}: 카테고리명을 찾을 수 없음. categoryId: ${brochure.categoryId}`,
+      );
     }
 
     return brochure;

@@ -17,6 +17,7 @@ export class GetBrochureListQuery {
     public readonly limit: number = 10,
     public readonly startDate?: Date,
     public readonly endDate?: Date,
+    public readonly categoryId?: string,
   ) {}
 }
 
@@ -34,13 +35,17 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
   ) {}
 
   async execute(query: GetBrochureListQuery): Promise<BrochureListResult> {
-    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate, categoryId } =
+      query;
 
     this.logger.debug(
-      `브로슈어 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `브로슈어 목록 조회 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
-    const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
+    const defaultLanguageCode = this.configService.get<string>(
+      'DEFAULT_LANGUAGE_CODE',
+      'en',
+    );
 
     const queryBuilder = this.brochureRepository
       .createQueryBuilder('brochure')
@@ -63,6 +68,12 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
 
     if (isPublic !== undefined) {
       queryBuilder.andWhere('brochure.isPublic = :isPublic', { isPublic });
+    }
+
+    if (categoryId) {
+      queryBuilder.andWhere('brochure.categoryId = :categoryId', {
+        categoryId,
+      });
     }
 
     if (startDate) {
@@ -92,7 +103,9 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
     const items = rawAndEntities.entities;
     const raw = rawAndEntities.raw;
 
-    this.logger.debug(`조회된 브로슈어 수: ${items.length}, raw 데이터 수: ${raw.length}`);
+    this.logger.debug(
+      `조회된 브로슈어 수: ${items.length}, raw 데이터 수: ${raw.length}`,
+    );
 
     // raw 데이터에서 category name을 엔티티에 매핑
     items.forEach((brochure, index) => {
@@ -100,7 +113,9 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
         brochure.category = {
           name: raw[index].category_name,
         };
-        this.logger.debug(`브로슈어 ${brochure.id}: 카테고리명 = ${raw[index].category_name}`);
+        this.logger.debug(
+          `브로슈어 ${brochure.id}: 카테고리명 = ${raw[index].category_name}`,
+        );
       } else {
         this.logger.warn(`브로슈어 ${brochure.id}: 카테고리명을 찾을 수 없음`);
       }
@@ -111,7 +126,7 @@ export class GetBrochureListHandler implements IQueryHandler<GetBrochureListQuer
       brochure.translations = brochure.translations.filter(
         (translation) => translation.language.code === defaultLanguageCode,
       );
-      
+
       // deletedAt이 null인 파일만 반환
       if (brochure.attachments) {
         brochure.attachments = brochure.attachments.filter(

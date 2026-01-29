@@ -108,14 +108,20 @@ describe('BrochureBusinessService', () => {
         'order',
         1,
         10,
+        undefined,
+        undefined,
+        undefined,
       );
 
       // Then
-      expect(brochureContextService.브로슈어_목록을_조회한다).toHaveBeenCalledWith(
+      expect(
+        brochureContextService.브로슈어_목록을_조회한다,
+      ).toHaveBeenCalledWith(
         true,
         'order',
         1,
         10,
+        undefined,
         undefined,
         undefined,
       );
@@ -148,16 +154,20 @@ describe('BrochureBusinessService', () => {
         10,
         startDate,
         endDate,
+        undefined,
       );
 
       // Then
-      expect(brochureContextService.브로슈어_목록을_조회한다).toHaveBeenCalledWith(
+      expect(
+        brochureContextService.브로슈어_목록을_조회한다,
+      ).toHaveBeenCalledWith(
         undefined,
         'order',
         1,
         10,
         startDate,
         endDate,
+        undefined,
       );
       expect(result.total).toBe(0);
     });
@@ -181,10 +191,71 @@ describe('BrochureBusinessService', () => {
         'order',
         1,
         10,
+        undefined,
+        undefined,
+        undefined,
       );
 
       // Then
       expect(result.totalPages).toBe(3); // Math.ceil(25 / 10)
+    });
+
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const mockResult = {
+        items: [
+          {
+            id: 'brochure-1',
+            isPublic: true,
+            order: 0,
+            categoryId,
+            translations: [
+              {
+                title: '브로슈어 자료',
+                description: '설명',
+                language: { code: 'ko' },
+              },
+            ],
+            category: {
+              name: '회사 소개',
+            },
+          } as any,
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      };
+
+      mockBrochureContextService.브로슈어_목록을_조회한다.mockResolvedValue(
+        mockResult,
+      );
+
+      // When
+      const result = await service.브로슈어_목록을_조회한다(
+        undefined,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      // Then
+      expect(
+        brochureContextService.브로슈어_목록을_조회한다,
+      ).toHaveBeenCalledWith(
+        undefined,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+      expect(result.total).toBe(1);
+      expect(result.items[0].categoryName).toBe('회사 소개');
     });
   });
 
@@ -209,12 +280,9 @@ describe('BrochureBusinessService', () => {
       const result = await service.브로슈어_전체_목록을_조회한다();
 
       // Then
-      expect(brochureContextService.브로슈어_목록을_조회한다).toHaveBeenCalledWith(
-        undefined,
-        'order',
-        1,
-        1000,
-      );
+      expect(
+        brochureContextService.브로슈어_목록을_조회한다,
+      ).toHaveBeenCalledWith(undefined, 'order', 1, 1000);
       expect(result).toEqual(mockResult.items);
     });
   });
@@ -267,9 +335,9 @@ describe('BrochureBusinessService', () => {
         attachments: undefined,
         createdBy,
       });
-      expect(brochureContextService.브로슈어_상세_조회한다).toHaveBeenCalledWith(
-        'brochure-1',
-      );
+      expect(
+        brochureContextService.브로슈어_상세_조회한다,
+      ).toHaveBeenCalledWith('brochure-1');
       expect(result).toEqual(mockDetailResult);
     });
 
@@ -393,8 +461,12 @@ describe('BrochureBusinessService', () => {
         translations: [],
       } as any;
 
-      mockBrochureContextService.브로슈어_공개를_수정한다.mockResolvedValue(undefined);
-      mockBrochureContextService.브로슈어_상세_조회한다.mockResolvedValue(mockDetailResult);
+      mockBrochureContextService.브로슈어_공개를_수정한다.mockResolvedValue(
+        undefined,
+      );
+      mockBrochureContextService.브로슈어_상세_조회한다.mockResolvedValue(
+        mockDetailResult,
+      );
 
       // When
       const result = await service.브로슈어_공개를_수정한다(
@@ -403,11 +475,12 @@ describe('BrochureBusinessService', () => {
       );
 
       // Then
-      expect(brochureContextService.브로슈어_공개를_수정한다).toHaveBeenCalledWith(
-        brochureId,
-        updateDto,
-      );
-      expect(brochureContextService.브로슈어_상세_조회한다).toHaveBeenCalledWith(brochureId);
+      expect(
+        brochureContextService.브로슈어_공개를_수정한다,
+      ).toHaveBeenCalledWith(brochureId, updateDto);
+      expect(
+        brochureContextService.브로슈어_상세_조회한다,
+      ).toHaveBeenCalledWith(brochureId);
       expect(result).toEqual(mockDetailResult);
     });
   });
@@ -432,9 +505,9 @@ describe('BrochureBusinessService', () => {
       const result = await service.브로슈어_상세_조회한다(brochureId);
 
       // Then
-      expect(brochureContextService.브로슈어_상세_조회한다).toHaveBeenCalledWith(
-        brochureId,
-      );
+      expect(
+        brochureContextService.브로슈어_상세_조회한다,
+      ).toHaveBeenCalledWith(brochureId);
       expect(result).toEqual(mockBrochure);
       expect(result.categoryId).toBe('category-1');
       expect(result.categoryName).toBe('테스트 카테고리');
@@ -498,7 +571,9 @@ describe('BrochureBusinessService', () => {
       expect(
         brochureContextService.기본_브로슈어들을_생성한다,
       ).toHaveBeenCalledWith(createdBy);
-      expect(brochureContextService.브로슈어_상세_조회한다).toHaveBeenCalledTimes(2);
+      expect(
+        brochureContextService.브로슈어_상세_조회한다,
+      ).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockDetailResults);
     });
   });
@@ -787,16 +862,18 @@ describe('BrochureBusinessService', () => {
       );
 
       // Then
-      expect(brochureContextService.브로슈어_상세_조회한다).toHaveBeenCalledWith(
-        brochureId,
-      );
+      expect(
+        brochureContextService.브로슈어_상세_조회한다,
+      ).toHaveBeenCalledWith(brochureId);
       // 소프트 삭제로 변경되어 deleteFiles 호출되지 않음
       expect(storageService.deleteFiles).not.toHaveBeenCalled();
       expect(storageService.uploadFiles).toHaveBeenCalledWith(
         files,
         'brochures',
       );
-      expect(brochureContextService.브로슈어_파일을_수정한다).toHaveBeenCalledWith(
+      expect(
+        brochureContextService.브로슈어_파일을_수정한다,
+      ).toHaveBeenCalledWith(
         brochureId,
         expect.objectContaining({
           attachments: expect.arrayContaining([
@@ -882,7 +959,9 @@ describe('BrochureBusinessService', () => {
       // 소프트 삭제로 변경되어 deleteFiles 호출되지 않음
       expect(storageService.deleteFiles).not.toHaveBeenCalled();
       expect(storageService.uploadFiles).not.toHaveBeenCalled();
-      expect(brochureContextService.브로슈어_파일을_수정한다).toHaveBeenCalledWith(
+      expect(
+        brochureContextService.브로슈어_파일을_수정한다,
+      ).toHaveBeenCalledWith(
         brochureId,
         expect.objectContaining({
           attachments: expect.arrayContaining([
