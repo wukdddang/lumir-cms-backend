@@ -16,6 +16,7 @@ export class GetLumirStoryListQuery {
     public readonly limit: number = 10,
     public readonly startDate?: Date,
     public readonly endDate?: Date,
+    public readonly categoryId?: string,
   ) {}
 }
 
@@ -23,9 +24,7 @@ export class GetLumirStoryListQuery {
  * 루미르스토리 목록 조회 핸들러
  */
 @QueryHandler(GetLumirStoryListQuery)
-export class GetLumirStoryListHandler
-  implements IQueryHandler<GetLumirStoryListQuery>
-{
+export class GetLumirStoryListHandler implements IQueryHandler<GetLumirStoryListQuery> {
   private readonly logger = new Logger(GetLumirStoryListHandler.name);
 
   constructor(
@@ -34,17 +33,22 @@ export class GetLumirStoryListHandler
   ) {}
 
   async execute(query: GetLumirStoryListQuery): Promise<LumirStoryListResult> {
-    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
+    const { isPublic, orderBy, page, limit, startDate, endDate, categoryId } =
+      query;
 
     this.logger.debug(
-      `루미르스토리 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `루미르스토리 목록 조회 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const queryBuilder =
       this.lumirStoryRepository.createQueryBuilder('lumirStory');
 
     // category 조인
-    queryBuilder.leftJoin('categories', 'category', 'lumirStory.categoryId = category.id');
+    queryBuilder.leftJoin(
+      'categories',
+      'category',
+      'lumirStory.categoryId = category.id',
+    );
     queryBuilder.addSelect(['category.name']);
 
     let hasWhere = false;
@@ -54,9 +58,24 @@ export class GetLumirStoryListHandler
       hasWhere = true;
     }
 
+    if (categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('lumirStory.categoryId = :categoryId', {
+          categoryId,
+        });
+      } else {
+        queryBuilder.where('lumirStory.categoryId = :categoryId', {
+          categoryId,
+        });
+        hasWhere = true;
+      }
+    }
+
     if (startDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('lumirStory.createdAt >= :startDate', { startDate });
+        queryBuilder.andWhere('lumirStory.createdAt >= :startDate', {
+          startDate,
+        });
       } else {
         queryBuilder.where('lumirStory.createdAt >= :startDate', { startDate });
         hasWhere = true;

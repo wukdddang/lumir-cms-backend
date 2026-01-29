@@ -257,16 +257,14 @@ export class ShareholdersMeetingBusinessService {
     );
 
     // 5. 주주총회 정보 및 번역 수정
-    const result = await this.shareholdersMeetingContextService.주주총회를_수정한다(
-      id,
-      {
+    const result =
+      await this.shareholdersMeetingContextService.주주총회를_수정한다(id, {
         categoryId,
         ...meetingData,
         translations,
         voteResults,
         updatedBy,
-      },
-    );
+      });
 
     this.logger.log(`주주총회 수정 완료 - ID: ${id}`);
 
@@ -307,6 +305,7 @@ export class ShareholdersMeetingBusinessService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: any[];
     total: number;
@@ -315,7 +314,7 @@ export class ShareholdersMeetingBusinessService {
     totalPages: number;
   }> {
     this.logger.log(
-      `주주총회 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `주주총회 목록 조회 시작 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const result =
@@ -326,16 +325,21 @@ export class ShareholdersMeetingBusinessService {
         limit,
         startDate,
         endDate,
+        categoryId,
       );
 
     const totalPages = Math.ceil(result.total / limit);
 
     // ShareholdersMeeting 엔티티를 DTO로 변환
-    const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
+    const defaultLanguageCode = this.configService.get<string>(
+      'DEFAULT_LANGUAGE_CODE',
+      'en',
+    );
     const items = result.items.map((meeting) => {
       const defaultTranslation =
-        meeting.translations?.find((t: any) => t.language?.code === defaultLanguageCode) ||
-        meeting.translations?.[0];
+        meeting.translations?.find(
+          (t: any) => t.language?.code === defaultLanguageCode,
+        ) || meeting.translations?.[0];
 
       return {
         id: meeting.id,

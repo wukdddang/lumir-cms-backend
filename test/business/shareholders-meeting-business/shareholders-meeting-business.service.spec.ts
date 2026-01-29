@@ -75,7 +75,9 @@ describe('ShareholdersMeetingBusinessService', () => {
     service = module.get<ShareholdersMeetingBusinessService>(
       ShareholdersMeetingBusinessService,
     );
-    shareholdersMeetingContextService = module.get(ShareholdersMeetingContextService);
+    shareholdersMeetingContextService = module.get(
+      ShareholdersMeetingContextService,
+    );
     categoryService = module.get(CategoryService);
     storageService = module.get(STORAGE_SERVICE);
   });
@@ -159,15 +161,17 @@ describe('ShareholdersMeetingBusinessService', () => {
     it('컨텍스트 서비스를 호출하여 주주총회를 삭제해야 한다', async () => {
       // Given
       const meetingId = 'meeting-1';
-      mockShareholdersMeetingContextService.주주총회를_삭제한다.mockResolvedValue(true);
+      mockShareholdersMeetingContextService.주주총회를_삭제한다.mockResolvedValue(
+        true,
+      );
 
       // When
       const result = await service.주주총회를_삭제한다(meetingId);
 
       // Then
-      expect(shareholdersMeetingContextService.주주총회를_삭제한다).toHaveBeenCalledWith(
-        meetingId,
-      );
+      expect(
+        shareholdersMeetingContextService.주주총회를_삭제한다,
+      ).toHaveBeenCalledWith(meetingId);
       expect(result).toBe(true);
     });
   });
@@ -243,7 +247,9 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
 
       // Then
-      expect(shareholdersMeetingContextService.주주총회를_생성한다).toHaveBeenCalledWith(
+      expect(
+        shareholdersMeetingContextService.주주총회를_생성한다,
+      ).toHaveBeenCalledWith(
         translations,
         meetingData,
         undefined,
@@ -338,7 +344,9 @@ describe('ShareholdersMeetingBusinessService', () => {
         files,
         'shareholders-meetings',
       );
-      expect(shareholdersMeetingContextService.주주총회를_생성한다).toHaveBeenCalledWith(
+      expect(
+        shareholdersMeetingContextService.주주총회를_생성한다,
+      ).toHaveBeenCalledWith(
         translations,
         meetingData,
         voteResults,
@@ -425,7 +433,10 @@ describe('ShareholdersMeetingBusinessService', () => {
         translations,
         updatedBy,
         meetingData.categoryId,
-        { location: meetingData.location, meetingDate: meetingData.meetingDate },
+        {
+          location: meetingData.location,
+          meetingDate: meetingData.meetingDate,
+        },
         undefined,
         files,
       );
@@ -452,17 +463,16 @@ describe('ShareholdersMeetingBusinessService', () => {
         ]),
         updatedBy,
       );
-      expect(shareholdersMeetingContextService.주주총회를_수정한다).toHaveBeenCalledWith(
-        meetingId,
-        {
-          categoryId: 'category-1',
-          location: '부산 해운대',
-          meetingDate: new Date('2024-06-20'),
-          translations,
-          voteResults: undefined,
-          updatedBy,
-        },
-      );
+      expect(
+        shareholdersMeetingContextService.주주총회를_수정한다,
+      ).toHaveBeenCalledWith(meetingId, {
+        categoryId: 'category-1',
+        location: '부산 해운대',
+        meetingDate: new Date('2024-06-20'),
+        translations,
+        voteResults: undefined,
+        updatedBy,
+      });
       expect(result).toEqual(mockUpdatedMeeting);
     });
 
@@ -599,19 +609,87 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
 
       // When
-      const result = await service.주주총회_목록을_조회한다(true, 'order', 1, 10);
+      const result = await service.주주총회_목록을_조회한다(
+        true,
+        'order',
+        1,
+        10,
+      );
 
       // Then
-      expect(shareholdersMeetingContextService.주주총회_목록을_조회한다).toHaveBeenCalledWith(
+      expect(
+        shareholdersMeetingContextService.주주총회_목록을_조회한다,
+      ).toHaveBeenCalledWith(
         true,
         'order',
         1,
         10,
         undefined,
         undefined,
+        undefined,
       );
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('제38기 정기 주주총회');
+      expect(result.items[0].categoryName).toBe('정기총회');
+    });
+
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'category-1';
+      const mockResult = {
+        items: [
+          {
+            id: 'meeting-1',
+            categoryId,
+            category: { name: '정기총회' },
+            isPublic: true,
+            order: 0,
+            location: '서울',
+            meetingDate: new Date('2024-03-15'),
+            translations: [
+              {
+                title: '제38기 정기 주주총회',
+                description: '정기 주주총회 안내',
+                language: { code: 'ko' },
+              },
+            ],
+          } as any,
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      };
+
+      mockShareholdersMeetingContextService.주주총회_목록을_조회한다.mockResolvedValue(
+        mockResult,
+      );
+
+      // When
+      const result = await service.주주총회_목록을_조회한다(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      // Then
+      expect(
+        shareholdersMeetingContextService.주주총회_목록을_조회한다,
+      ).toHaveBeenCalledWith(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].categoryId).toBe(categoryId);
       expect(result.items[0].categoryName).toBe('정기총회');
     });
 
@@ -643,13 +721,16 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
 
       // Then
-      expect(shareholdersMeetingContextService.주주총회_목록을_조회한다).toHaveBeenCalledWith(
+      expect(
+        shareholdersMeetingContextService.주주총회_목록을_조회한다,
+      ).toHaveBeenCalledWith(
         undefined,
         'order',
         1,
         10,
         startDate,
         endDate,
+        undefined,
       );
       expect(result.total).toBe(0);
     });
@@ -669,7 +750,12 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
 
       // When
-      const result = await service.주주총회_목록을_조회한다(undefined, 'order', 1, 10);
+      const result = await service.주주총회_목록을_조회한다(
+        undefined,
+        'order',
+        1,
+        10,
+      );
 
       // Then
       expect(result.totalPages).toBe(3); // Math.ceil(25 / 10)
@@ -680,8 +766,16 @@ describe('ShareholdersMeetingBusinessService', () => {
     it('카테고리 서비스를 호출하여 목록을 조회해야 한다', async () => {
       // Given
       const mockCategories = [
-        { id: 'category-1', name: '정기총회', entityType: 'shareholders_meeting' },
-        { id: 'category-2', name: '임시총회', entityType: 'shareholders_meeting' },
+        {
+          id: 'category-1',
+          name: '정기총회',
+          entityType: 'shareholders_meeting',
+        },
+        {
+          id: 'category-2',
+          name: '임시총회',
+          entityType: 'shareholders_meeting',
+        },
       ];
 
       mockCategoryService.엔티티_타입별_카테고리를_조회한다.mockResolvedValue(
@@ -692,10 +786,9 @@ describe('ShareholdersMeetingBusinessService', () => {
       const result = await service.주주총회_카테고리_목록을_조회한다();
 
       // Then
-      expect(categoryService.엔티티_타입별_카테고리를_조회한다).toHaveBeenCalledWith(
-        'shareholders_meeting',
-        true,
-      );
+      expect(
+        categoryService.엔티티_타입별_카테고리를_조회한다,
+      ).toHaveBeenCalledWith('shareholders_meeting', true);
       expect(result).toEqual(mockCategories);
     });
   });
@@ -751,10 +844,15 @@ describe('ShareholdersMeetingBusinessService', () => {
         entityType: 'shareholders_meeting',
       } as Category;
 
-      mockCategoryService.카테고리를_업데이트한다.mockResolvedValue(mockUpdatedCategory);
+      mockCategoryService.카테고리를_업데이트한다.mockResolvedValue(
+        mockUpdatedCategory,
+      );
 
       // When
-      const result = await service.주주총회_카테고리를_수정한다(categoryId, updateData);
+      const result = await service.주주총회_카테고리를_수정한다(
+        categoryId,
+        updateData,
+      );
 
       // Then
       expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(
@@ -789,10 +887,13 @@ describe('ShareholdersMeetingBusinessService', () => {
       );
 
       // Then
-      expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(categoryId, {
-        order: orderData.order,
-        updatedBy: orderData.updatedBy,
-      });
+      expect(categoryService.카테고리를_업데이트한다).toHaveBeenCalledWith(
+        categoryId,
+        {
+          order: orderData.order,
+          updatedBy: orderData.updatedBy,
+        },
+      );
       expect(result).toEqual(mockResult);
     });
   });
@@ -807,7 +908,9 @@ describe('ShareholdersMeetingBusinessService', () => {
       const result = await service.주주총회_카테고리를_삭제한다(categoryId);
 
       // Then
-      expect(categoryService.카테고리를_삭제한다).toHaveBeenCalledWith(categoryId);
+      expect(categoryService.카테고리를_삭제한다).toHaveBeenCalledWith(
+        categoryId,
+      );
       expect(result).toBe(true);
     });
   });

@@ -101,6 +101,12 @@ export class LumirStoryController {
     type: String,
     example: '2024-12-31',
   })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    description: '카테고리 ID (UUID)',
+    type: String,
+  })
   async 루미르스토리_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
@@ -108,6 +114,7 @@ export class LumirStoryController {
     @Query('limit') limit?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('categoryId') categoryId?: string,
   ): Promise<LumirStoryListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
@@ -122,6 +129,7 @@ export class LumirStoryController {
         limitNum,
         startDate ? new Date(startDate) : undefined,
         endDate ? new Date(endDate) : undefined,
+        categoryId || undefined,
       );
 
     return result;
@@ -242,14 +250,15 @@ export class LumirStoryController {
       throw new BadRequestException('content 필드는 필수입니다.');
     }
 
-    const lumirStory = await this.lumirStoryBusinessService.루미르스토리를_생성한다(
-      title,
-      content,
-      categoryId || null,
-      imageUrl || null,
-      user.id,
-      files,
-    );
+    const lumirStory =
+      await this.lumirStoryBusinessService.루미르스토리를_생성한다(
+        title,
+        content,
+        categoryId || null,
+        imageUrl || null,
+        user.id,
+        files,
+      );
 
     return {
       ...lumirStory,
@@ -486,13 +495,11 @@ export class LumirStoryController {
     @Param('id') id: string,
     @Body() updateDto: UpdateLumirStoryPublicDto,
   ): Promise<LumirStoryResponseDto> {
-    const lumirStory = await this.lumirStoryBusinessService.루미르스토리_공개를_수정한다(
-      id,
-      {
+    const lumirStory =
+      await this.lumirStoryBusinessService.루미르스토리_공개를_수정한다(id, {
         ...updateDto,
         updatedBy: user.id,
-      },
-    );
+      });
 
     return {
       ...lumirStory,
@@ -543,10 +550,12 @@ export class LumirStoryController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() createDto: CreateLumirStoryCategoryDto,
   ): Promise<LumirStoryCategoryResponseDto> {
-    return await this.lumirStoryBusinessService.루미르스토리_카테고리를_생성한다({
-      ...createDto,
-      createdBy: user.id,
-    });
+    return await this.lumirStoryBusinessService.루미르스토리_카테고리를_생성한다(
+      {
+        ...createDto,
+        createdBy: user.id,
+      },
+    );
   }
 
   /**

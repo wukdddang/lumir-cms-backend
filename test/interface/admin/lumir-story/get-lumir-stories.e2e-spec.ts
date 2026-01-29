@@ -72,6 +72,72 @@ describe('GET /api/admin/lumir-stories (루미르스토리 목록 조회)', () =
       // 목록 조회에서는 content 필드가 포함되지 않음 (상세 조회에서만 포함)
     });
 
+    it('categoryId 필터가 동작해야 한다', async () => {
+      // Given - 두 번째 카테고리 생성
+      const secondCategoryResponse = await testSuite
+        .request()
+        .post('/api/admin/lumir-stories/categories')
+        .send({
+          name: '두 번째 카테고리',
+          description: '필터링 테스트용 두 번째 카테고리',
+        });
+      const secondCategoryId = secondCategoryResponse.body.id;
+
+      // 첫 번째 카테고리의 루미르스토리 1개 추가 생성
+      await testSuite.request().post('/api/admin/lumir-stories').send({
+        title: '카테고리1-스토리2',
+        content: '내용',
+        categoryId,
+      });
+
+      // 두 번째 카테고리의 루미르스토리 3개 생성
+      await testSuite.request().post('/api/admin/lumir-stories').send({
+        title: '카테고리2-스토리1',
+        content: '내용',
+        categoryId: secondCategoryId,
+      });
+
+      await testSuite.request().post('/api/admin/lumir-stories').send({
+        title: '카테고리2-스토리2',
+        content: '내용',
+        categoryId: secondCategoryId,
+      });
+
+      await testSuite.request().post('/api/admin/lumir-stories').send({
+        title: '카테고리2-스토리3',
+        content: '내용',
+        categoryId: secondCategoryId,
+      });
+
+      // When - 첫 번째 카테고리로 필터링
+      const response1 = await testSuite
+        .request()
+        .get(`/api/admin/lumir-stories?categoryId=${categoryId}`)
+        .expect(200);
+
+      // Then - 첫 번째 카테고리의 스토리만 2개 (beforeEach에서 생성한 1개 + 추가 1개)
+      expect(response1.body.total).toBe(2);
+      expect(
+        response1.body.items.every(
+          (item: any) => item.categoryId === categoryId,
+        ),
+      ).toBe(true);
+
+      // When - 두 번째 카테고리로 필터링
+      const response2 = await testSuite
+        .request()
+        .get(`/api/admin/lumir-stories?categoryId=${secondCategoryId}`)
+        .expect(200);
+
+      // Then - 두 번째 카테고리의 스토리만 3개
+      expect(response2.body.total).toBe(3);
+      expect(
+        response2.body.items.every(
+          (item: any) => item.categoryId === secondCategoryId,
+        ),
+      ).toBe(true);
+    });
+
     it('공개된 루미르스토리만 조회해야 한다', async () => {
       // Given
       // When

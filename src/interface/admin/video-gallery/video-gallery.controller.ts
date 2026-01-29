@@ -103,6 +103,12 @@ export class VideoGalleryController {
     type: String,
     example: '2024-12-31',
   })
+  @ApiQuery({
+    name: 'categoryId',
+    required: false,
+    description: '카테고리 ID (UUID)',
+    type: String,
+  })
   async 비디오갤러리_목록을_조회한다(
     @Query('isPublic') isPublic?: string,
     @Query('orderBy') orderBy?: 'order' | 'createdAt',
@@ -110,6 +116,7 @@ export class VideoGalleryController {
     @Query('limit') limit?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
+    @Query('categoryId') categoryId?: string,
   ): Promise<VideoGalleryListResponseDto> {
     const isPublicFilter =
       isPublic === 'true' ? true : isPublic === 'false' ? false : undefined;
@@ -124,6 +131,7 @@ export class VideoGalleryController {
         limitNum,
         startDate ? new Date(startDate) : undefined,
         endDate ? new Date(endDate) : undefined,
+        categoryId || undefined,
       );
 
     return result;
@@ -262,14 +270,15 @@ export class VideoGalleryController {
       }
     }
 
-    const videoGallery = await this.videoGalleryBusinessService.비디오갤러리를_생성한다(
-      title,
-      categoryId || null,
-      description || null,
-      parsedYoutubeUrls,
-      user.id,
-      files,
-    );
+    const videoGallery =
+      await this.videoGalleryBusinessService.비디오갤러리를_생성한다(
+        title,
+        categoryId || null,
+        description || null,
+        parsedYoutubeUrls,
+        user.id,
+        files,
+      );
 
     const { category, ...result } = videoGallery;
     return {
@@ -421,8 +430,7 @@ export class VideoGalleryController {
         files: {
           type: 'array',
           items: { type: 'string', format: 'binary' },
-          description:
-            '비디오 파일 목록 - 전송한 것으로 완전히 교체됩니다',
+          description: '비디오 파일 목록 - 전송한 것으로 완전히 교체됩니다',
         },
       },
       required: ['title'],
@@ -532,13 +540,11 @@ export class VideoGalleryController {
     @Param('id') id: string,
     @Body() updateDto: UpdateVideoGalleryPublicDto,
   ): Promise<VideoGalleryResponseDto> {
-    const videoGallery = await this.videoGalleryBusinessService.비디오갤러리_공개를_수정한다(
-      id,
-      {
+    const videoGallery =
+      await this.videoGalleryBusinessService.비디오갤러리_공개를_수정한다(id, {
         ...updateDto,
         updatedBy: user.id,
-      },
-    );
+      });
 
     const { category, ...result } = videoGallery;
     return {
@@ -590,10 +596,12 @@ export class VideoGalleryController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() createDto: CreateVideoGalleryCategoryDto,
   ): Promise<VideoGalleryCategoryResponseDto> {
-    return await this.videoGalleryBusinessService.비디오갤러리_카테고리를_생성한다({
-      ...createDto,
-      createdBy: user.id,
-    });
+    return await this.videoGalleryBusinessService.비디오갤러리_카테고리를_생성한다(
+      {
+        ...createDto,
+        createdBy: user.id,
+      },
+    );
   }
 
   /**

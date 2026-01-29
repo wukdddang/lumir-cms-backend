@@ -16,6 +16,7 @@ export class GetVideoGalleryListQuery {
     public readonly limit: number = 10,
     public readonly startDate?: Date,
     public readonly endDate?: Date,
+    public readonly categoryId?: string,
   ) {}
 }
 
@@ -23,9 +24,7 @@ export class GetVideoGalleryListQuery {
  * 비디오갤러리 목록 조회 핸들러
  */
 @QueryHandler(GetVideoGalleryListQuery)
-export class GetVideoGalleryListHandler
-  implements IQueryHandler<GetVideoGalleryListQuery>
-{
+export class GetVideoGalleryListHandler implements IQueryHandler<GetVideoGalleryListQuery> {
   private readonly logger = new Logger(GetVideoGalleryListHandler.name);
 
   constructor(
@@ -33,16 +32,19 @@ export class GetVideoGalleryListHandler
     private readonly videoGalleryRepository: Repository<VideoGallery>,
   ) {}
 
-  async execute(query: GetVideoGalleryListQuery): Promise<VideoGalleryListResult> {
-    const { isPublic, orderBy, page, limit, startDate, endDate } = query;
+  async execute(
+    query: GetVideoGalleryListQuery,
+  ): Promise<VideoGalleryListResult> {
+    const { isPublic, orderBy, page, limit, startDate, endDate, categoryId } =
+      query;
 
     this.logger.debug(
-      `비디오갤러리 목록 조회 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `비디오갤러리 목록 조회 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
-    const queryBuilder =
-      this.videoGalleryRepository.createQueryBuilder('videoGallery')
-        .leftJoinAndSelect('videoGallery.category', 'category');
+    const queryBuilder = this.videoGalleryRepository
+      .createQueryBuilder('videoGallery')
+      .leftJoinAndSelect('videoGallery.category', 'category');
 
     let hasWhere = false;
 
@@ -51,18 +53,37 @@ export class GetVideoGalleryListHandler
       hasWhere = true;
     }
 
+    if (categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('videoGallery.categoryId = :categoryId', {
+          categoryId,
+        });
+      } else {
+        queryBuilder.where('videoGallery.categoryId = :categoryId', {
+          categoryId,
+        });
+        hasWhere = true;
+      }
+    }
+
     if (startDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('videoGallery.createdAt >= :startDate', { startDate });
+        queryBuilder.andWhere('videoGallery.createdAt >= :startDate', {
+          startDate,
+        });
       } else {
-        queryBuilder.where('videoGallery.createdAt >= :startDate', { startDate });
+        queryBuilder.where('videoGallery.createdAt >= :startDate', {
+          startDate,
+        });
         hasWhere = true;
       }
     }
 
     if (endDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('videoGallery.createdAt <= :endDate', { endDate });
+        queryBuilder.andWhere('videoGallery.createdAt <= :endDate', {
+          endDate,
+        });
       } else {
         queryBuilder.where('videoGallery.createdAt <= :endDate', { endDate });
         hasWhere = true;
@@ -82,9 +103,11 @@ export class GetVideoGalleryListHandler
     const [rawItems, total] = await queryBuilder.getManyAndCount();
 
     // deletedAt이 null인 파일만 필터링 (videoSources)
-    rawItems.forEach(item => {
+    rawItems.forEach((item) => {
       if (item.videoSources) {
-        item.videoSources = item.videoSources.filter((source: any) => source.type === 'youtube' || !source.deletedAt);
+        item.videoSources = item.videoSources.filter(
+          (source: any) => source.type === 'youtube' || !source.deletedAt,
+        );
       }
     });
 

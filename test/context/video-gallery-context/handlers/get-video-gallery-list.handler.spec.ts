@@ -72,9 +72,7 @@ describe('GetVideoGalleryListHandler', () => {
         orderBy: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getManyAndCount: jest
-          .fn()
-          .mockResolvedValue([mockVideoGalleries, 2]),
+        getManyAndCount: jest.fn().mockResolvedValue([mockVideoGalleries, 2]),
       };
 
       mockVideoGalleryRepository.createQueryBuilder.mockReturnValue(
@@ -125,9 +123,7 @@ describe('GetVideoGalleryListHandler', () => {
         orderBy: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
-        getManyAndCount: jest
-          .fn()
-          .mockResolvedValue([mockVideoGalleries, 1]),
+        getManyAndCount: jest.fn().mockResolvedValue([mockVideoGalleries, 1]),
       };
 
       mockVideoGalleryRepository.createQueryBuilder.mockReturnValue(
@@ -146,12 +142,7 @@ describe('GetVideoGalleryListHandler', () => {
 
     it('생성일 기준으로 정렬해야 한다', async () => {
       // Given
-      const query = new GetVideoGalleryListQuery(
-        undefined,
-        'createdAt',
-        1,
-        10,
-      );
+      const query = new GetVideoGalleryListQuery(undefined, 'createdAt', 1, 10);
 
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
@@ -216,6 +207,109 @@ describe('GetVideoGalleryListHandler', () => {
         'videoGallery.createdAt <= :endDate',
         { endDate },
       );
+    });
+
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'category-uuid-1';
+      const query = new GetVideoGalleryListQuery(
+        undefined,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      const mockVideoGalleries = [
+        {
+          id: 'video-gallery-1',
+          categoryId: 'category-uuid-1',
+          title: '비디오 1',
+          isPublic: true,
+          order: 0,
+          category: { id: 'category-uuid-1', name: '제품 소개' },
+        },
+      ] as VideoGallery[];
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([mockVideoGalleries, 1]),
+      };
+
+      mockVideoGalleryRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
+
+      // When
+      const result = await handler.execute(query);
+
+      // Then
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'videoGallery.categoryId = :categoryId',
+        { categoryId: 'category-uuid-1' },
+      );
+      expect(result.items[0].categoryId).toBe('category-uuid-1');
+      expect(result.total).toBe(1);
+    });
+
+    it('카테고리 ID와 공개 여부로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'category-uuid-1';
+      const query = new GetVideoGalleryListQuery(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      const mockVideoGalleries = [
+        {
+          id: 'video-gallery-1',
+          categoryId: 'category-uuid-1',
+          title: '비디오 1',
+          isPublic: true,
+          order: 0,
+          category: { id: 'category-uuid-1', name: '제품 소개' },
+        },
+      ] as VideoGallery[];
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([mockVideoGalleries, 1]),
+      };
+
+      mockVideoGalleryRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
+
+      // When
+      const result = await handler.execute(query);
+
+      // Then
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'videoGallery.isPublic = :isPublic',
+        { isPublic: true },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'videoGallery.categoryId = :categoryId',
+        { categoryId: 'category-uuid-1' },
+      );
+      expect(result.items[0].categoryId).toBe('category-uuid-1');
     });
 
     it('페이지네이션을 적용해야 한다', async () => {

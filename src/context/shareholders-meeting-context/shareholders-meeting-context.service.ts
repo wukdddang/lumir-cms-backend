@@ -31,17 +31,20 @@ export class ShareholdersMeetingContextService {
    * 주주총회 전체 목록을 조회한다
    */
   async 주주총회_전체_목록을_조회한다(): Promise<ShareholdersMeeting[]> {
-    const meetings = await this.shareholdersMeetingService.모든_주주총회를_조회한다({
-      orderBy: 'order',
-    });
-    
+    const meetings =
+      await this.shareholdersMeetingService.모든_주주총회를_조회한다({
+        orderBy: 'order',
+      });
+
     // 각 주주총회에서 deletedAt이 null인 파일만 반환
-    meetings.forEach(meeting => {
+    meetings.forEach((meeting) => {
       if (meeting.attachments) {
-        meeting.attachments = meeting.attachments.filter((att: any) => !att.deletedAt);
+        meeting.attachments = meeting.attachments.filter(
+          (att: any) => !att.deletedAt,
+        );
       }
     });
-    
+
     return meetings;
   }
 
@@ -49,15 +52,16 @@ export class ShareholdersMeetingContextService {
    * 주주총회 상세를 조회한다
    */
   async 주주총회_상세를_조회한다(id: string): Promise<ShareholdersMeeting> {
-    const meeting = await this.shareholdersMeetingService.ID로_주주총회를_조회한다(id);
-    
+    const meeting =
+      await this.shareholdersMeetingService.ID로_주주총회를_조회한다(id);
+
     // deletedAt이 null인 파일만 반환
     if (meeting.attachments) {
       meeting.attachments = meeting.attachments.filter(
         (att: any) => !att.deletedAt,
       );
     }
-    
+
     return meeting;
   }
 
@@ -144,7 +148,9 @@ export class ShareholdersMeetingContextService {
 
     // 1. 카테고리 유효성 검증 (categoryId가 있는 경우에만)
     if (meetingData.categoryId) {
-      const category = await this.categoryService.ID로_카테고리를_조회한다(meetingData.categoryId);
+      const category = await this.categoryService.ID로_카테고리를_조회한다(
+        meetingData.categoryId,
+      );
       if (category.entityType !== CategoryEntityType.SHAREHOLDERS_MEETING) {
         throw new BadRequestException('주주총회 카테고리가 아닙니다.');
       }
@@ -196,7 +202,10 @@ export class ShareholdersMeetingContextService {
     );
 
     // 8. 기준 번역 선정 (기본 언어 우선, 없으면 첫 번째)
-    const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
+    const defaultLanguageCode = this.configService.get<string>(
+      'DEFAULT_LANGUAGE_CODE',
+      'en',
+    );
     const defaultLang = languages.find((l) => l.code === defaultLanguageCode);
     const baseTranslation =
       translations.find((t) => t.languageId === defaultLang?.id) ||
@@ -329,7 +338,9 @@ export class ShareholdersMeetingContextService {
 
     // 카테고리 유효성 검증 (categoryId가 제공된 경우)
     if (data.categoryId) {
-      const category = await this.categoryService.ID로_카테고리를_조회한다(data.categoryId);
+      const category = await this.categoryService.ID로_카테고리를_조회한다(
+        data.categoryId,
+      );
       if (category.entityType !== CategoryEntityType.SHAREHOLDERS_MEETING) {
         throw new BadRequestException('주주총회 카테고리가 아닙니다.');
       }
@@ -375,9 +386,7 @@ export class ShareholdersMeetingContextService {
 
           // 기본 언어 번역이 수정된 경우 이벤트 발행 (동기화 트리거)
           if (baseLanguage && translation.languageId === baseLanguage.id) {
-            this.logger.debug(
-              '기본 언어 번역 수정 감지 - 동기화 이벤트 발행',
-            );
+            this.logger.debug('기본 언어 번역 수정 감지 - 동기화 이벤트 발행');
             this.eventBus.publish(
               new ShareholdersMeetingTranslationUpdatedEvent(
                 id,
@@ -623,6 +632,7 @@ export class ShareholdersMeetingContextService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: ShareholdersMeeting[];
     total: number;
@@ -631,7 +641,7 @@ export class ShareholdersMeetingContextService {
     totalPages: number;
   }> {
     this.logger.log(
-      `주주총회 목록 조회 - 페이지: ${page}, 개수: ${limit}, 공개: ${isPublic}`,
+      `주주총회 목록 조회 - 페이지: ${page}, 개수: ${limit}, 공개: ${isPublic}, 카테고리: ${categoryId}`,
     );
 
     // 전체 목록 조회 (category 포함)
@@ -641,18 +651,24 @@ export class ShareholdersMeetingContextService {
         orderBy,
         startDate,
         endDate,
+        categoryId,
       });
 
     // deletedAt이 null인 파일만 필터링
-    allMeetings.forEach(meeting => {
+    allMeetings.forEach((meeting) => {
       if (meeting.attachments) {
-        meeting.attachments = meeting.attachments.filter((att: any) => !att.deletedAt);
+        meeting.attachments = meeting.attachments.filter(
+          (att: any) => !att.deletedAt,
+        );
       }
     });
 
     // 각 주주총회에 대해 번역 정보 로드
     for (const meeting of allMeetings) {
-      const translations = await this.shareholdersMeetingService.주주총회_번역을_조회한다(meeting.id);
+      const translations =
+        await this.shareholdersMeetingService.주주총회_번역을_조회한다(
+          meeting.id,
+        );
       meeting.translations = translations;
     }
 

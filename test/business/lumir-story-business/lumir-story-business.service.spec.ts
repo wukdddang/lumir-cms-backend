@@ -104,9 +104,69 @@ describe('LumirStoryBusinessService', () => {
       // Then
       expect(
         lumirStoryContextService.루미르스토리_목록을_조회한다,
-      ).toHaveBeenCalledWith(true, 'order', 1, 10, undefined, undefined);
+      ).toHaveBeenCalledWith(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        undefined,
+      );
       expect(result.items).toHaveLength(1);
       expect(result.items[0].title).toBe('루미르 스토리 1');
+      expect(result.items[0].categoryName).toBe('혁신');
+    });
+
+    it('카테고리 ID로 필터링하여 조회해야 한다', async () => {
+      // Given
+      const categoryId = 'cat-1';
+      const mockResult = {
+        items: [
+          {
+            id: 'lumir-story-1',
+            title: '루미르 스토리 1',
+            isPublic: true,
+            order: 0,
+            category: { name: '혁신' },
+            imageUrl: null,
+            createdAt: new Date('2024-01-01'),
+            updatedAt: new Date('2024-01-02'),
+          } as LumirStory,
+        ],
+        total: 1,
+        page: 1,
+        limit: 10,
+      };
+
+      mockLumirStoryContextService.루미르스토리_목록을_조회한다.mockResolvedValue(
+        mockResult,
+      );
+
+      // When
+      const result = await service.루미르스토리_목록을_조회한다(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+
+      // Then
+      expect(
+        lumirStoryContextService.루미르스토리_목록을_조회한다,
+      ).toHaveBeenCalledWith(
+        true,
+        'order',
+        1,
+        10,
+        undefined,
+        undefined,
+        categoryId,
+      );
+      expect(result.items).toHaveLength(1);
       expect(result.items[0].categoryName).toBe('혁신');
     });
 
@@ -146,6 +206,7 @@ describe('LumirStoryBusinessService', () => {
         10,
         startDate,
         endDate,
+        undefined,
       );
       expect(result.total).toBe(0);
     });

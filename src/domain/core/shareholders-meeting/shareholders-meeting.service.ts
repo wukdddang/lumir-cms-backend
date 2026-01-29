@@ -48,12 +48,13 @@ export class ShareholdersMeetingService {
     orderBy?: 'order' | 'meetingDate' | 'createdAt';
     startDate?: Date;
     endDate?: Date;
+    categoryId?: string;
   }): Promise<ShareholdersMeeting[]> {
     this.logger.debug(`주주총회 목록 조회`);
 
-    const queryBuilder =
-      this.shareholdersMeetingRepository.createQueryBuilder('meeting')
-        .leftJoinAndSelect('meeting.category', 'category');
+    const queryBuilder = this.shareholdersMeetingRepository
+      .createQueryBuilder('meeting')
+      .leftJoinAndSelect('meeting.category', 'category');
 
     let hasWhere = false;
 
@@ -64,20 +65,41 @@ export class ShareholdersMeetingService {
       hasWhere = true;
     }
 
+    if (options?.categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('meeting.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+      } else {
+        queryBuilder.where('meeting.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+        hasWhere = true;
+      }
+    }
+
     if (options?.startDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('meeting.createdAt >= :startDate', { startDate: options.startDate });
+        queryBuilder.andWhere('meeting.createdAt >= :startDate', {
+          startDate: options.startDate,
+        });
       } else {
-        queryBuilder.where('meeting.createdAt >= :startDate', { startDate: options.startDate });
+        queryBuilder.where('meeting.createdAt >= :startDate', {
+          startDate: options.startDate,
+        });
         hasWhere = true;
       }
     }
 
     if (options?.endDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('meeting.createdAt <= :endDate', { endDate: options.endDate });
+        queryBuilder.andWhere('meeting.createdAt <= :endDate', {
+          endDate: options.endDate,
+        });
       } else {
-        queryBuilder.where('meeting.createdAt <= :endDate', { endDate: options.endDate });
+        queryBuilder.where('meeting.createdAt <= :endDate', {
+          endDate: options.endDate,
+        });
         hasWhere = true;
       }
     }
@@ -454,7 +476,8 @@ export class ShareholdersMeetingService {
 
     Object.assign(translation, data);
 
-    const updated = await this.voteResultTranslationRepository.save(translation);
+    const updated =
+      await this.voteResultTranslationRepository.save(translation);
 
     this.logger.log(`의결 결과 번역 업데이트 완료 - 번역 ID: ${translationId}`);
     return updated;

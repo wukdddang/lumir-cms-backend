@@ -105,8 +105,17 @@ export class VideoGalleryContextService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<VideoGalleryListResult> {
-    const query = new GetVideoGalleryListQuery(isPublic, orderBy, page, limit, startDate, endDate);
+    const query = new GetVideoGalleryListQuery(
+      isPublic,
+      orderBy,
+      page,
+      limit,
+      startDate,
+      endDate,
+      categoryId,
+    );
     return await this.queryBus.execute(query);
   }
 

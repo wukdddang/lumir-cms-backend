@@ -203,7 +203,9 @@ export class BaseE2ETest {
 
     // 앱 초기화 후 스케줄러 중지 (테스트 환경에서는 크론 작업 실행 안 함)
     try {
-      const schedulerRegistry = moduleFixture.get(SchedulerRegistry, { strict: false });
+      const schedulerRegistry = moduleFixture.get(SchedulerRegistry, {
+        strict: false,
+      });
       if (schedulerRegistry) {
         const cronJobs = schedulerRegistry.getCronJobs();
         cronJobs.forEach((job: any) => {
@@ -216,9 +218,44 @@ export class BaseE2ETest {
       console.log('⚠️ 스케줄러를 찾을 수 없습니다.');
     }
 
+    // 테스트용 관리자 계정 추가 (AdminGuard 통과용)
+    await this.initializeTestAdmin();
+
     // 기본 언어 초기화 (스케줄러에서 언어를 찾는 에러 방지)
     if (!this.skipDefaultLanguageInit) {
       await this.initializeDefaultLanguages();
+    }
+  }
+
+  /**
+   * 테스트용 관리자 계정 초기화
+   * MockAuthContextService에서 반환하는 employeeNumber를 admins 테이블에 추가
+   */
+  private async initializeTestAdmin(): Promise<void> {
+    try {
+      const adminRepository = this.dataSource.getRepository('Admin');
+
+      // 이미 존재하는지 확인
+      const existingAdmin = await adminRepository.findOne({
+        where: { employeeNumber: 'TEST001' },
+      });
+
+      if (!existingAdmin) {
+        // 테스트용 관리자 계정 생성
+        await adminRepository.save({
+          employeeNumber: 'TEST001',
+          name: 'Test User',
+          email: 'test@example.com',
+          isActive: true,
+          notes: 'E2E 테스트용 관리자 계정',
+        });
+        console.log('✅ 테스트용 관리자 계정(TEST001) 추가 완료');
+      }
+    } catch (error) {
+      console.warn(
+        '⚠️ 테스트용 관리자 계정 초기화 중 오류 발생:',
+        error.message || error,
+      );
     }
   }
 
@@ -232,9 +269,13 @@ export class BaseE2ETest {
         .post('/api/admin/languages/initialize-default')
         .set('Authorization', `Bearer ${this.testAccessToken}`)
         .expect(201);
-      
+
       // 언어가 제대로 생성되었는지 확인
-      if (response.body && response.body.items && response.body.items.length > 0) {
+      if (
+        response.body &&
+        response.body.items &&
+        response.body.items.length > 0
+      ) {
         console.log(`✅ 기본 언어 ${response.body.items.length}개 초기화 완료`);
       }
     } catch (error) {
@@ -308,6 +349,8 @@ export class BaseE2ETest {
    */
   async cleanupBeforeTest(): Promise<void> {
     await this.cleanDatabase();
+    // 테스트용 관리자 계정 다시 추가
+    await this.initializeTestAdmin();
     // 기본 언어 다시 초기화
     if (!this.skipDefaultLanguageInit) {
       await this.initializeDefaultLanguages();
