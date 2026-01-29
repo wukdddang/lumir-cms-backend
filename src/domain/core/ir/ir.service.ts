@@ -45,6 +45,7 @@ export class IRService {
     orderBy?: 'order' | 'createdAt';
     startDate?: Date;
     endDate?: Date;
+    categoryId?: string;
   }): Promise<IR[]> {
     this.logger.debug(`IR 목록 조회`);
 
@@ -54,7 +55,11 @@ export class IRService {
       .leftJoinAndSelect('translations.language', 'language');
 
     // category 조인
-    queryBuilder.leftJoin('categories', 'category', 'ir.categoryId = category.id');
+    queryBuilder.leftJoin(
+      'categories',
+      'category',
+      'ir.categoryId = category.id',
+    );
     queryBuilder.addSelect(['category.name']);
 
     let hasWhere = false;
@@ -66,20 +71,41 @@ export class IRService {
       hasWhere = true;
     }
 
+    if (options?.categoryId) {
+      if (hasWhere) {
+        queryBuilder.andWhere('ir.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+      } else {
+        queryBuilder.where('ir.categoryId = :categoryId', {
+          categoryId: options.categoryId,
+        });
+        hasWhere = true;
+      }
+    }
+
     if (options?.startDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('ir.createdAt >= :startDate', { startDate: options.startDate });
+        queryBuilder.andWhere('ir.createdAt >= :startDate', {
+          startDate: options.startDate,
+        });
       } else {
-        queryBuilder.where('ir.createdAt >= :startDate', { startDate: options.startDate });
+        queryBuilder.where('ir.createdAt >= :startDate', {
+          startDate: options.startDate,
+        });
         hasWhere = true;
       }
     }
 
     if (options?.endDate) {
       if (hasWhere) {
-        queryBuilder.andWhere('ir.createdAt <= :endDate', { endDate: options.endDate });
+        queryBuilder.andWhere('ir.createdAt <= :endDate', {
+          endDate: options.endDate,
+        });
       } else {
-        queryBuilder.where('ir.createdAt <= :endDate', { endDate: options.endDate });
+        queryBuilder.where('ir.createdAt <= :endDate', {
+          endDate: options.endDate,
+        });
         hasWhere = true;
       }
     }
@@ -140,7 +166,9 @@ export class IRService {
       };
       this.logger.debug(`IR ${ir.id}: 카테고리명 = ${raw.category_name}`);
     } else {
-      this.logger.warn(`IR ${ir.id}: 카테고리명을 찾을 수 없음. categoryId: ${ir.categoryId}`);
+      this.logger.warn(
+        `IR ${ir.id}: 카테고리명을 찾을 수 없음. categoryId: ${ir.categoryId}`,
+      );
     }
 
     return ir;

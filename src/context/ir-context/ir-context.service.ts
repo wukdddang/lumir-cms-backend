@@ -31,14 +31,14 @@ export class IRContextService {
     const irs = await this.irService.모든_IR을_조회한다({
       orderBy: 'order',
     });
-    
+
     // 각 IR에서 deletedAt이 null인 파일만 반환
-    irs.forEach(ir => {
+    irs.forEach((ir) => {
       if (ir.attachments) {
         ir.attachments = ir.attachments.filter((att: any) => !att.deletedAt);
       }
     });
-    
+
     return irs;
   }
 
@@ -47,14 +47,12 @@ export class IRContextService {
    */
   async IR_상세를_조회한다(id: string): Promise<IR> {
     const ir = await this.irService.ID로_IR을_조회한다(id);
-    
+
     // deletedAt이 null인 파일만 반환
     if (ir.attachments) {
-      ir.attachments = ir.attachments.filter(
-        (att: any) => !att.deletedAt,
-      );
+      ir.attachments = ir.attachments.filter((att: any) => !att.deletedAt);
     }
-    
+
     return ir;
   }
 
@@ -101,7 +99,7 @@ export class IRContextService {
 
   /**
    * IR을 생성한다
-   * 
+   *
    * 브로슈어와 동일한 다국어 전략 적용:
    * 1. 전달받은 언어: isSynced = false (사용자 입력)
    * 2. 나머지 활성 언어: isSynced = true (자동 동기화)
@@ -113,12 +111,14 @@ export class IRContextService {
       description?: string;
     }>,
     createdBy: string | undefined,
-    attachments: Array<{
-      fileName: string;
-      fileUrl: string;
-      fileSize: number;
-      mimeType: string;
-    }> | undefined,
+    attachments:
+      | Array<{
+          fileName: string;
+          fileUrl: string;
+          fileSize: number;
+          mimeType: string;
+        }>
+      | undefined,
     categoryId: string | null,
   ): Promise<IR> {
     this.logger.log(`IR 생성 시작 - 번역 수: ${translations.length}`);
@@ -168,7 +168,10 @@ export class IRContextService {
     );
 
     // 8. 기준 번역 선정 (기본 언어 우선, 없으면 첫 번째)
-    const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
+    const defaultLanguageCode = this.configService.get<string>(
+      'DEFAULT_LANGUAGE_CODE',
+      'en',
+    );
     const defaultLang = languages.find((l) => l.code === defaultLanguageCode);
     const baseTranslation =
       translations.find((t) => t.languageId === defaultLang?.id) ||
@@ -349,6 +352,7 @@ export class IRContextService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: IR[];
     total: number;
@@ -357,7 +361,7 @@ export class IRContextService {
     totalPages: number;
   }> {
     this.logger.log(
-      `IR 목록 조회 - 페이지: ${page}, 개수: ${limit}, 공개: ${isPublic}`,
+      `IR 목록 조회 - 페이지: ${page}, 개수: ${limit}, 공개: ${isPublic}, 카테고리: ${categoryId}`,
     );
 
     // 전체 목록 조회
@@ -366,10 +370,11 @@ export class IRContextService {
       orderBy,
       startDate,
       endDate,
+      categoryId,
     });
 
     // deletedAt이 null인 파일만 필터링
-    allIRs.forEach(ir => {
+    allIRs.forEach((ir) => {
       if (ir.attachments) {
         ir.attachments = ir.attachments.filter((att: any) => !att.deletedAt);
       }

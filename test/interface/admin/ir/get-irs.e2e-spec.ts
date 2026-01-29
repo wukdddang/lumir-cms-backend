@@ -260,10 +260,10 @@ describe('GET /api/admin/irs (IR 조회)', () => {
 
       // Then - 최근 생성된 것이 먼저 와야 함 (DESC)
       expect(response.body.items.length).toBeGreaterThan(0);
-      
+
       // createdAt으로 정렬되었는지 확인 (DESC)
       expect(secondCreatedAt >= firstCreatedAt).toBe(true);
-      
+
       // 첫 번째 항목이 가장 최근에 생성된 것이어야 함
       const firstItemCreatedAt = new Date(response.body.items[0].createdAt);
       expect(firstItemCreatedAt >= firstCreatedAt).toBe(true);
@@ -287,7 +287,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
 
       const createdIRId = createResponse.body.id;
       const createdDate = new Date(createResponse.body.createdAt);
-      
+
       // When - 생성된 날짜로 필터링 (전날부터 다음날까지)
       const startDate = new Date(createdDate);
       startDate.setDate(startDate.getDate() - 1);
@@ -426,10 +426,7 @@ describe('GET /api/admin/irs (IR 조회)', () => {
 
     it('잘못된 UUID 형식으로 조회 시 400 에러가 발생해야 한다', async () => {
       // When & Then - ParseUUIDPipe가 400 에러를 반환해야 함
-      await testSuite
-        .request()
-        .get('/api/admin/irs/invalid-uuid')
-        .expect(400);
+      await testSuite.request().get('/api/admin/irs/invalid-uuid').expect(400);
     });
   });
 
@@ -508,6 +505,71 @@ describe('GET /api/admin/irs (IR 조회)', () => {
       );
       expect(privateIR).toBeDefined();
       expect(privateIR.isPublic).toBe(false);
+    });
+
+    it('categoryId 필터가 동작해야 한다', async () => {
+      // Given - 두 번째 카테고리 생성
+      const secondCategoryResponse = await testSuite
+        .request()
+        .post('/api/admin/irs/categories')
+        .send({
+          name: '사업보고서',
+          description: '사업보고서 카테고리',
+        })
+        .expect(201);
+      const secondCategoryId = secondCategoryResponse.body.id;
+
+      // 첫 번째 카테고리의 IR 2개 생성
+      await testSuite
+        .request()
+        .post('/api/admin/irs')
+        .field(
+          'translations',
+          JSON.stringify([{ languageId, title: '카테고리1-IR1' }]),
+        )
+        .field('categoryId', categoryId)
+        .expect(201);
+
+      await testSuite
+        .request()
+        .post('/api/admin/irs')
+        .field(
+          'translations',
+          JSON.stringify([{ languageId, title: '카테고리1-IR2' }]),
+        )
+        .field('categoryId', categoryId)
+        .expect(201);
+
+      // 두 번째 카테고리의 IR 3개 생성
+      for (let i = 1; i <= 3; i++) {
+        await testSuite
+          .request()
+          .post('/api/admin/irs')
+          .field(
+            'translations',
+            JSON.stringify([{ languageId, title: `카테고리2-IR${i}` }]),
+          )
+          .field('categoryId', secondCategoryId)
+          .expect(201);
+      }
+
+      // When - 첫 번째 카테고리로 필터링
+      const response1 = await testSuite
+        .request()
+        .get(`/api/admin/irs?categoryId=${categoryId}`)
+        .expect(200);
+
+      // Then - 첫 번째 카테고리의 IR만 2개
+      expect(response1.body.total).toBe(2);
+
+      // When - 두 번째 카테고리로 필터링
+      const response2 = await testSuite
+        .request()
+        .get(`/api/admin/irs?categoryId=${secondCategoryId}`)
+        .expect(200);
+
+      // Then - 두 번째 카테고리의 IR만 3개
+      expect(response2.body.total).toBe(3);
     });
   });
 });

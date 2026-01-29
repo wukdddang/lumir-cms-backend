@@ -178,7 +178,9 @@ export class IRBusinessService {
     categoryId: string | null,
     files?: Express.Multer.File[],
   ): Promise<any> {
-    this.logger.log(`IR 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`);
+    this.logger.log(
+      `IR 수정 시작 - ID: ${id}, 번역 수: ${translations.length}`,
+    );
 
     // 1. 기존 IR 조회
     const ir = await this.irContextService.IR_상세를_조회한다(id);
@@ -283,6 +285,7 @@ export class IRBusinessService {
     limit: number = 10,
     startDate?: Date,
     endDate?: Date,
+    categoryId?: string,
   ): Promise<{
     items: IRListItemDto[];
     total: number;
@@ -291,7 +294,7 @@ export class IRBusinessService {
     totalPages: number;
   }> {
     this.logger.log(
-      `IR 목록 조회 시작 - 공개: ${isPublic}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
+      `IR 목록 조회 시작 - 공개: ${isPublic}, 카테고리: ${categoryId}, 정렬: ${orderBy}, 페이지: ${page}, 제한: ${limit}`,
     );
 
     const result = await this.irContextService.IR_목록을_조회한다(
@@ -301,17 +304,22 @@ export class IRBusinessService {
       limit,
       startDate,
       endDate,
+      categoryId,
     );
 
     const totalPages = Math.ceil(result.total / limit);
 
     // IR 엔티티를 IRListItemDto로 변환
-    const defaultLanguageCode = this.configService.get<string>('DEFAULT_LANGUAGE_CODE', 'en');
-    
+    const defaultLanguageCode = this.configService.get<string>(
+      'DEFAULT_LANGUAGE_CODE',
+      'en',
+    );
+
     const items: IRListItemDto[] = result.items.map((ir) => {
       const defaultTranslation =
-        ir.translations?.find((t) => t.language?.code === defaultLanguageCode) ||
-        ir.translations?.[0];
+        ir.translations?.find(
+          (t) => t.language?.code === defaultLanguageCode,
+        ) || ir.translations?.[0];
 
       return {
         id: ir.id,
